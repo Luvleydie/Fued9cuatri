@@ -1,9 +1,16 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { authGuard, guestGuard } from './guards/auth.guard';
 
 const routes: Routes = [
   {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
+  },
+  {
     path: 'home',
+    canActivate: [authGuard],
     loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
   },
   {
@@ -11,6 +18,8 @@ const routes: Routes = [
     redirectTo: 'home',
     pathMatch: 'full'
   },
+  { path: 'products', redirectTo: 'home', pathMatch: 'full' },
+  { path: '**', redirectTo: 'home' },
 ];
 
 @NgModule({

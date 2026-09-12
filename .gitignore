@@ -76,3 +76,5 @@ Thumbs.db
 /test-results
 /playwright-report
 /artifacts
+/.node_modules-old
+/.package-lock.old.json

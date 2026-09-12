@@ -1,0 +1,31 @@
+<ion-content>
+  <main class="login-layout">
+    <section class="welcome-panel" aria-label="Bienvenido a NovaCart">
+      <a class="brand" routerLink="/login"><span class="brand-mark">N</span> NovaCart<span class="brand-dot">.</span></a>
+      <div class="welcome-copy">
+        <span class="eyebrow">TU PRÓXIMO FAVORITO ESTÁ AQUÍ</span>
+        <h1>Pequeños hallazgos.<br>Grandes favoritos.</h1>
+        <p>Explora, elige y reúne todo lo que te gusta en un solo lugar.</p>
+        <div class="shopping-art" aria-hidden="true"><div class="orbit"></div><div class="shopping-bag"><span>N<span>✦</span></span></div><span class="art-tag">Hecho para descubrir</span></div>
+      </div>
+      <p class="welcome-foot">Una experiencia sencilla, de principio a fin.</p>
+    </section>
+    <section class="login-panel">
+      <div class="login-card">
+        <span class="eyebrow">BIENVENIDO DE NUEVO</span>
+        <h2>Iniciar sesión</h2>
+        <p class="muted">Entra y encuentra algo para ti.</p>
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <ion-input label="Usuario" labelPlacement="stacked" fill="outline" formControlName="username" autocomplete="username" placeholder="Tu nombre de usuario" [errorText]="'Escribe tu usuario.'"></ion-input>
+          <ion-input label="Contraseña" labelPlacement="stacked" fill="outline" formControlName="password" type="password" autocomplete="current-password" placeholder="Tu contraseña" [errorText]="'Escribe tu contraseña.'"></ion-input>
+          @if (error()) { <p role="alert" class="form-error">{{ error() }}</p> }
+          <ion-button type="submit" expand="block" [disabled]="form.invalid || loading()">
+            @if (loading()) { <ion-spinner name="crescent" aria-label="Iniciando sesión"></ion-spinner> } @else { Ingresar <span aria-hidden="true">→</span> }
+          </ion-button>
+        </form>
+        <div class="demo-box"><strong>Conoce NovaCart</strong><p>Usa la cuenta pública de DummyJSON para explorar la aplicación.</p><ion-button fill="clear" size="small" (click)="fillDemo()" [disabled]="loading()">Usar cuenta de demostración</ion-button></div>
+        <p class="academic-note">Proyecto académico · Las compras son simuladas.</p>
+      </div>
+    </section>
+  </main>
+</ion-content>

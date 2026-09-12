@@ -1,37 +1,35 @@
-/*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
- */
-
-/* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
-
-/* Optional CSS utils that can be commented out */
 @import "@ionic/angular/css/padding.css";
-@import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
-@import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import "@ionic/angular/css/palettes/dark.system.css";
+:root { color-scheme: light; }
+body { -webkit-font-smoothing: antialiased; }
+ion-content { --background: #f9f9fc; }
+ion-toolbar { --background: #fff; --color: #26243e; --min-height: 68px; --padding-start: 16px; --padding-end: 16px; border-bottom: 1px solid #eeedf5; }
+ion-title { font-weight: 750; letter-spacing: -.7px; }
+ion-button { --border-radius: 10px; --box-shadow: none; font-weight: 600; text-transform: none; letter-spacing: 0; }
+ion-card { --background: #fff; border-radius: 16px; box-shadow: none; border: 1px solid #eceaf3; }
+ion-spinner { color: var(--ion-color-primary); }
+.page-shell { max-width: 1280px; margin: 0 auto; padding: 36px 28px 42px; }
+h1 { color: #28243e; font-size: 34px; font-weight: 750; letter-spacing: -1px; margin: 10px 0; }
+h2 { color: #28243e; }
+.eyebrow { color: #7b6ac7; font-size: 10px; font-weight: 750; letter-spacing: 1.6px; text-transform: uppercase; }
+.muted { color: #777287; line-height: 1.6; }
+.accent-dot { color: #7058d9; }
+.toolbar-label { font-size: 13px; font-weight: 400; color: #8b849c; letter-spacing: 0; margin-left: 8px; }
+.empty-state { text-align: center; padding: 60px 20px; border-radius: 18px; background: #fff; border: 1px solid #eeecf5; margin-top: 25px; }
+.empty-state > ion-icon { font-size: 44px; color: #9a89d9; }
+.empty-state h2 { font-size: 22px; font-weight: 650; }
+.empty-state p { color: #797188; line-height: 1.6; }
+.notice { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 22px; background: #fff7e5; border: 1px solid #f3e2bc; color: #795d2e; border-radius: 12px; margin: 20px 0; font-size: 13px; }
+.notice p { margin: 5px 0 0; line-height: 1.5; }
+.price { color: #312845; font-weight: 750; font-size: 23px; }
+.price small { color: #8b839a; font-size: 10px; font-weight: 500; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+a:focus-visible { outline: 3px solid #9984f5; outline-offset: 4px; border-radius: 4px; }
+@media(max-width: 767px) { .page-shell { padding: 24px 18px 30px; } h1 { font-size: 29px; } .notice { align-items: flex-start; flex-direction: column; gap: 8px; } }
