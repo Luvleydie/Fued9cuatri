@@ -1,0 +1,46 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/home" text="Volver" aria-label="Volver al catálogo"></ion-back-button></ion-buttons>
+    <ion-title>Detalle del producto</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page-shell">
+    @if (loading()) {
+      <div class="empty-state" role="status"><ion-spinner name="crescent"></ion-spinner><p>Cargando producto…</p></div>
+    } @else if (error()) {
+      <div class="empty-state" role="alert"><ion-icon name="cube-outline"></ion-icon><h1>{{ notFound() ? 'Producto no encontrado' : 'No pudimos cargar el producto' }}</h1><p>{{ error() }}</p>@if (!notFound()) { <ion-button (click)="loadProduct()">Reintentar</ion-button> }<ion-button fill="outline" routerLink="/home">Volver al catálogo</ion-button></div>
+    } @else if (product(); as item) {
+      <div class="breadcrumb"><a routerLink="/home">Productos</a><span>/</span><span>{{ item.category }}</span></div>
+      @if (source() === 'local') {
+        <div class="notice" role="status"><div><strong>Producto del catálogo de respaldo.</strong><p>La conexión no está disponible. Los datos pueden haber cambiado.</p></div><ion-button fill="outline" size="small" (click)="loadProduct()">Reintentar</ion-button></div>
+      }
+      <section class="detail-grid">
+        <div class="detail-image">
+          @if ((item.images?.[0] || item.thumbnail) && !imageFailed()) {
+            <img [src]="item.images?.[0] || item.thumbnail" [alt]="item.title" (error)="imageFailed.set(true)" />
+          } @else {
+            <div class="image-placeholder"><ion-icon name="cube-outline"></ion-icon><p>Imagen no disponible</p></div>
+          }
+        </div>
+        <div class="detail-info">
+          <p class="eyebrow">{{ item.category }}</p>
+          <h1>{{ item.title }}</h1>
+          <p class="brand">{{ item.brand || 'Marca no especificada' }}</p>
+          @if (item.rating !== undefined) { <div class="rating"><ion-icon name="star" aria-hidden="true"></ion-icon><strong>{{ item.rating | number:'1.2-2' }}</strong><span>de 5 · Calificación</span></div> }
+          <div class="price-row"><span class="price">{{ item.price | currency:'USD':'symbol':'1.2-2' }}</span><span class="muted">USD</span></div>
+          @if (item.discountPercentage !== undefined) { <p class="discount">Descuento informado: {{ item.discountPercentage | number:'1.0-2' }} %</p><p class="price-note">El precio mostrado es el que se sumará a tu carrito.</p> }
+          <p class="description">{{ item.description }}</p>
+          <dl class="product-facts">
+            <div><dt>Categoría</dt><dd>{{ item.category }}</dd></div>
+            <div><dt>Marca</dt><dd>{{ item.brand || 'No especificada' }}</dd></div>
+            <div><dt>Stock disponible</dt><dd>{{ item.stock === undefined ? 'No informado' : item.stock + ' unidades' }}</dd></div>
+          </dl>
+          <ion-button expand="block" class="add-button" (click)="addProduct()" [disabled]="item.stock !== undefined && item.stock <= 0"><ion-icon name="bag-add-outline" slot="start" aria-hidden="true"></ion-icon>{{ item.stock === 0 ? 'Producto agotado' : 'Agregar al carrito' }}</ion-button>
+          <ion-button expand="block" fill="clear" routerLink="/cart">Ver mi carrito</ion-button>
+        </div>
+      </section>
+    }
+  </main>
+</ion-content>

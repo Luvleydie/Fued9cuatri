@@ -18,6 +18,14 @@ const routes: Routes = [
     redirectTo: 'home',
     pathMatch: 'full'
   },
+  {
+    path: 'product/:id', canActivate: [authGuard],
+    loadChildren: () => import('./pages/product-detail/product-detail.module').then(m => m.ProductDetailPageModule)
+  },
+  {
+    path: 'cart', canActivate: [authGuard],
+    loadChildren: () => import('./pages/cart/cart.module').then(m => m.CartPageModule)
+  },
   { path: 'products', redirectTo: 'home', pathMatch: 'full' },
   { path: '**', redirectTo: 'home' },
 ];
