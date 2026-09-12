@@ -1,7 +1,7 @@
 .wordmark-accent { color: var(--ion-color-primary); }
 .catalog-hero { position: relative; overflow: hidden; min-height: 254px; padding: 38px 42px; border-radius: 24px; color: #fff; background: linear-gradient(115deg, #222a69, #5545ac); display: flex; justify-content: space-between; gap: 20px; }
 .catalog-hero .eyebrow { color: #cfccff; }
-.catalog-hero h1 { margin: 10px 0 16px; font-size: clamp(1.9rem, 3.2vw, 2.75rem); line-height: 1.12; letter-spacing: -1.2px; font-weight: 750; }
+.catalog-hero h1 { color: #fff; margin: 10px 0 16px; font-size: clamp(1.9rem, 3.2vw, 2.75rem); line-height: 1.12; letter-spacing: -1.2px; font-weight: 750; }
 .catalog-hero p:not(.eyebrow) { max-width: 450px; line-height: 1.6; color: #e0e2fa; font-size: .95rem; }
 .hero-tag { display: inline-block; margin-top: 8px; color: #dedafa; font-size: .78rem; }
 .hero-art { width: 285px; position: relative; flex-shrink: 0; display: grid; place-items: center; }
@@ -27,6 +27,6 @@ ion-card-title { font-size: .98rem; line-height: 1.45; min-height: 2.9em; font-w
 ion-card-content { padding: 9px 17px 17px; display: flex; flex-direction: column; flex: 1; }
 .brand { color: #777c90; font-size: .76rem; margin-bottom: 14px; }
 .price { font-size: 1.3rem; font-weight: 750; color: #222840; margin: auto 0 15px; }.price small { font-size: .65rem; font-weight: 500; color: #777c90; }
-.card-actions { display: flex; gap: 5px; }.card-actions ion-button { flex: 1; margin: 0; --padding-start: 10px; --padding-end: 10px; font-size: .72rem; }
+.card-actions { display: flex; gap: 5px; }.card-actions ion-button { flex: 1; margin: 0; min-height: 36px; --padding-start: 10px; --padding-end: 10px; font-size: .72rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-@media (max-width: 767px) { .catalog-hero { min-height: 250px; padding: 28px 24px; }.hero-art { display: none; }.catalog-heading { margin-top: 28px; }.product-media { height: 225px; } }
+@media (max-width: 767px) { .catalog-hero { min-height: 250px; padding: 28px 24px; }.hero-art { display: none; }.catalog-heading { margin-top: 28px; }.product-media { height: 225px; }.card-actions ion-button { min-height: 44px; } }
