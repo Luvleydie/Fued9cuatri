@@ -27,6 +27,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/cart/cart.module').then(m => m.CartPageModule)
   },
   { path: 'products', redirectTo: 'home', pathMatch: 'full' },
+  {
+    path: 'profile', canActivate: [authGuard],
+    loadChildren: () => import('./pages/profile/profile.module').then(m => m.ProfilePageModule)
+  },
   { path: '**', redirectTo: 'home' },
 ];
 
