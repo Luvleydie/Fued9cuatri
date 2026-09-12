@@ -15,6 +15,8 @@ Pruebas realizadas el 11 de septiembre de 2026, hora de Ciudad de México (12 de
 | Navegador | 15 grupos funcionales comprobados, incluidos navegación visible y badge. |
 | Presentación | Cinco vistas a 390, 768 y 1440 px; sin desbordamiento horizontal. |
 | Capturas de entrega | Login, productos, detalle, carrito y perfil obtenidos con API real, sin mocks. |
+| Checkout limpio | Instalación, 51 pruebas, lint y build correctos; `git status --short` vacío al terminar. |
+| GitHub | Publicación en `main` correcta y hash remoto comparado con el local. |
 
 ## Escenarios del navegador
 
@@ -56,8 +58,22 @@ Se aprobaron 13 grupos en la primera ejecución. Se corrigieron dos selectores d
 | CA-22 | Compilación de producción correcta. |
 | CA-23 | Historial con commits por etapas. |
 | CA-24 | Origin: `https://github.com/Luvleydie/Fued9cuatri.git`. |
-| CA-25 | Pendiente de completar el push de entrega y comprobar el hash remoto. |
+| CA-25 | `git push -u origin main` correcto; el hash remoto coincide con el local. |
 
 ## Reproducción y publicación final
 
-La instalación desde un checkout limpio y la publicación se registrarán al completar la comprobación de entrega.
+Se creó un worktree separado y limpio del commit `a6b5138`, que contiene el código completo, documentación y capturas. Allí se ejecutó la siguiente secuencia:
+
+```bash
+npm install
+npm test -- --watch=false
+npm run lint
+ionic build
+git status --short
+```
+
+La instalación añadió 583 paquetes y no reportó vulnerabilidades. Las 51 pruebas pasaron, el lint no detectó problemas y la compilación de producción terminó correctamente, con un tamaño inicial aproximado de 657 KB. Git no reportó modificaciones de archivos rastreados después de la secuencia, incluido el lockfile.
+
+Posteriormente se ejecutaron `git fetch origin` y `git push -u origin main`. GitHub creó la rama `main` y el hash consultado con `git ls-remote origin refs/heads/main` coincidió con el commit local. El último commit de documentación registra estos resultados; no modifica el código de la aplicación.
+
+Repositorio de entrega: [Luvleydie/Fued9cuatri](https://github.com/Luvleydie/Fued9cuatri).
