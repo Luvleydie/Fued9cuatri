@@ -29,7 +29,7 @@ export class HomePage {
   }
 
   ionViewWillEnter(): void {
-    if (!this.products().length) void this.loadProducts();
+    void this.loadProducts();
   }
 
   async loadProducts(): Promise<void> {

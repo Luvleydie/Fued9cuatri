@@ -1,66 +1,183 @@
-# Modelo de datos de NovaCart
+# Modelo de datos y diagrama de entidades
 
-NovaCart utiliza interfaces TypeScript para representar la información de DummyJSON y un carrito local. No existe una base de datos propia: la API suministra usuarios y productos; el navegador conserva la sesión y el carrito.
+**Actualización: 21 de septiembre de 2026.** NovaCart utiliza una base SQLite propia para usuarios, sesiones y productos. El esquema ejecutable está en [server/schema.sql](../server/schema.sql). El carrito sigue almacenado en el navegador.
 
-| Modelo | Campos obligatorios | Campos opcionales | Uso |
-| --- | --- | --- | --- |
-| `User` | `id: number`, `username: string` | `email`, `firstName`, `lastName`, `image`: `string` | Información del usuario autenticado mostrada en el perfil. |
-| `AuthResponse extends User` | Campos de `User`, `accessToken: string`, `refreshToken: string` | Los mismos campos opcionales de `User` | Respuesta de `POST /auth/login`. |
-| `Product` | `id: number`, `title`, `description`, `category`: `string`, `price: number` | `discountPercentage`, `rating`, `stock`: `number`; `brand`, `thumbnail`: `string`; `images: string[]` | Producto del catálogo, detalle y carrito. |
-| `ProductsResponse` | `products: Product[]`, `total: number`, `skip: number`, `limit: number` | Ninguno | Contenedor del listado devuelto por `GET /products`. |
-| `CartItem` | `product: Product`, `quantity: number` | Ninguno | Relaciona un producto con su cantidad seleccionada. |
+## Diagrama sencillo de la base de datos
 
-Las definiciones se encuentran en [src/app/models](../src/app/models). `ProductSource` es el tipo auxiliar `'api' | 'local'`: indica si el catálogo o detalle procede de DummyJSON o del respaldo y permite mostrar el aviso correspondiente.
+El diagrama resume las tres tablas reales. Los campos adicionales se describen en las tablas siguientes.
+
+```mermaid
+erDiagram
+    users ||--o{ sessions : tiene
+    users ||--o{ products : crea
+
+    users {
+        INTEGER id PK
+        TEXT username UK
+        TEXT email
+        TEXT first_name
+        TEXT last_name
+        TEXT password_hash
+        TEXT password_salt
+    }
+
+    sessions {
+        TEXT token_hash PK
+        INTEGER user_id FK
+        INTEGER expires_at
+        TEXT created_at
+    }
+
+    products {
+        INTEGER id PK
+        TEXT title
+        TEXT description
+        TEXT category
+        INTEGER price_cents
+        INTEGER stock
+        INTEGER created_by FK
+        TEXT created_at
+        TEXT updated_at
+    }
+```
+
+Un usuario puede tener cero o muchas sesiones y crear cero o muchos productos. Cada sesión y cada producto pertenecen a un usuario existente. `created_by` registra al creador; no representa una compra ni una regla de propiedad exclusiva sobre el inventario.
+
+## Diccionario de tablas
+
+### `users`
+
+| Columna SQL | Tipo | Regla y significado |
+| --- | --- | --- |
+| `id` | `INTEGER` | Clave primaria autoincremental. |
+| `username` | `TEXT` | Obligatorio, único; entre 1 y 100 caracteres. |
+| `email` | `TEXT` | Correo del usuario; obligatorio. |
+| `first_name`, `last_name` | `TEXT` | Nombre y apellidos; obligatorios. |
+| `image` | `TEXT` | Imagen del perfil; valor inicial `''`. |
+| `password_hash`, `password_salt` | `TEXT` | Hash de contraseña y sal; obligatorios, de uso exclusivo del servidor. |
+| `created_at` | `TEXT` | Fecha de creación, inicializada con `CURRENT_TIMESTAMP`. |
+
+### `sessions`
+
+| Columna SQL | Tipo | Regla y significado |
+| --- | --- | --- |
+| `token_hash` | `TEXT` | Clave primaria. Guarda el hash del token, no el token de acceso completo. |
+| `user_id` | `INTEGER` | Obligatoria; referencia `users.id`. `ON DELETE CASCADE` elimina las sesiones si se borra su usuario. |
+| `expires_at` | `INTEGER` | Fecha de vencimiento usada para rechazar sesiones caducadas. |
+| `created_at` | `TEXT` | Fecha de creación, inicializada con `CURRENT_TIMESTAMP`. |
+
+Hay índices sobre `user_id` y `expires_at`. Cerrar sesión invalida el acceso correspondiente en esta tabla. El proyecto no ofrece un endpoint para eliminar usuarios; la regla de borrado forma parte del modelo relacional.
+
+### `products`
+
+| Columna SQL | Tipo | Regla y significado |
+| --- | --- | --- |
+| `id` | `INTEGER` | Clave primaria autoincremental. |
+| `title` | `TEXT` | Obligatorio; entre 1 y 160 caracteres después de quitar espacios extremos. |
+| `description` | `TEXT` | Obligatoria; entre 1 y 2000 caracteres después de quitar espacios extremos. |
+| `category` | `TEXT` | Obligatoria; entre 1 y 80 caracteres después de quitar espacios extremos. |
+| `price_cents` | `INTEGER` | Precio en centavos; de 0 a 100 000 000. |
+| `stock` | `INTEGER` | Existencias; de 0 a 1 000 000. |
+| `brand` | `TEXT` | Marca, valor inicial `''`; máximo 120 caracteres. |
+| `thumbnail` | `TEXT` | Imagen principal, valor inicial `''`; máximo 2000 caracteres. |
+| `images_json` | `TEXT` | Arreglo JSON válido de imágenes; valor inicial `'[]'`. |
+| `rating` | `REAL` | Opcional; entre 0 y 5. |
+| `discount_percentage` | `REAL` | Opcional; entre 0 y 100. |
+| `created_by` | `INTEGER` | Obligatoria; referencia `users.id`. `ON DELETE RESTRICT` impide borrar un usuario que aún tiene productos creados. |
+| `created_at`, `updated_at` | `TEXT` | Fechas inicializadas con `CURRENT_TIMESTAMP`; el servidor actualiza `updated_at` al editar. |
+
+Hay un índice sobre `created_by`. Las tres tablas usan el modo `STRICT`; las restricciones `NOT NULL`, `UNIQUE`, `CHECK` y las claves foráneas complementan la validación que realiza la API.
+
+## De la base de datos a los objetos TypeScript
+
+Las tablas representan persistencia; las interfaces describen objetos de aplicación. No todos los campos internos se envían a una pantalla.
+
+| Base de datos | Objeto TypeScript | Transformación |
+| --- | --- | --- |
+| `users` | `User` | `first_name` y `last_name` se convierten en `firstName` y `lastName`. Se seleccionan sólo los datos públicos; no se envían hash, sal ni fecha interna. |
+| Usuario autenticado y sesión creada | `AuthResponse` | Combina los campos de `User` con `accessToken`. No hay `refreshToken`. |
+| `products` | `Product` | `price_cents / 100` produce `price`; `images_json` se convierte en `images: string[]`; `discount_percentage` se presenta como `discountPercentage`. Se omiten autor y fechas internas. |
+| Formulario de inventario | `ProductInput` | La API valida los campos, convierte `price` en centavos y asigna el autor usando la sesión autenticada. SQLite asigna `id`. |
+| Consulta completa de productos | `ProductsResponse` | Envuelve `Product[]` y los metadatos de compatibilidad `total`, `skip: 0` y `limit: total`; la API no aplica paginación. |
+| Navegador | `CartItem` | Conserva una copia de `Product` y `quantity`; no se inserta en SQLite. |
+
+`Product.stock` es opcional en el contrato del cliente por compatibilidad con los objetos de catálogo existentes. El servidor propio y `ProductInput` requieren existencias para las altas y modificaciones.
+
+## Diagrama sencillo de interfaces y servicios Angular
+
+Este segundo diagrama relaciona los objetos que usan las pantallas con las clases que acceden a los datos. Muestra campos y métodos representativos; las firmas completas están en [Servicios de acceso a datos](SERVICIOS_DATOS.md). Las flechas discontinuas indican uso y las continuas relacionan una línea del carrito con su producto.
 
 ```mermaid
 classDiagram
     class User {
+        <<interface>>
         +number id
         +string username
-        +string email
-        +string firstName
-        +string lastName
-        +string image
-    }
-    class AuthResponse {
-        +string accessToken
-        +string refreshToken
     }
     class Product {
+        <<interface>>
         +number id
+        +string title
+        +number price
+    }
+    class ProductInput {
+        <<interface>>
         +string title
         +string description
         +string category
         +number price
         +number stock
     }
-    class ProductsResponse {
-        +Product[] products
-        +number total
-        +number skip
-        +number limit
-    }
     class CartItem {
+        <<interface>>
+        +Product product
         +number quantity
     }
-    AuthResponse --|> User
-    ProductsResponse "1" o-- "0..*" Product : contiene
-    CartItem "0..*" --> "1" Product : selecciona
+    class AuthService {
+        +login(credentials)
+        +getCurrentUser()
+        +logout()
+    }
+    class ProductsService {
+        +getInventory()
+        +getProduct(id)
+        +createProduct(input)
+        +updateProduct(id, input)
+        +deleteProduct(id)
+    }
+    class CartService {
+        +getItems()
+        +addProduct(product)
+        +increaseQuantity(productId)
+        +decreaseQuantity(productId)
+        +removeProduct(productId)
+        +clearCart()
+    }
+    AuthService ..> User : consulta
+    ProductsService ..> Product : devuelve
+    ProductsService ..> ProductInput : recibe
+    CartService ..> CartItem : administra
+    CartItem "0..*" --> "1" Product : contiene copia
 ```
 
-El diagrama muestra los atributos principales; la tabla identifica cuáles son opcionales. La relación entre `CartItem` y `Product` representa una copia local de los datos del producto, no una reserva de inventario en el servidor.
+`ProductInput` es un contrato separado; no hereda de `Product`, pues no incluye un identificador asignado por la base de datos. `User` y `Product` representan los datos públicos de sus tablas; `CartItem` es una entidad local del navegador. No se incluye una interfaz de sesión para las pantallas: `AuthResponse` entrega el token y el servidor mantiene sus registros privados.
 
-## Persistencia y reglas
+## Persistencia en el navegador
 
-| Clave de `localStorage` | Contenido | Duración |
+| Clave de `localStorage` | Objeto | Comportamiento |
 | --- | --- | --- |
-| `novacart.accessToken` | Access token recibido del login. | Hasta cerrar sesión o detectar un token vencido o inválido. |
-| `novacart.user` | JSON con los campos permitidos de `User`. | La misma sesión del token. |
-| `novacart.cart` | JSON de `CartItem[]`. | Se conserva al recargar y al cerrar sesión; cambia al editar o vaciar el carrito. |
+| `novacart.accessToken` | `string` | Token de acceso. Se elimina al cerrar sesión o detectar vencimiento. |
+| `novacart.user` | `User` serializado | Datos permitidos del perfil. Se elimina junto con la sesión. |
+| `novacart.cart` | `CartItem[]` serializado | Se conserva al recargar y al cerrar sesión. Cambia al agregar productos, editar cantidades o vaciar. |
 
-- Se proyecta la respuesta de `/auth/me` mediante `toUser`; campos adicionales como `password` no se guardan. `refreshToken` describe la respuesta real, pero no se persiste ni se utiliza para renovar sesiones.
-- El carrito acepta cantidades enteras positivas y limita cada línea al `stock` cuando está disponible. Un producto con stock cero no se agrega. Al restaurar, se descartan registros inválidos, se agrupan duplicados y se ajustan cantidades al stock guardado.
-- Los precios se muestran en USD. Los subtotales se calculan como `redondear(price × 100) × quantity`; el total suma centavos y se divide entre 100 al presentarlo. `discountPercentage` es informativo y no se aplica nuevamente al precio.
-- El respaldo contiene seis productos reales con imágenes locales. Se utiliza únicamente ante errores de conexión o respuestas 5xx; un identificador inválido o un 404 sigue siendo un producto no encontrado.
+`CartService` comprueba productos y cantidades al restaurar, descarta entradas inválidas, agrupa duplicados y limita las unidades al stock guardado. Los importes se calculan en centavos y se muestran en USD. `discountPercentage` es informativo y no se aplica una segunda vez al precio.
 
-El uso de tokens en `localStorage` corresponde a esta demostración académica. La validación local de vencimiento ayuda a gestionar la interfaz; DummyJSON valida la autorización cuando se consulta el perfil.
+El carrito es una selección local, no una reserva de inventario. Una edición del catálogo no actualiza automáticamente los productos que ya se copiaron al carrito. La compra simulada no crea pedidos, no reduce existencias en SQLite y no procesa cobros.
+
+## Alcance del CRUD
+
+La pantalla Inventario crea, consulta, actualiza y elimina filas reales de `products` mediante la [API propia](API.md). Los cambios permanecen después de reiniciar el servidor porque se escriben en un archivo SQLite. La cuenta y los productos iniciales se preparan durante la inicialización; no hay CRUD público de usuarios, sesiones, pedidos o pagos.
+
+El inventario trabaja con la API. El catálogo y el detalle pueden mostrar seis productos locales de respaldo ante errores de conexión o respuestas 5xx, con un aviso de su procedencia. Ese respaldo no se utiliza para simular escrituras del CRUD.
+
+Consulta también el [inventario completo de interfaces](INTERFACES_TYPESCRIPT.md), la [capa de servicios Angular](SERVICIOS_DATOS.md) y la [explicación del uso de IA para este modelo](USO_IA_MODELO.md).

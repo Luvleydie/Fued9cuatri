@@ -1,7 +1,7 @@
 import { Product } from '../models/product.model';
 
 // Snapshot consultado en DummyJSON el 11 de septiembre de 2026.
-// Sólo se usa cuando falla la conexión o el servidor responde con 5xx.
+// Semilla inicial de SQLite y copia de lectura cuando falla la conexión o hay 5xx.
 export const MOCK_PRODUCTS: Product[] = [
   {
     "id": 1,

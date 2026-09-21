@@ -1,0 +1,46 @@
+.inventory-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 24px; }
+.inventory-heading .muted { margin-bottom: 0; }
+.inventory-heading ion-button { flex-shrink: 0; }
+.inventory-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.inventory-layout.editing { grid-template-columns: minmax(300px, .85fr) minmax(0, 1.15fr); }
+.inventory-list, .editor-panel { min-width: 0; }
+.editor-panel { padding: 26px; background: #fff; border: 1px solid #e7e3f1; border-radius: 18px; }
+.editor-panel h2 { margin: 8px 0; font-size: 23px; }
+.form-help { color: #777287; font-size: 12px; line-height: 1.5; margin: 8px 0 14px; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.field { margin-top: 17px; min-width: 0; }
+.field label { display: block; margin-bottom: 8px; font-size: 13px; color: #423953; font-weight: 650; }
+.field input, .field textarea { width: 100%; border: 1px solid #dad5e8; background: #fff; border-radius: 9px; padding: 12px; font: inherit; color: #28243e; font-size: 14px; }
+.field textarea { resize: vertical; }
+.field input:focus, .field textarea:focus { outline: 2px solid #ac98eb; outline-offset: 1px; }
+.field input[aria-invalid="true"], .field textarea[aria-invalid="true"] { border-color: #c33755; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-error { color: #a82240; font-size: 12px; line-height: 1.5; margin: 7px 0 0; }
+.field-error:empty { display: none; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.form-actions button { min-height: 44px; border-radius: 9px; padding: 12px 18px; font-size: 13px; font-weight: 650; cursor: pointer; }
+.save-button { border: 1px solid #6b52d8; background: #6b52d8; color: white; }
+.cancel-button { background: white; border: 1px solid #dbd5ed; color: #655088; }
+.form-actions button:focus-visible { outline: 3px solid #ac98eb; outline-offset: 3px; }
+fieldset:disabled { opacity: .65; }
+.list-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+.list-heading h2 { font-size: 23px; margin: 0 0 5px; }
+.list-heading p { font-size: 12px; margin: 0; }
+ion-searchbar { --background: #fff; --box-shadow: none; --border-radius: 11px; padding: 0; border: 1px solid #e7e3f1; border-radius: 12px; margin-bottom: 16px; }
+.product-list { display: grid; gap: 12px; }
+.inventory-product { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 21px; border: 1px solid #e7e3f1; border-radius: 15px; background: #fff; }
+.product-summary { min-width: 0; }
+.category { font-size: 10px; color: #74618e; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 7px; overflow-wrap: anywhere; }
+h3 { font-size: 16px; line-height: 1.5; margin: 0; overflow-wrap: anywhere; }
+h3 a { color: #30263f; text-decoration: none; }
+.product-summary .muted { font-size: 12px; margin: 3px 0 12px; overflow-wrap: anywhere; }
+.product-values { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; }
+.stock { color: #386454; background: #eaf5ef; font-size: 10px; border-radius: 20px; padding: 5px 9px; }
+.stock.sold-out { color: #90542f; background: #fff1e7; }
+.product-actions { display: flex; flex-shrink: 0; gap: 4px; }
+.editing .product-actions { flex-direction: column; }
+.feedback { border: 1px solid; border-radius: 12px; padding: 15px 18px; margin-bottom: 22px; font-size: 14px; line-height: 1.5; }
+.success { color: #27614a; border-color: #bee0cd; background: #eef8f2; }
+.error { color: #972842; border-color: #ecc4cf; background: #fff2f5; }
+@media(max-width: 900px) { .inventory-layout.editing { grid-template-columns: minmax(0, 1fr); } .editing .product-actions { flex-direction: row; } }
+@media(max-width: 580px) { .inventory-heading { align-items: flex-start; flex-direction: column; gap: 16px; } .inventory-product { align-items: flex-start; flex-direction: column; gap: 10px; } .product-actions { align-self: flex-end; } .editor-panel { padding: 20px; } }

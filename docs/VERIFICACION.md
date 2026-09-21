@@ -1,79 +1,60 @@
-# Verificación de NovaCart
+# Verificación de la entrega de NovaCart
 
-Pruebas realizadas el 11 de septiembre de 2026, hora de Ciudad de México (12 de septiembre en los informes UTC). Los resultados reflejan comprobaciones ejecutadas, no sólo inspección de archivos.
+**Fecha: 21 de septiembre de 2026.** Resultados ejecutados sobre la aplicación con servicios Angular, API propia y SQLite. El [registro del 11 de septiembre](VERIFICACION_2026-09-11.md) se conserva como antecedente de la versión que utilizaba DummyJSON.
 
-## Comprobaciones realizadas
+## Resultados actuales
 
-| Comprobación | Resultado |
+Entorno: Windows, Node.js `24.19.0` y npm `11.19.1`, con las dependencias ya instaladas en el espacio de trabajo.
+
+| Comprobación | Resultado observado |
 | --- | --- |
-| Instalación de dependencias | Correcta con npm 11.19.1; versiones registradas en el README y lockfile. |
-| Compilación por etapas | `ionic build` correcto después de inicialización, autenticación, catálogo, detalle/carrito y perfil/navegación. |
-| Pruebas unitarias | 51 pruebas aprobadas en 7 archivos con Vitest. |
-| Análisis estático | `npm run lint` correcto. |
-| Auditoría de dependencias | `npm audit`: 0 vulnerabilidades tras alinear Angular y fijar Capacitor 8.4.3. |
-| API real | Login, perfil, catálogo completo y detalle responden correctamente; credenciales públicas verificadas. |
-| Navegador | 15 grupos funcionales comprobados, incluidos navegación visible y badge. |
-| Presentación | Cinco vistas a 390, 768 y 1440 px; sin desbordamiento horizontal. |
-| Capturas de entrega | Login, productos, detalle, carrito y perfil obtenidos con API real, sin mocks. |
-| Checkout limpio | Instalación, 51 pruebas, lint y build correctos; `git status --short` vacío al terminar. |
-| GitHub | Publicación en `main` correcta y hash remoto comparado con el local. |
+| `npm test -- --watch=false` | 108 pruebas aprobadas en 9 archivos; servicios, sesión, carrito, formulario y login. |
+| `npm run test:api` | 9 pruebas aprobadas; incluye compilación TypeScript del servidor. |
+| `npm run lint` | Todos los archivos analizados cumplen las reglas. |
+| `npm run build` | Compilación de producción correcta; tamaño inicial de 666,14 kB. |
+| `npm run test:e2e` | 17 grupos aprobados, cero fallidos, contra el compilado y la API real. |
+| `npm run screenshots` | Siete capturas actualizadas en `docs/screenshots/`, sin interceptar la API. |
 
-## Escenarios del navegador
+El servidor de navegador se inició en `http://127.0.0.1:3001` con un archivo SQLite de prueba independiente dentro de `artifacts/browser/`, sin modificar la base habitual de `server/data/`. Para esta ejecución se estableció `BASE_URL=http://127.0.0.1:3001`. El informe local `artifacts/browser/verification.json` registra el final de los escenarios a las `2026-09-21T23:08:54.961Z`.
 
-- Redirección al login desde todas las rutas privadas y rutas desconocidas.
-- Campos obligatorios, credenciales incorrectas, login real y persistencia tras recargar.
-- Fallo de conexión durante el login sin crear una sesión ficticia.
-- Navegación con clics en Productos, Carrito y Perfil, detalle desde una tarjeta y actualización del contador.
-- Búsqueda por nombre, categoría y marca, incluyendo una búsqueda sin coincidencias.
-- Detalle real, identificador inválido y respuesta 404 real.
-- Agregado repetido, incremento/decremento, total, recarga, stock máximo, eliminación y vaciado confirmado.
-- Compra simulada: el carrito permanece intacto hasta aceptar el resultado.
-- Perfil real con proyección segura del usuario y logout que conserva el carrito.
-- Fallo de red del catálogo: seis productos e imágenes locales; recuperación al reintentar.
-- Respuestas 5xx: detalle de respaldo disponible y error comprensible cuando no existe copia local.
-- Respuestas 4xx del catálogo sin activar el respaldo.
-- Perfil con fallo de red recuperable y cierre de sesión ante un 401.
-- Token vencido, usuario corrupto y carrito corrupto.
-- Diseño responsive de las cinco vistas en tres tamaños de pantalla.
+## Modelo, servicios y CRUD comprobados
 
-Los fallos controlados se inyectan únicamente en el script de pruebas. Las capturas de `docs/screenshots/` se generan por separado sin interceptar la API. El script de verificación guarda diagnósticos en `artifacts/browser/`, carpeta ignorada por Git; no escribe tokens a disco.
+- La API crea un producto con identificador propio, lo consulta, actualiza precio y existencias, lo conserva al reiniciar SQLite y permite eliminarlo. Consultarlo después del borrado devuelve `404`.
+- Vaciar el catálogo y reiniciar no repone los productos eliminados. La inicialización se realiza una vez por base de datos.
+- Se comprobaron claves foráneas, autor del producto, precios en centavos y restricciones de existencias. Contraseñas y tokens no se guardan en texto plano en las tablas.
+- Se rechazaron escrituras sin autenticación, sesiones falsificadas, vencidas o revocadas, JSON incorrecto y campos inválidos.
+- El formulario de Angular valida texto, precio, existencias e imágenes. Se corrigieron diferencias con la API en rutas de imagen, longitudes tras quitar espacios y caracteres de control.
+- En navegador se recorrieron crear, consultar, editar, recargar y eliminar desde Inventario. Se comprobó que los errores del servidor conservan el formulario y no anuncian un guardado inexistente.
+- Se contrastaron esquema SQL, interfaces TypeScript, métodos públicos de los servicios y diagramas de [MODELO_DATOS.md](MODELO_DATOS.md) y [SERVICIOS_DATOS.md](SERVICIOS_DATOS.md).
 
-Se aprobaron 13 grupos en la primera ejecución. Se corrigieron dos selectores de la automatización (un enlace identificado como botón y una espera de cierre de Alert), y los escenarios afectados pasaron en una ejecución selectiva posterior. La corrección visual del título del catálogo se revisó nuevamente en los tres tamaños.
+## Comprobaciones de la interfaz
 
-## Criterios de aceptación
+Los 17 grupos incluyen rutas protegidas, login, búsqueda, detalle, navegación, carrito, compra simulada, perfil, cierre de sesión, respaldo de catálogo, errores de red y HTTP, almacenamiento inválido, CRUD y presentación responsive. Los fallos controlados se inyectan únicamente en las pruebas que los necesitan.
 
-| Criterio | Evidencia |
-| --- | --- |
-| CA-01 | `npm install` completo. |
-| CA-02 | Axios instalado y declarado en `package.json`. |
-| CA-03–04 | `AppModule`, módulos de páginas, `standalone: false` y arranque modular. |
-| CA-05–06 | Login real y sesión conservada al recargar. |
-| CA-07–08 | Catálogo real y detalle individual verificados. |
-| CA-09–12 | Agregado, cantidades, eliminación y totales comprobados. |
-| CA-13–14 | Perfil real y logout funcional. |
-| CA-15–16 | Rutas protegidas y cinco vistas funcionales. |
-| CA-17 | Interfaces Product, User, CartItem y AuthResponse. |
-| CA-18 | Cinco PNG reales en `docs/screenshots/`. |
-| CA-19–21 | README, evidencia de IA y ejemplos aceptados/modificados/descartados. |
-| CA-22 | Compilación de producción correcta. |
-| CA-23 | Historial con commits por etapas. |
-| CA-24 | Origin: `https://github.com/Luvleydie/Fued9cuatri.git`. |
-| CA-25 | `git push -u origin main` correcto; el hash remoto coincide con el local. |
+Se verificó ausencia de desbordamiento horizontal a 390, 768 y 1440 píxeles en seis vistas y el formulario de inventario. También se inspeccionaron visualmente las capturas del formulario a 390 píxeles y del inventario a 1440 píxeles. Las siete capturas de entrega se generaron a 1440 × 1200 con la API SQLite real.
 
-## Reproducción y publicación final
-
-Se creó un worktree separado y limpio del commit `a6b5138`, que contiene el código completo, documentación y capturas. Allí se ejecutó la siguiente secuencia:
+## Reproducir
 
 ```bash
-npm install
+npm ci
 npm test -- --watch=false
+npm run test:api
 npm run lint
-ionic build
-git status --short
+npm run build
+npm run dev
 ```
 
-La instalación añadió 583 paquetes y no reportó vulnerabilidades. Las 51 pruebas pasaron, el lint no detectó problemas y la compilación de producción terminó correctamente, con un tamaño inicial aproximado de 657 KB. Git no reportó modificaciones de archivos rastreados después de la secuencia, incluido el lockfile.
+Con la app en ejecución, desde otra terminal:
 
-Posteriormente se ejecutaron `git fetch origin` y `git push -u origin main`. GitHub creó la rama `main` y el hash consultado con `git ls-remote origin refs/heads/main` coincidió con el commit local. El último commit de documentación registra estos resultados; no modifica el código de la aplicación.
+```bash
+npm run test:e2e
+npm run screenshots
+```
 
-Repositorio de entrega: [Luvleydie/Fued9cuatri](https://github.com/Luvleydie/Fued9cuatri).
+Por defecto, los scripts usan `http://localhost:8100`. El [README](../README.md) explica cómo iniciar sesión y recorrer el CRUD manualmente.
+
+## Límites del registro
+
+En esta revisión no se repitieron la instalación en un checkout limpio ni una auditoría de dependencias; no se trasladan esos resultados de la verificación histórica a esta entrega. Las pruebas se limitaron al navegador de escritorio automatizado y a las anchuras indicadas, sin ejecución nativa en Android o iOS.
+
+El carrito es local y la compra es una simulación: no crea pedidos, procesa cobros ni descuenta existencias. El CRUD completo corresponde a productos; los usuarios no tienen formulario público de alta, edición o eliminación. Los archivos SQLite, claves de sesión, compilados y diagnósticos locales están excluidos de Git.

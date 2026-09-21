@@ -9,8 +9,8 @@ const results = [];
 const filter = process.env.E2E_FILTER ? new RegExp(process.env.E2E_FILTER, 'i') : null;
 let authenticatedState;
 let actualProducts = [];
-const productList = /^https:\/\/dummyjson\.com\/products(?:\?.*)?$/;
-const productDetail = /^https:\/\/dummyjson\.com\/products\/\d+(?:\?.*)?$/;
+const productList = /\/api\/products(?:\?.*)?$/;
+const productDetail = /\/api\/products\/\d+(?:\?.*)?$/;
 const profileUrl = '**/auth/me';
 const activeCards = (page) => page.locator('.product-card:visible');
 const productOne = (page) => page.locator('.cart-item:visible[data-product-id="1"]');
@@ -19,9 +19,12 @@ const quantity = (page) => productOne(page).getByTestId('quantity');
 async function test(name, scenario, authenticated = true) {
   if (filter && !filter.test(name) && !name.startsWith('Login: validaciones')) return;
   const started = Date.now();
-  const { context, page, diagnostics } = await makePage(browser, authenticated ? authenticatedState : undefined);
+  const { context, page, diagnostics } = await makePage(browser);
   try {
-    if (authenticated) assert.ok(authenticatedState, 'Primero debe pasar el login real');
+    if (authenticated) {
+      await loginReal(page);
+      authenticatedState = await context.storageState();
+    }
     const detail = await scenario(page, context);
     assertNoRuntimeErrors(diagnostics);
     results.push({ name, passed: true, durationMs: Date.now() - started, ...(detail ? { detail } : {}) });
@@ -45,7 +48,7 @@ async function expectCatalog(page) {
 
 try {
   await test('Guard: todas las rutas privadas y rutas desconocidas requieren sesión', async (page) => {
-    const routes = ['/home', '/products', '/product/1', '/cart', '/profile', '/ruta-inexistente'];
+    const routes = ['/home', '/products', '/product/1', '/cart', '/profile', '/inventory', '/ruta-inexistente'];
     for (const route of routes) {
       await navigate(page, route);
       await expect(page).toHaveURL(/\/login$/);
@@ -54,7 +57,7 @@ try {
     return { routes };
   }, false);
 
-  await test('Login: validaciones, error real y sesión real de DummyJSON', async (page, context) => {
+  await test('Login: validaciones, error real y sesión real de NovaCart', async (page, context) => {
     await navigate(page, '/login');
     await expect(page.getByRole('button', { name: /^Ingresar/ })).toBeDisabled();
     await page.locator('ion-input[formcontrolname="username"] input').fill('usuario_inexistente_novacart');
@@ -65,7 +68,7 @@ try {
     const productsResponse = page.waitForResponse((response) => productList.test(response.url()) && response.status() === 200);
     await loginReal(page);
     actualProducts = (await (await productsResponse).json()).products;
-    assert.ok(actualProducts.length > 6, 'La sesión real debe consultar el catálogo completo');
+    assert.ok(actualProducts.length >= 6, 'La sesión real debe consultar el catálogo de SQLite');
     authenticatedState = await context.storageState(); // Sólo en memoria; nunca escribir tokens a disco.
     await page.reload();
     await expectCatalog(page);
@@ -274,21 +277,114 @@ try {
     assert.equal(await page.evaluate((key) => localStorage.getItem(key) !== null, tokenKey), false);
   });
 
-  await test('Presentación responsive: cinco vistas a 390, 768 y 1440 píxeles', async (page, context) => {
+  await test('CRUD: validación, creación, lectura, edición y eliminación persistentes', async (page) => {
+    await navigate(page, '/inventory');
+    await expect(page.locator('.inventory-product').first()).toBeVisible();
+    const title = `Producto de prueba ${Date.now()}`;
+    const updatedTitle = `${title} editado`;
+    let createdId;
+    const sessionToken = await page.evaluate((key) => localStorage.getItem(key), tokenKey);
+    try {
+      await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+      await page.getByRole('button', { name: 'Crear producto', exact: true }).click();
+      await expect(page.getByRole('alert')).toContainText('Revisa los campos');
+      await page.locator('#product-title').fill(title);
+      await page.locator('#product-description').fill('Producto creado desde la pantalla y guardado en SQLite.');
+      await page.locator('#product-category').fill('pruebas');
+      await page.locator('#product-price').fill('24.90');
+      await page.locator('#product-stock').fill('3');
+      const creation = page.waitForResponse(response => productList.test(response.url()) && response.request().method() === 'POST');
+      await page.getByRole('button', { name: 'Crear producto', exact: true }).click();
+      const created = await creation;
+      assert.equal(created.status(), 201);
+      createdId = (await created.json()).id;
+      await expect(page.getByRole('status')).toContainText('Producto creado correctamente.');
+      await page.reload();
+      await expect(page.getByRole('link', { name: title, exact: true })).toBeVisible();
+      await page.getByRole('button', { name: `Editar ${title}`, exact: true }).click();
+      await expect(page.locator('#product-price')).toHaveValue('24.9');
+      await page.locator('#product-title').fill(updatedTitle);
+      await page.locator('#product-price').fill('31.50');
+      await page.locator('#product-stock').fill('7');
+      await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click();
+      await expect(page.getByRole('status')).toContainText('Cambios guardados correctamente.');
+      await page.reload();
+      const row = page.locator('.inventory-product').filter({ has: page.getByRole('link', { name: updatedTitle, exact: true }) });
+      await expect(row).toContainText('$31.50');
+      await expect(row).toContainText('7 en existencia');
+      await page.getByRole('link', { name: updatedTitle, exact: true }).click();
+      await expect(page.getByRole('heading', { name: updatedTitle, exact: true })).toBeVisible();
+      await page.getByRole('navigation').getByRole('link', { name: 'Productos', exact: true }).click();
+      await expect(page.locator('ion-card-title:visible').filter({ hasText: updatedTitle })).toBeVisible();
+      await page.getByRole('navigation').getByRole('link', { name: 'Gestión', exact: true }).click();
+      await page.getByRole('button', { name: `Eliminar ${updatedTitle}`, exact: true }).click();
+      await page.getByRole('alertdialog').getByRole('button', { name: 'Cancelar', exact: true }).click();
+      await expect(page.getByRole('alertdialog')).toHaveCount(0);
+      await expect(row).toBeVisible();
+      await page.getByRole('button', { name: `Eliminar ${updatedTitle}`, exact: true }).click();
+      await page.getByRole('alertdialog').getByRole('button', { name: 'Eliminar', exact: true }).click();
+      await expect(page.getByRole('status')).toContainText('Producto eliminado correctamente.');
+      await page.reload();
+      await expect(page.getByRole('link', { name: updatedTitle, exact: true })).toHaveCount(0);
+      await navigate(page, `/product/${createdId}`);
+      await expect(page.getByRole('heading', { name: 'Producto no encontrado' })).toBeVisible();
+    } finally {
+      if (createdId) {
+        await page.request.delete(new URL(`/api/products/${createdId}`, baseURL).href, { headers: { Authorization: `Bearer ${sessionToken}` } });
+      }
+    }
+  });
+
+  await test('CRUD: errores de API conservan el formulario y no simulan guardados', async (page) => {
+    await navigate(page, '/inventory');
+    await expect(page.locator('.inventory-product').first()).toBeVisible();
+    const count = await page.locator('.inventory-product').count();
+    await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+    await page.locator('#product-title').fill('Formulario que debe conservarse');
+    await page.locator('#product-description').fill('Sin persistencia cuando falla el servidor.');
+    await page.locator('#product-category').fill('pruebas');
+    await page.route(productList, route => route.request().method() === 'POST'
+      ? route.fulfill({ status: 503, contentType: 'application/json', body: '{"message":"Servicio temporalmente no disponible."}' })
+      : route.continue());
+    await page.getByRole('button', { name: 'Crear producto', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('Servicio temporalmente no disponible.');
+    await expect(page.locator('#product-title')).toHaveValue('Formulario que debe conservarse');
+    await expect(page.locator('.inventory-product')).toHaveCount(count);
+    await expect(page.getByRole('button', { name: 'Crear producto', exact: true })).toBeEnabled();
+    await page.unroute(productList);
+    await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
+    await page.route(productList, route => route.abort('failed'));
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Inventario no disponible' })).toBeVisible();
+    await expect(page.locator('.inventory-product')).toHaveCount(0);
+    await expect(page.getByText('Estás viendo el catálogo de respaldo.', { exact: true })).toHaveCount(0);
+    await page.unroute(productList);
+    await page.getByRole('button', { name: 'Actualizar inventario', exact: true }).click();
+    await expect(page.locator('.inventory-product')).toHaveCount(count);
+  });
+
+  await test('Presentación responsive: seis vistas y formulario a 390, 768 y 1440 píxeles', async (page, context) => {
     const measurements = [];
     await navigate(page, '/cart');
     await setCart(page, [{ product: actualProducts.find((item) => item.id === 1), quantity: 2 }]);
     for (const width of [390, 768, 1440]) {
       await page.setViewportSize({ width, height: 1100 });
-      for (const route of ['/home', '/product/1', '/cart', '/profile']) {
+      for (const route of ['/home', '/product/1', '/cart', '/profile', '/inventory']) {
         await navigate(page, route);
         if (route === '/home') await expectCatalog(page);
         if (route === '/product/1') await expect(page.getByRole('heading', { name: 'Essence Mascara Lash Princess' })).toBeVisible();
         if (route === '/cart') await expect(productOne(page)).toBeVisible();
         if (route === '/profile') await expect(page.getByText('emilys', { exact: true })).toBeVisible();
+        if (route === '/inventory') await expect(page.locator('.inventory-product').first()).toBeVisible();
         await waitForImages(page);
         measurements.push({ route, width, measurements: await assertNoOverflow(page, width) });
         await page.screenshot({ path: path.join(artifacts, `${width}-${route.slice(1).replaceAll('/', '-')}.png`), animations: 'disabled' });
+        if (route === '/inventory') {
+          await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+          await expect(page.locator('#product-title')).toBeVisible();
+          measurements.push({ route: '/inventory/form', width, measurements: await assertNoOverflow(page, width) });
+          await page.screenshot({ path: path.join(artifacts, `${width}-inventory-form.png`), animations: 'disabled' });
+        }
       }
     }
     await context.clearCookies();

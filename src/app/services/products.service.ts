@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import axios from 'axios';
 import api from '../core/api/axios-client';
 import { MOCK_PRODUCTS } from '../data/mock-products';
-import { Product, ProductsResponse, ProductSource } from '../models/product.model';
+import { Product, ProductsResponse, ProductListResult, ProductDetailResult } from '../models/product.model';
+import { ProductInput } from '../models/product-input.model';
 
 export class ProductNotFoundError extends Error {
   constructor() {
@@ -21,10 +22,9 @@ export function filterProducts(products: Product[], query: string): Product[] {
 
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
-  async getProducts(): Promise<{ products: Product[]; source: ProductSource }> {
+  async getProducts(): Promise<ProductListResult> {
     try {
-      const { data } = await api.get<ProductsResponse>('/products', { params: { limit: 0 } });
-      return { products: data.products, source: 'api' };
+      return { products: await this.getInventory(), source: 'api' };
     } catch (error) {
       if (this.canUseLocalProducts(error)) {
         console.warn('NovaCart: la API de productos no está disponible; se utiliza el catálogo local de demostración.');
@@ -34,7 +34,7 @@ export class ProductsService {
     }
   }
 
-  async getProduct(id: string | number): Promise<{ product: Product; source: ProductSource }> {
+  async getProduct(id: string | number): Promise<ProductDetailResult> {
     if (!/^[1-9]\d*$/.test(String(id)) || !Number.isSafeInteger(Number(id))) {
       throw new ProductNotFoundError();
     }
@@ -54,6 +54,32 @@ export class ProductsService {
       }
       throw error;
     }
+  }
+
+  /** La gestión siempre consulta la base de datos; nunca presenta datos de respaldo como persistidos. */
+  async getInventory(): Promise<Product[]> {
+    const { data } = await api.get<ProductsResponse>('/products', { params: { limit: 0 } });
+    return data.products;
+  }
+
+  async createProduct(input: ProductInput): Promise<Product> {
+    const { data } = await api.post<Product>('/products', input);
+    return data;
+  }
+
+  async updateProduct(id: number, input: ProductInput): Promise<Product> {
+    this.requireProductId(id);
+    const { data } = await api.put<Product>(`/products/${id}`, input);
+    return data;
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    this.requireProductId(id);
+    await api.delete(`/products/${id}`);
+  }
+
+  private requireProductId(id: number): void {
+    if (!Number.isSafeInteger(id) || id < 1) throw new ProductNotFoundError();
   }
 
   private canUseLocalProducts(error: unknown): boolean {

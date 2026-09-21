@@ -1,6 +1,6 @@
 .with-navigation { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 .app-navigation { position: absolute; bottom: 0; background: #fff; border-top: 1px solid #e9e6f1; padding-bottom: env(safe-area-inset-bottom, 0px); }
-nav { height: 72px; display: grid; grid-template-columns: repeat(3, 1fr); max-width: 600px; margin: auto; }
+nav { height: 72px; display: grid; grid-template-columns: repeat(4, 1fr); max-width: 640px; margin: auto; }
 nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: #8b849a; text-decoration: none; font-size: 11px; font-weight: 600; position: relative; }
 nav a.active { color: #6b52d8; }
 nav a.active::before { position: absolute; top: 0; content: ''; height: 3px; width: 36px; background: #6b52d8; border-radius: 0 0 5px 5px; }

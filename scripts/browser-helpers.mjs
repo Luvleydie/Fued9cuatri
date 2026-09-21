@@ -47,7 +47,7 @@ export async function loginReal(page) {
   const loginResponse = page.waitForResponse((response) => response.url().endsWith('/auth/login') && response.request().method() === 'POST');
   await page.getByRole('button', { name: /^Ingresar/ }).click();
   const response = await loginResponse;
-  assert.equal(response.status(), 200, 'DummyJSON debe aceptar las credenciales públicas');
+  assert.equal(response.status(), 200, 'La API de NovaCart debe aceptar las credenciales de demostración');
   await expect(page).toHaveURL(/\/home$/);
   await expect(page.locator('.product-card:visible').first()).toBeVisible();
   await expect(page.getByText('Estás viendo el catálogo de respaldo.', { exact: true })).toHaveCount(0);

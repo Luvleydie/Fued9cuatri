@@ -20,3 +20,15 @@ export interface ProductsResponse {
 }
 
 export type ProductSource = 'api' | 'local';
+
+/** Objeto que consume el catálogo, incluyendo el origen visible de los datos. */
+export interface ProductListResult {
+  products: Product[];
+  source: ProductSource;
+}
+
+/** Objeto que consume la pantalla de detalle. */
+export interface ProductDetailResult {
+  product: Product;
+  source: ProductSource;
+}

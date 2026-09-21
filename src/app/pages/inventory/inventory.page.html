@@ -1,0 +1,61 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>Gestión de productos</ion-title>
+    <ion-buttons slot="end"><ion-button routerLink="/home">Ver catálogo</ion-button></ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page-shell">
+    <section class="inventory-heading" aria-labelledby="inventory-title">
+      <div><p class="eyebrow">ADMINISTRA TU COLECCIÓN</p><h1 id="inventory-title">Tu inventario, al día.</h1><p class="muted">Crea productos y mantén sus precios y existencias actualizados.</p></div>
+      <ion-button (click)="startCreate()" [disabled]="busy()"><ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>Nuevo producto</ion-button>
+    </section>
+
+    @if (message()) { <div class="feedback success" role="status">{{ message() }}</div> }
+    @if (error()) { <div class="feedback error" role="alert">{{ error() }}</div> }
+
+    <div class="inventory-layout" [class.editing]="formOpen()" [attr.aria-busy]="busy()">
+      @if (formOpen()) {
+        <section class="editor-panel" aria-labelledby="editor-title">
+          <p class="eyebrow">{{ editingId() === null ? 'AMPLÍA EL CATÁLOGO' : 'ACTUALIZA EL CATÁLOGO' }}</p>
+          <h2 id="editor-title">{{ editingId() === null ? 'Nuevo producto' : 'Editar producto' }}</h2>
+          <p class="form-help">Los campos marcados con * son obligatorios.</p>
+          <form (ngSubmit)="saveProduct()" novalidate>
+            <fieldset [disabled]="busy()">
+              <div class="field"><label for="product-title">Nombre *</label><input id="product-title" name="title" [(ngModel)]="form.title" required maxlength="160" [attr.aria-invalid]="!!fieldErrors().title" [attr.aria-describedby]="fieldErrors().title ? 'title-error' : null" />@if (fieldErrors().title) { <p class="field-error" id="title-error">{{ fieldErrors().title }}</p> }</div>
+              <div class="field"><label for="product-description">Descripción *</label><textarea id="product-description" name="description" [(ngModel)]="form.description" required maxlength="2000" rows="4" [attr.aria-invalid]="!!fieldErrors().description" [attr.aria-describedby]="fieldErrors().description ? 'description-error' : null"></textarea>@if (fieldErrors().description) { <p class="field-error" id="description-error">{{ fieldErrors().description }}</p> }</div>
+              <div class="field"><label for="product-category">Categoría *</label><input id="product-category" name="category" [(ngModel)]="form.category" required maxlength="80" [attr.aria-invalid]="!!fieldErrors().category" [attr.aria-describedby]="fieldErrors().category ? 'category-error' : null" />@if (fieldErrors().category) { <p class="field-error" id="category-error">{{ fieldErrors().category }}</p> }</div>
+              <div class="field-row">
+                <div class="field"><label for="product-price">Precio (USD) *</label><input id="product-price" name="price" type="number" inputmode="decimal" [(ngModel)]="form.price" required min="0" max="1000000" step="0.01" [attr.aria-invalid]="!!fieldErrors().price" [attr.aria-describedby]="fieldErrors().price ? 'price-error' : null" />@if (fieldErrors().price) { <p class="field-error" id="price-error">{{ fieldErrors().price }}</p> }</div>
+                <div class="field"><label for="product-stock">Existencias *</label><input id="product-stock" name="stock" type="number" inputmode="numeric" [(ngModel)]="form.stock" required min="0" max="1000000" step="1" [attr.aria-invalid]="!!fieldErrors().stock" [attr.aria-describedby]="fieldErrors().stock ? 'stock-error' : null" />@if (fieldErrors().stock) { <p class="field-error" id="stock-error">{{ fieldErrors().stock }}</p> }</div>
+              </div>
+              <div class="field"><label for="product-brand">Marca</label><input id="product-brand" name="brand" [(ngModel)]="form.brand" maxlength="120" [attr.aria-invalid]="!!fieldErrors().brand" [attr.aria-describedby]="fieldErrors().brand ? 'brand-error' : null" />@if (fieldErrors().brand) { <p class="field-error" id="brand-error">{{ fieldErrors().brand }}</p> }</div>
+              <div class="field"><label for="product-thumbnail">Dirección de imagen</label><input id="product-thumbnail" name="thumbnail" [(ngModel)]="form.thumbnail" maxlength="2000" placeholder="https://ejemplo.com/producto.jpg" [attr.aria-invalid]="!!fieldErrors().thumbnail" aria-describedby="thumbnail-help thumbnail-error" /><p class="form-help" id="thumbnail-help">Opcional. Puedes agregar una imagen disponible en internet.</p><p class="field-error" id="thumbnail-error">{{ fieldErrors().thumbnail }}</p></div>
+              <div class="form-actions"><button class="save-button" type="submit">{{ phase() === 'saving' ? 'Guardando…' : editingId() === null ? 'Crear producto' : 'Guardar cambios' }}</button><button class="cancel-button" type="button" (click)="cancelEdit()">Cancelar</button></div>
+            </fieldset>
+          </form>
+        </section>
+      }
+
+      <section class="inventory-list" aria-labelledby="list-title">
+        <div class="list-heading"><div><h2 id="list-title">Productos</h2><p class="muted">{{ filteredProducts().length }} de {{ products().length }} productos</p></div><ion-button fill="outline" size="small" (click)="loadInventory()" [disabled]="busy()" aria-label="Actualizar inventario"><ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>Actualizar</ion-button></div>
+        <ion-searchbar [value]="query()" (ionInput)="query.set($event.detail.value ?? '')" placeholder="Buscar por nombre, categoría o marca" aria-label="Buscar en inventario" [debounce]="150"></ion-searchbar>
+        @if (phase() === 'loading') {
+          <div class="empty-state" role="status"><ion-spinner name="crescent"></ion-spinner><p>Cargando inventario…</p></div>
+        } @else if (filteredProducts().length) {
+          <div class="product-list">
+            @for (product of filteredProducts(); track product.id) {
+              <article class="inventory-product">
+                <div class="product-summary"><p class="category">{{ product.category }}</p><h3><a [routerLink]="['/product', product.id]">{{ product.title }}</a></h3><p class="muted">{{ product.brand || 'Sin marca' }}</p><div class="product-values"><strong>{{ product.price | currency:'USD':'symbol':'1.2-2' }} USD</strong><span class="stock" [class.sold-out]="product.stock === 0">{{ product.stock ?? 0 }} en existencia</span></div></div>
+                <div class="product-actions"><ion-button fill="outline" size="small" (click)="startEdit(product)" [disabled]="busy()" [attr.aria-label]="'Editar ' + product.title"><ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>Editar</ion-button><ion-button fill="clear" color="danger" size="small" (click)="confirmDelete(product)" [disabled]="busy()" [attr.aria-label]="'Eliminar ' + product.title"><ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>Eliminar</ion-button></div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="empty-state"><ion-icon name="cube-outline" aria-hidden="true"></ion-icon><h2>{{ error() ? 'Inventario no disponible' : query() ? 'Sin coincidencias' : 'Empieza tu catálogo' }}</h2><p>{{ error() ? 'Usa Actualizar para volver a consultar los productos.' : query() ? 'Prueba con otro nombre, categoría o marca.' : 'Agrega tu primer producto con el botón Nuevo producto.' }}</p></div>
+        }
+      </section>
+    </div>
+  </main>
+</ion-content>

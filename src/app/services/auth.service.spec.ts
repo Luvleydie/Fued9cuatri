@@ -20,7 +20,7 @@ describe('AuthService', () => {
   async function login(service: AuthService): Promise<string> {
     const accessToken = validToken();
     vi.spyOn(api, 'post').mockResolvedValue({ data: { ...publicUser, accessToken, refreshToken: 'refresh-secret', password: 'demo-secret' } });
-    await service.login(' emilys ', 'emilyspass');
+    await service.login({ username: ' emilys ', password: 'emilyspass' });
     return accessToken;
   }
 
@@ -44,7 +44,7 @@ describe('AuthService', () => {
   it('rechaza el login fallido y no crea una sesión local', async () => {
     vi.spyOn(api, 'post').mockRejectedValue(new Error('invalid credentials'));
     const service = TestBed.inject(AuthService);
-    await expect(service.login('wrong', 'wrong')).rejects.toThrow();
+    await expect(service.login({ username: 'wrong', password: 'wrong' })).rejects.toThrow();
     expect(service.isAuthenticated()).toBe(false);
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
@@ -81,10 +81,20 @@ describe('AuthService', () => {
     await login(service);
     localStorage.setItem('novacart.cart', '[{"demo":true}]');
     await service.logout();
+    expect(api.post).toHaveBeenLastCalledWith('/auth/logout');
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     expect(localStorage.getItem(USER_KEY)).toBeNull();
     expect(service.user()).toBeNull();
     expect(localStorage.getItem('novacart.cart')).toBe('[{"demo":true}]');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/login', { replaceUrl: true });
+  });
+  it('limpia la sesión local aunque no se pueda contactar con logout', async () => {
+    const service = TestBed.inject(AuthService);
+    await login(service);
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('Sin conexión'));
+    await service.logout();
+    expect(service.user()).toBeNull();
+    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     expect(router.navigateByUrl).toHaveBeenCalledWith('/login', { replaceUrl: true });
   });
 });

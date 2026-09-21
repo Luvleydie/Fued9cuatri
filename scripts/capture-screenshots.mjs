@@ -46,8 +46,14 @@ try {
   await expect(page.getByText('emilys', { exact: true })).toBeVisible();
   await expect(page.locator('.profile-loading:visible')).toHaveCount(0);
   await capture('05-profile.png');
+  await navigate(page, '/inventory');
+  await expect(page.locator('.inventory-product').first()).toBeVisible();
+  await capture('06-inventory.png');
+  await page.getByRole('button', { name: 'Editar Essence Mascara Lash Princess', exact: true }).click();
+  await expect(page.locator('#product-title')).toBeVisible();
+  await capture('07-product-form.png');
   assertNoRuntimeErrors(diagnostics);
-  console.log(JSON.stringify({ source: 'DummyJSON real, sin mocks', viewport: '1440x1200', screenshots: saved }, null, 2));
+  console.log(JSON.stringify({ source: 'API NovaCart y SQLite reales, sin mocks', viewport: '1440x1200', screenshots: saved }, null, 2));
 } finally {
   await context.close();
   await browser.close();

@@ -28,6 +28,10 @@ const routes: Routes = [
   },
   { path: 'products', redirectTo: 'home', pathMatch: 'full' },
   {
+    path: 'inventory', canActivate: [authGuard],
+    loadChildren: () => import('./pages/inventory/inventory.module').then(m => m.InventoryPageModule)
+  },
+  {
     path: 'profile', canActivate: [authGuard],
     loadChildren: () => import('./pages/profile/profile.module').then(m => m.ProfilePageModule)
   },

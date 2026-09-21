@@ -78,3 +78,6 @@ Thumbs.db
 /artifacts
 /.node_modules-old
 /.package-lock.old.json
+
+# Base SQLite local y sus archivos auxiliares
+/server/data/

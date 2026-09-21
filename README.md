@@ -1,205 +1,174 @@
 # NovaCart
 
-Una pequeña aplicación de comercio electrónico para explorar productos, consultar detalles y gestionar un carrito de compras. Proyecto académico desarrollado con **Ionic + Angular basado en NgModules + TypeScript + Axios**.
+Aplicación académica de comercio electrónico con **Ionic, Angular, TypeScript, Axios y una API propia con SQLite**. Incluye login, catálogo, detalle, carrito, perfil e inventario para crear, consultar, actualizar y eliminar productos persistidos.
 
-**Estado: Proyecto académico funcional.** El proceso de compra es una simulación y no procesa pagos reales.
+**Entrega revisada: 21 de septiembre de 2026.** La capa de acceso a datos está formada por servicios inyectables de Angular: `ProductsService`, `AuthService` y `CartService`. Las pantallas Ionic consumen sus métodos y objetos tipados.
 
-## Objetivo
+## Ejecutar el proyecto
 
-Desarrollar una aplicación e-commerce utilizando Ionic y Angular con arquitectura NgModules, integración de API REST mediante Axios, autenticación de usuarios y gestión local de un carrito de compras. El código mantiene una estructura sencilla y explicable en clase.
-
-## Tecnologías y versiones verificadas
-
-| Tecnología | Versión utilizada |
-| --- | --- |
-| Node.js | 24.19.0 |
-| npm | 11.19.1 |
-| Ionic CLI | 7.2.1 |
-| Ionic Angular | 9.0.3 |
-| Angular | 22.1.6 |
-| Angular CLI / Build | 22.1.8 |
-| TypeScript | 6.0.3 |
-| Axios | 1.20.0 |
-| Capacitor Core / CLI | 8.4.3 |
-| Vitest | 4.1.11 |
-| Playwright | 1.63.0 |
-| Git | 2.55.0.windows.3 |
-| API REST | DummyJSON |
-| Repositorio | GitHub |
-
-Versiones obtenidas con `node --version`, `npm --version`, `ionic --version`, `npx ng version`, `npm list --depth=0` y `git --version`. El archivo `package-lock.json` conserva la resolución de las dependencias.
-
-## Instalación y ejecución
-
-Se recomienda Node.js 24.19.0 o una versión compatible de Node 24 desde 24.15.0 y npm 11.19.1 o posterior. Instala Ionic CLI si no está disponible:
+Desde la raíz del repositorio, con Node.js 24 desde 24.15.0 y npm 11.19.1 o posterior:
 
 ```bash
-npm install -g @ionic/cli@7.2.1
-git clone https://github.com/Luvleydie/Fued9cuatri.git
-cd Fued9cuatri
-npm install
-ionic serve
+npm ci
+npm run dev
 ```
 
-Abre `http://localhost:8100`. Los archivos de Ionic están directamente en la raíz del repositorio; no hay una subcarpeta adicional de la aplicación.
-
-Para reproducir exactamente las dependencias del lockfile también puedes utilizar `npm ci` en lugar de `npm install`.
-
-Para generar la compilación de producción:
-
-```bash
-ionic build
-```
-
-El resultado se escribe en `www/`, carpeta excluida de Git. `capacitor.config.ts` proporciona la base híbrida y apunta a ese directorio. Esta entrega se ejecuta en navegador; no incluye proyectos nativos, APK/IPA ni publicación en tiendas.
-
-## Usuario de demostración
-
-Credenciales comprobadas contra la API pública de DummyJSON:
+Abre **http://localhost:8100**. Este comando compila la API TypeScript y ejecuta el servidor en el puerto 3001 y Angular en el 8100. La base de datos y los datos de demostración se crean automáticamente en el primer arranque. No se requiere instalar un servidor de base de datos ni Ionic CLI global.
 
 ```text
 Usuario: emilys
 Contraseña: emilyspass
 ```
 
-En el login, **Usar cuenta de demostración** rellena estos datos y **Ingresar** realiza la petición real. Es una cuenta pública de prueba; no corresponde a credenciales privadas. DummyJSON puede cambiar sus datos de demostración en el futuro.
+El botón **Usar cuenta de demostración** rellena esos datos; **Ingresar** autentica contra la API local. Son credenciales de la cuenta académica incluida en la inicialización.
 
-## Funcionalidades y navegación
+Para trabajar con los procesos por separado:
 
-| Vista | Ruta | Funcionalidad |
+```bash
+# Terminal 1: compilar e iniciar la API
+npm run api
+```
+
+```bash
+# Terminal 2: iniciar Angular
+npm start -- --port 8100
+```
+
+Angular recarga los cambios del frontend. Después de modificar el servidor TypeScript, reinicia `npm run api` o `npm run dev` para volver a compilarlo.
+
+Para probar la compilación de producción, detén los procesos anteriores y ejecuta:
+
+```bash
+npm run serve:prod
+```
+
+Abre **http://127.0.0.1:3001**. El mismo servidor entrega `www/` y `/api`. También puedes compilar sin iniciar procesos mediante `npm run build` y `npm run build:api`.
+
+## Pantallas y objetos TypeScript
+
+| Pantalla | Ruta | Objetos e interfaces | Funcionalidad |
+| --- | --- | --- | --- |
+| Login | `/login` | `LoginCredentials`, `LoginRequest`, `AuthResponse`, `User`. | Validar formulario, iniciar sesión y manejar errores. |
+| Catálogo | `/home` | `Product[]`, `ProductListResult`. | Consultar y buscar por título, categoría o marca; agregar al carrito. |
+| Detalle | `/product/:id` | `Product`, `ProductDetailResult`. | Consultar características y existencias de un producto. |
+| Carrito | `/cart` | `CartItem[]`, `Product`. | Agregar, cambiar cantidades, eliminar y vaciar; compra simulada. |
+| Perfil | `/profile` | `User`. | Consultar perfil y cerrar sesión. |
+| Inventario | `/inventory` | `Product[]`, `ProductInput`, `ApiError`. | CRUD persistente de productos, validación y confirmación de eliminación. |
+
+`PagePhase` tipa las fases `idle`, `loading`, `saving`, `success` y `error` en Login e Inventario. Las otras páginas conservan indicadores booleanos de carga o diálogo. Las interfaces se comparten entre servicios, objetos y pantallas; [INTERFACES_TYPESCRIPT.md](docs/INTERFACES_TYPESCRIPT.md) enumera sus nombres, campos, archivos y ejemplos concretos.
+
+Las rutas de las pantallas privadas están protegidas y `/products` redirige a `/home`. La navegación incluye Productos, Carrito, Gestión y Perfil; **Gestión** abre la pantalla Inventario.
+
+## Probar el CRUD desde la pantalla
+
+1. Inicia sesión y entra en **Gestión (Inventario)**.
+2. Pulsa **Nuevo producto**, completa nombre, descripción, categoría, precio y existencias, y guarda.
+3. Busca el producto en el listado o en **Productos** para consultarlo.
+4. Vuelve a **Gestión (Inventario)**, selecciona **Editar**, cambia sus datos y guarda.
+5. Recarga la página para comprobar que la modificación permanece en SQLite.
+6. Selecciona **Eliminar** en el producto de práctica y confirma; desaparecerá del catálogo.
+
+El servidor valida las solicitudes aunque se omita el formulario. El precio acepta hasta dos decimales y las existencias son enteros no negativos. Las escrituras no se simulan si falla la API. Cualquier usuario autenticado puede administrar los productos; esta entrega no implementa roles.
+
+## APIs creadas
+
+Base local: `http://127.0.0.1:3001/api`. El cliente Axios utiliza `/api`, con proxy de Angular durante el desarrollo y el mismo origen en el compilado.
+
+| Método | Endpoint | Resultado |
 | --- | --- | --- |
-| Login | `/login` | Validación, autenticación real y errores amigables. |
-| Productos | `/home` | Catálogo completo y búsqueda por nombre, categoría o marca. `/products` redirige aquí. |
-| Detalle | `/product/:id` | Imagen, descripción, precio, categoría, marca, descuento, rating y stock. |
-| Carrito | `/cart` | Agregar, modificar cantidades, eliminar, vaciar y finalizar una compra simulada. |
-| Perfil | `/profile` | Información obtenida de la API y cierre de sesión. |
+| `GET` | `/api/health` | Estado del servidor. |
+| `POST` | `/api/auth/login` | Usuario y `accessToken`. |
+| `GET` | `/api/auth/me` | Perfil autenticado. |
+| `POST` | `/api/auth/logout` | Revocar sesión. |
+| `GET` | `/api/products` | Listado completo de productos. |
+| `GET` | `/api/products/:id` | Consultar un producto. |
+| `POST` | `/api/products` | Crear un producto. |
+| `PUT` | `/api/products/:id` | Actualizar sus campos editables. |
+| `DELETE` | `/api/products/:id` | Eliminar un producto. |
 
-- Persistencia de sesión y carrito después de actualizar el navegador.
-- Guards para las rutas privadas y redirección de rutas desconocidas.
-- Navegación inferior con contador de unidades del carrito.
-- Diseño adaptable a teléfono, tablet y escritorio mediante Ionic Grid.
-- Estados de carga, vacío, error y reintento; Toasts y Alerts de Ionic.
-- Cantidades enteras positivas, límites de stock y totales calculados en centavos.
+Perfil, logout y todas las operaciones de productos requieren `Authorization: Bearer <accessToken>`. El [documento de API](docs/API.md) incluye cuerpos, respuestas, validaciones y códigos HTTP. [api-ejemplos.http](docs/api-ejemplos.http) permite recorrer login y CRUD con el token y el identificador de las respuestas.
 
-Los precios se muestran en **USD**, sin añadir impuestos ni envíos. `price` es el importe utilizado en el carrito; `discountPercentage` se muestra como dato informativo y no se descuenta otra vez. El stock representa una referencia de demostración y no una reserva de inventario.
+## Base de datos y persistencia
 
-## Estructura del proyecto
+[server/schema.sql](server/schema.sql) define `users`, `sessions` y `products`. La base predeterminada es `server/data/novacart.sqlite`; los precios se guardan en centavos. `sessions.user_id` y `products.created_by` referencian a `users.id`. El [modelo de datos](docs/MODELO_DATOS.md) incluye el diagrama Mermaid, el diccionario de entidades y su correspondencia con los objetos TypeScript.
+
+La primera inicialización inserta la cuenta demo y seis productos con imágenes locales. Los cambios del inventario permanecen después de reiniciar. Los productos borrados no se vuelven a insertar por reiniciar el servidor. `DB_PATH` permite usar otro archivo SQLite y `PORT` cambia el puerto al ejecutar la API por separado.
+
+La contraseña se guarda como hash con sal; las sesiones son revocables y sus tokens se comprueban en el servidor. El archivo `server/data/novacart.sqlite.secret` conserva la clave de firma junto a la base. Esos archivos de ejecución están excluidos de Git.
+
+El navegador guarda `novacart.accessToken`, `novacart.user` y `novacart.cart`. Cerrar sesión elimina token y usuario y conserva el carrito. El carrito contiene copias locales de los productos; no representa una reserva de inventario. **La compra es una simulación: no procesa cobros, no crea pedidos ni descuenta stock en SQLite.** Los importes se muestran en USD.
+
+Ante errores de red o respuestas 5xx, catálogo y detalle pueden usar seis productos de respaldo con un aviso visible. Los errores 4xx no activan ese respaldo. Inventario y sus escrituras requieren la API.
+
+## Estructura
 
 ```text
 src/app/
-├── core/api/          # Axios y almacenamiento de sesión
-├── data/              # Seis productos de respaldo
-├── guards/            # Protección de rutas
-├── models/            # Interfaces TypeScript
-├── pages/             # Login, home, detalle, carrito y perfil
-├── services/          # AuthService, ProductsService y CartService
-├── app.module.ts
-└── app-routing.module.ts
-docs/                  # Documentación y capturas
-scripts/               # Verificación en navegador y capturas reproducibles
+  models/              Interfaces y tipos compartidos
+  core/api/            Cliente Axios y almacenamiento de sesión
+  services/            AuthService, ProductsService y CartService
+  guards/              Protección de rutas
+  pages/               Login, catálogo, detalle, carrito, perfil e inventario
+  data/                Productos de demostración y respaldo
+server/
+  schema.sql           Tablas, claves foráneas y restricciones
+  types.ts             Interfaces internas del servidor
+  database.ts          SQLite, inicialización y operaciones de persistencia
+  auth.ts              Verificación de contraseña y sesiones
+  validation.ts        Validación de entradas y errores HTTP
+  app.ts               Rutas HTTP y entrega del frontend
+  index.ts             Configuración y arranque
+  tests/               Comprobaciones de API
+scripts/               Arranque conjunto, navegador y capturas
+docs/                  Documentación académica y evidencia visual
 ```
 
-Cada página tiene su `*.module.ts` y `*-routing.module.ts`, además de TypeScript, HTML y SCSS. Los componentes declaran `standalone: false`. Las rutas usan `loadChildren` y los módulos importan `IonicModule` desde `@ionic/angular/lazy`, `CommonModule` y los módulos de formularios necesarios.
+Angular conserva NgModules y componentes `standalone: false`. Los objetos expuestos mediante signals actualizan las plantillas Ionic. Las interfaces de transporte de `src/app/models` también se importan desde el servidor; su validación durante la ejecución se implementa explícitamente.
 
-El starter de Angular 22 funciona sin Zone.js. Se usan signals sencillas para que los resultados asíncronos de Axios actualicen la interfaz. No se utiliza NgRx, un backend propio ni una base de datos externa.
-
-## Modelo inicial de datos
-
-| Modelo | Representa |
-| --- | --- |
-| `Product` | Información del producto ofrecido por DummyJSON. |
-| `User` | Datos básicos del usuario autenticado. |
-| `CartItem` | Un `Product` y una cantidad seleccionada. |
-| `AuthResponse` | Datos básicos del usuario, `accessToken` y `refreshToken` recibidos en el login. |
-
-Un carrito contiene varios `CartItem`; cada uno guarda un producto y su cantidad. La respuesta paginada se describe con `ProductsResponse`, y `ProductSource` permite distinguir datos de API y datos locales.
-
-[Consultar el modelo completo y diagrama Mermaid](docs/MODELO_DATOS.md).
-
-## API REST y Axios
-
-Base: [DummyJSON](https://dummyjson.com). Se configura en los archivos de entorno y se consume mediante una única instancia de Axios con timeout de 15 segundos y encabezados JSON.
-
-| Método | Endpoint | Uso |
-| --- | --- | --- |
-| POST | `/auth/login` | Enviar `username`, `password` y duración de sesión. |
-| GET | `/auth/me` | Consultar el perfil con `Authorization: Bearer accessToken`. |
-| GET | `/products?limit=0` | Obtener la colección completa para la búsqueda local. |
-| GET | `/products/:id` | Consultar un producto específico. |
-
-El interceptor agrega automáticamente el token vigente. La aplicación comprueba su vencimiento al proteger rutas; una respuesta 401/403 del perfil termina la sesión. La duración solicitada es de 60 minutos y no se renueva automáticamente.
-
-Ante errores de red o respuestas 5xx de productos, se utilizan seis productos locales con imágenes incluidas en el repositorio y un aviso visible. **Los errores 4xx y los identificadores inexistentes no activan ese respaldo.** El botón Reintentar vuelve a consultar la API. El login siempre requiere una conexión real.
-
-## Persistencia y límites académicos
-
-Las claves son `novacart.accessToken`, `novacart.user` y `novacart.cart`. Cerrar sesión elimina token y usuario, conservando el carrito del navegador. Los datos corruptos se descartan de forma segura.
-
-No se almacenan contraseñas ni el payload completo de `/auth/me`. Se seleccionan expresamente los campos del modelo `User`; tampoco se persiste el refresh token. Guardar access tokens en `localStorage` es una simplificación permitida para esta demostración académica, no una propuesta de autenticación para producción.
-
-## Pruebas y capturas reproducibles
+## Verificación
 
 ```bash
 npm test -- --watch=false
+npm run test:api
 npm run lint
-ionic build
+npm run build
+npm run build:api
 ```
 
-Para las pruebas de navegador, mantén la aplicación ejecutándose en otra terminal:
-
-```bash
-ionic serve --no-open
-```
-
-Después ejecuta:
+Con `npm run dev` ejecutándose en otra terminal:
 
 ```bash
 npm run test:e2e
 npm run screenshots
 ```
 
-Los scripts utilizan Chrome instalado. Si no está disponible, instala Chromium con `npx playwright install chromium`; el script recurrirá a él. Playwright es sólo una dependencia de desarrollo y no interviene en la ejecución normal de NovaCart.
+Los scripts de navegador usan Chrome instalado o Chromium de Playwright; si ninguno está disponible, ejecuta `npx playwright install chromium`. La variable `BASE_URL` permite cambiar la dirección; en PowerShell: `$env:BASE_URL = 'http://localhost:8100'`. `CHROME_CHANNEL` permite seleccionar un canal de navegador compatible.
 
-Puedes cambiar la dirección con la variable `BASE_URL`. Por ejemplo, en PowerShell: `$env:BASE_URL = 'http://localhost:8100'`. La variable opcional `CHROME_CHANNEL` permite elegir otro canal compatible, como `msedge`.
+[VERIFICACION.md](docs/VERIFICACION.md) registra los resultados realmente ejecutados y sus límites. Los archivos temporales de revisión se escriben en `artifacts/browser/`; las capturas de entrega están en `docs/screenshots/`.
 
-`verify-app.mjs` comprueba recorridos reales y casos de fallo controlados; escribe resultados y capturas de revisión en `artifacts/browser/`, excluido de Git. Los datos de sesión del navegador se mantienen únicamente en memoria. `capture-screenshots.mjs` genera las cinco capturas de entrega sin interceptar ni simular las peticiones de la API.
+## Documentos de entrega
 
-[Resultados de las comprobaciones y criterios de aceptación](docs/VERIFICACION.md).
+- [Interfaces TypeScript, objetos y fases de las pantallas](docs/INTERFACES_TYPESCRIPT.md).
+- [Servicios Angular de acceso a datos, inyección y operaciones CRUD](docs/SERVICIOS_DATOS.md).
+- [APIs, autenticación y operaciones CRUD](docs/API.md), con [peticiones de ejemplo](docs/api-ejemplos.http).
+- [Modelo de datos y diagramas de entidades y clases](docs/MODELO_DATOS.md).
+- [Cómo se utilizó IA para generar y revisar el modelo](docs/USO_IA_MODELO.md).
+- [Verificación de funcionamiento](docs/VERIFICACION.md).
 
-## Capturas de ejecución
+[EVIDENCIA_IA.md](docs/EVIDENCIA_IA.md) y [PROMPTS_DESARROLLO.md](docs/PROMPTS_DESARROLLO.md) conservan el registro histórico anterior del 11 de septiembre de 2026, cuando se usaba DummyJSON. Los documentos enlazados en esta sección describen la versión actual con servidor propio.
 
-### Login
+## Capturas de la aplicación
 
-![Login de NovaCart](docs/screenshots/01-login.png)
+| Login | Catálogo |
+| --- | --- |
+| ![Login](docs/screenshots/01-login.png) | ![Catálogo](docs/screenshots/02-products.png) |
 
-### Productos
+| Detalle | Carrito |
+| --- | --- |
+| ![Detalle](docs/screenshots/03-product-detail.png) | ![Carrito](docs/screenshots/04-cart.png) |
 
-![Catálogo de productos de NovaCart](docs/screenshots/02-products.png)
+| Perfil | Inventario |
+| --- | --- |
+| ![Perfil](docs/screenshots/05-profile.png) | ![Inventario](docs/screenshots/06-inventory.png) |
 
-### Detalle
-
-![Detalle de un producto](docs/screenshots/03-product-detail.png)
-
-### Carrito
-
-![Carrito con cantidades y total](docs/screenshots/04-cart.png)
-
-### Perfil
-
-![Perfil del usuario autenticado](docs/screenshots/05-profile.png)
-
-## Uso de Inteligencia Artificial
-
-La IA apoyó la estructura inicial, modelos, consumo de API, interfaz, depuración, pruebas y documentación. Las instrucciones se reconstruyen a partir de las fases realizadas y se distinguen de una transcripción literal.
-
-- [Consultar evidencia de prompts y evaluación del código](docs/EVIDENCIA_IA.md).
-- [Documento breve: prompt, objetivo y resultado final](docs/PROMPTS_DESARROLLO.md).
-- [Modelo de datos](docs/MODELO_DATOS.md).
-
-## Decisiones y correcciones del entorno
-
-La descarga inicial de Ionic CLI se interrumpió por `ECONNRESET`; se recuperó el mismo starter oficial mediante PowerShell. Se actualizó npm 11.2.0 a 11.19.1 por un fallo interno de resolución de dependencias y se realizó una instalación limpia al alinear los paquetes Angular 22.1.6 con las herramientas 22.1.8.
-
-Capacitor Core y CLI se fijaron en 8.4.3 para evitar una dependencia vulnerable introducida por la rama 8.5 del CLI. Se ajustaron los navegadores objetivo y el presupuesto SCSS a 4 KB de aviso y 6 KB de error por componente, manteniendo las hojas pequeñas y la compilación sin advertencias de presupuesto.
-
-El repositorio conserva commits lógicos de inicialización, autenticación, catálogo, detalle/carrito, perfil/navegación y documentación.
+![Formulario de producto](docs/screenshots/07-product-form.png)

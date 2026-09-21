@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { addIcons } from 'ionicons';
-import { gridOutline, bagHandleOutline, personOutline, logOutOutline, shieldCheckmarkOutline } from 'ionicons/icons';
+import { gridOutline, bagHandleOutline, personOutline, logOutOutline, shieldCheckmarkOutline, createOutline } from 'ionicons/icons';
 import { AuthService } from './services/auth.service';
 import { CartService } from './services/cart.service';
 
@@ -20,7 +20,7 @@ export class AppComponent {
   readonly showNavigation = computed(() => Boolean(this.auth.user()) && !this.currentUrl().startsWith('/login'));
 
   constructor() {
-    addIcons({ gridOutline, bagHandleOutline, personOutline, logOutOutline, shieldCheckmarkOutline });
+    addIcons({ gridOutline, bagHandleOutline, personOutline, logOutOutline, shieldCheckmarkOutline, createOutline });
     this.router.events.pipe(takeUntilDestroyed()).subscribe(event => {
       if (event instanceof NavigationEnd) this.currentUrl.set(event.urlAfterRedirects);
     });

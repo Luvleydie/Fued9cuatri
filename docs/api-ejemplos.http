@@ -1,0 +1,92 @@
+# NovaCart: ejecutar cada petición en orden.
+# Las respuestas nombradas usan la sintaxis de REST Client.
+# En otro cliente, copiar manualmente el accessToken y el id del producto creado.
+@baseUrl = http://127.0.0.1:3001/api
+@token = {{login.response.body.$.accessToken}}
+@productId = {{createProduct.response.body.$.id}}
+
+### 1. Comprobar servidor: 200
+GET {{baseUrl}}/health
+
+### 2. Iniciar sesión: 200
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "emilys",
+  "password": "emilyspass",
+  "expiresInMins": 60
+}
+
+### 3. Consultar perfil: 200
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### 4. READ - Listar: 200, ProductsResponse
+GET {{baseUrl}}/products?limit=0
+Authorization: Bearer {{token}}
+
+### 5. CREATE - Crear: 201, Product con id asignado por SQLite
+# @name createProduct
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Cuaderno de TypeScript",
+  "description": "Cuaderno de 100 hojas para apuntes.",
+  "category": "papeleria",
+  "price": 8.5,
+  "stock": 20,
+  "brand": "NovaCart",
+  "thumbnail": "assets/products/product-placeholder.svg"
+}
+
+### 6. READ - Consultar el producto creado: 200
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+### 7. UPDATE - Sustituir campos editables: 200
+PUT {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Cuaderno de TypeScript actualizado",
+  "description": "Cuaderno de 100 hojas, edición de práctica CRUD.",
+  "category": "papeleria",
+  "price": 9.25,
+  "stock": 15,
+  "brand": "NovaCart",
+  "thumbnail": "assets/products/product-placeholder.svg"
+}
+
+### 8. Validación: 400, no modifica el producto
+PUT {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Entrada inválida",
+  "description": "El stock negativo debe rechazarse.",
+  "category": "papeleria",
+  "price": 9.25,
+  "stock": -1
+}
+
+### 9. DELETE - Eliminar sólo el producto creado en el paso 5: 204
+DELETE {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+### 10. Confirmar eliminación: 404
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+### 11. Revocar sesión: 204
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+
+### 12. Confirmar revocación: 401
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}

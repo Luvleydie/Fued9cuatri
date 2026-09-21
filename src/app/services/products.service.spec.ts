@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AxiosError, CanceledError } from 'axios';
 import api from '../core/api/axios-client';
 import { MOCK_PRODUCTS } from '../data/mock-products';
+import { ProductInput } from '../models/product-input.model';
 import { filterProducts, ProductNotFoundError, ProductsService } from './products.service';
 
 describe('ProductsService', () => {
@@ -77,5 +78,68 @@ describe('ProductsService', () => {
     expect(filterProducts(products, 'CALVIN')).toEqual([products[1]]);
     expect(filterProducts(products, '')).toEqual(products);
     expect(filterProducts(products, 'sin coincidencias')).toEqual([]);
+  });
+
+  it('consulta inventario persistido sin transformar la respuesta de productos', async () => {
+    const get = vi.spyOn(api, 'get').mockResolvedValue({ data: { products: [MOCK_PRODUCTS[0]], total: 1, skip: 0, limit: 1 } });
+    expect(await service.getInventory()).toEqual([MOCK_PRODUCTS[0]]);
+    expect(get).toHaveBeenCalledWith('/products', { params: { limit: 0 } });
+  });
+
+  it.each(['ERR_NETWORK', 'ECONNABORTED'])('no utiliza respaldo de demostración al gestionar inventario ante %s', async (code) => {
+    const error = new AxiosError('No connection', code);
+    vi.spyOn(api, 'get').mockRejectedValue(error);
+    await expect(service.getInventory()).rejects.toBe(error);
+  });
+
+  it('no utiliza respaldo al gestionar inventario cuando el servidor devuelve 503', async () => {
+    const error = Object.assign(new AxiosError('Unavailable'), { response: { status: 503 } });
+    vi.spyOn(api, 'get').mockRejectedValue(error);
+    await expect(service.getInventory()).rejects.toBe(error);
+  });
+
+  const input: ProductInput = { title: 'Cuaderno', description: 'Cuaderno de notas', category: 'Papelería', price: 14.5, stock: 8 };
+
+  it('crea un producto enviando ProductInput y devuelve el ID asignado por la API', async () => {
+    const saved = { ...input, id: 27 };
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ data: saved });
+    expect(await service.createProduct(input)).toEqual(saved);
+    expect(post).toHaveBeenCalledWith('/products', input);
+  });
+
+  it('actualiza un producto existente mediante PUT', async () => {
+    const saved = { ...input, id: 27, price: 19.95 };
+    const put = vi.spyOn(api, 'put').mockResolvedValue({ data: saved });
+    expect(await service.updateProduct(27, { ...input, price: 19.95 })).toEqual(saved);
+    expect(put).toHaveBeenCalledWith('/products/27', { ...input, price: 19.95 });
+  });
+
+  it('elimina por ID y acepta una respuesta sin contenido', async () => {
+    const remove = vi.spyOn(api, 'delete').mockResolvedValue({ status: 204 });
+    await expect(service.deleteProduct(27)).resolves.toBeUndefined();
+    expect(remove).toHaveBeenCalledWith('/products/27');
+  });
+
+  it('conserva los errores de validación y no simula creación exitosa', async () => {
+    const error = Object.assign(new AxiosError('Validation failed'), { response: { status: 400, data: { message: 'Precio inválido', errors: { price: 'Fuera de rango' } } } });
+    vi.spyOn(api, 'post').mockRejectedValue(error);
+    await expect(service.createProduct({ ...input, price: -1 })).rejects.toBe(error);
+  });
+
+  it('no simula actualización ni eliminación cuando falla la conexión', async () => {
+    const error = new AxiosError('Network error', 'ERR_NETWORK');
+    vi.spyOn(api, 'put').mockRejectedValue(error);
+    vi.spyOn(api, 'delete').mockRejectedValue(error);
+    await expect(service.updateProduct(27, input)).rejects.toBe(error);
+    await expect(service.deleteProduct(27)).rejects.toBe(error);
+  });
+
+  it.each([0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])('rechaza ID inválido %s antes de editar o eliminar', async (id) => {
+    const put = vi.spyOn(api, 'put');
+    const remove = vi.spyOn(api, 'delete');
+    await expect(service.updateProduct(id, input)).rejects.toBeInstanceOf(ProductNotFoundError);
+    await expect(service.deleteProduct(id)).rejects.toBeInstanceOf(ProductNotFoundError);
+    expect(put).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
   });
 });

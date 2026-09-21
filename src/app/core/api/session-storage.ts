@@ -28,8 +28,8 @@ export function readToken(): string | null {
   }
 }
 
-// /auth/me devuelve más campos, incluida una contraseña de demostración.
-// Conservamos exclusivamente la información necesaria para el perfil.
+// Validación del objeto recibido y proyección explícita de campos públicos.
+// Nunca conservar credenciales aunque un servidor devuelva campos adicionales.
 export function toUser(value: unknown): User {
   if (!value || typeof value !== 'object') throw new Error('Usuario no válido');
   const data = value as Record<string, unknown>;

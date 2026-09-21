@@ -4,6 +4,8 @@ import axios from 'axios';
 import api from '../core/api/axios-client';
 import { clearSession, readToken, readUser, toUser, TOKEN_KEY, USER_KEY } from '../core/api/session-storage';
 import { AuthResponse } from '../models/auth-response.model';
+import { LoginCredentials, LoginRequest } from '../models/auth-request.model';
+import { User } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -11,10 +13,11 @@ export class AuthService {
   private readonly currentUser = signal(readUser());
   readonly user = this.currentUser.asReadonly();
 
-  async login(username: string, password: string): Promise<void> {
-    const { data } = await api.post<AuthResponse>('/auth/login', {
-      username: username.trim(), password, expiresInMins: 60,
-    });
+  async login(credentials: LoginCredentials): Promise<void> {
+    const request: LoginRequest = {
+      username: credentials.username.trim(), password: credentials.password, expiresInMins: 60,
+    };
+    const { data } = await api.post<AuthResponse>('/auth/login', request);
     const user = toUser(data);
     try {
       localStorage.setItem(TOKEN_KEY, data.accessToken);
@@ -29,9 +32,14 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
-    clearSession();
-    this.currentUser.set(null);
-    await this.router.navigateByUrl('/login', { replaceUrl: true });
+    try {
+      if (readToken()) await api.post<void>('/auth/logout');
+    } catch { /* Sin conexión se cierra la sesión local; la remota caduca en una hora. */ }
+    finally {
+      clearSession();
+      this.currentUser.set(null);
+      await this.router.navigateByUrl('/login', { replaceUrl: true });
+    }
   }
 
   isAuthenticated(): boolean {
@@ -42,7 +50,7 @@ export class AuthService {
 
   getToken(): string | null { return readToken(); }
 
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<User> {
     try {
       const { data } = await api.get<unknown>('/auth/me');
       const user = toUser(data);
