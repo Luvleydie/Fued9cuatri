@@ -4,6 +4,8 @@ Aplicación académica de comercio electrónico con **Ionic, Angular, TypeScript
 
 **Entrega revisada: 21 de septiembre de 2026.** La capa de acceso a datos está formada por servicios inyectables de Angular: `ProductsService`, `AuthService` y `CartService`. Las pantallas Ionic consumen sus métodos y objetos tipados.
 
+La entrega de persistencia incluye un [documento PDF de dos páginas](output/pdf/NovaCart_Persistencia.pdf), su [fuente Markdown](docs/PERSISTENCIA.md), un [video de 61 segundos](docs/videos/persistencia-novacart.mp4) y los [prompts utilizados](docs/PROMPTS_PERSISTENCIA.md). El video muestra alta, modificación y eliminación con tres reaperturas reales del navegador y del servidor.
+
 ## Ejecutar el proyecto
 
 Desde la raíz del repositorio, con Node.js 24 desde 24.15.0 y npm 11.19.1 o posterior:
@@ -94,6 +96,8 @@ Perfil, logout y todas las operaciones de productos requieren `Authorization: Be
 
 La primera inicialización inserta la cuenta demo y seis productos con imágenes locales. Los cambios del inventario permanecen después de reiniciar. Los productos borrados no se vuelven a insertar por reiniciar el servidor. `DB_PATH` permite usar otro archivo SQLite y `PORT` cambia el puerto al ejecutar la API por separado.
 
+SQLite usa WAL y configura explícitamente `synchronous=FULL` al abrir la conexión. Los cambios se escriben al guardar, sin depender de un evento de cierre del navegador. Si falla el almacenamiento del carrito, la pantalla muestra un aviso y **Reintentar guardado** para conservar los cambios antes de salir.
+
 La contraseña se guarda como hash con sal; las sesiones son revocables y sus tokens se comprueban en el servidor. El archivo `server/data/novacart.sqlite.secret` conserva la clave de firma junto a la base. Esos archivos de ejecución están excluidos de Git.
 
 El navegador guarda `novacart.accessToken`, `novacart.user` y `novacart.cart`. Cerrar sesión elimina token y usuario y conserva el carrito. El carrito contiene copias locales de los productos; no representa una reserva de inventario. **La compra es una simulación: no procesa cobros, no crea pedidos ni descuenta stock en SQLite.** Los importes se muestran en USD.
@@ -146,8 +150,28 @@ Los scripts de navegador usan Chrome instalado o Chromium de Playwright; si ning
 
 [VERIFICACION.md](docs/VERIFICACION.md) registra los resultados realmente ejecutados y sus límites. Los archivos temporales de revisión se escriben en `artifacts/browser/`; las capturas de entrega están en `docs/screenshots/`.
 
+Para comprobar la persistencia con procesos nuevos:
+
+```bash
+npm run test:persistence
+```
+
+El comando compila la app y la API, crea una base SQLite y un perfil de navegador aislados dentro de `artifacts/persistence/`, y ejecuta cuatro sesiones con tres reaperturas completas. No requiere un servidor iniciado. Comprueba también el carrito sin reinyectar almacenamiento. Conserva los archivos temporales para diagnóstico, excluidos de Git.
+
+Para regenerar el video y su informe:
+
+```bash
+python -m pip install -r scripts/requirements-delivery.txt
+npx playwright install ffmpeg
+npm run video:persistence
+```
+
+Python sólo es necesario para preparar los entregables. `python scripts/render-persistence-document.py` genera el PDF desde su fuente Markdown. Las rutas y los detalles de cada comprobación se explican en [PERSISTENCIA.md](docs/PERSISTENCIA.md).
+
 ## Documentos de entrega
 
+- [Persistencia: documento PDF](output/pdf/NovaCart_Persistencia.pdf), [fuente Markdown](docs/PERSISTENCIA.md) y [prompts](docs/PROMPTS_PERSISTENCIA.md).
+- [Video de cierre y reapertura](docs/videos/persistencia-novacart.mp4), con [informe verificable](docs/evidencia/persistencia-verificacion.json).
 - [Interfaces TypeScript, objetos y fases de las pantallas](docs/INTERFACES_TYPESCRIPT.md).
 - [Servicios Angular de acceso a datos, inyección y operaciones CRUD](docs/SERVICIOS_DATOS.md).
 - [APIs, autenticación y operaciones CRUD](docs/API.md), con [peticiones de ejemplo](docs/api-ejemplos.http).

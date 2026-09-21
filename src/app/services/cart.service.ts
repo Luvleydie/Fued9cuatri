@@ -6,6 +6,8 @@ const STORAGE_KEY = 'novacart.cart';
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
+  private readonly storageError = signal('');
+  readonly persistenceError = this.storageError.asReadonly();
   private readonly cartItems = signal<CartItem[]>(this.restore());
   readonly items = this.cartItems.asReadonly();
   readonly totalItems = computed(() => this.items().reduce((sum, item) => sum + item.quantity, 0));
@@ -67,6 +69,10 @@ export class CartService {
     this.save([]);
   }
 
+  retryPersistence(): void {
+    this.persist(this.items());
+  }
+
   private unitCents(product: Product): number {
     // Convertir antes de multiplicar evita acumular errores de coma flotante.
     return Math.round((product.price + Number.EPSILON) * 100);
@@ -80,8 +86,9 @@ export class CartService {
   private persist(items: CartItem[]): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      this.storageError.set('');
     } catch {
-      // Si el navegador bloquea el almacenamiento, el carrito sigue en memoria.
+      this.storageError.set('No se pudo guardar el carrito en este dispositivo. Reintenta antes de cerrar para conservar tus cambios.');
     }
   }
 

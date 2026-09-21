@@ -69,6 +69,8 @@ export class Store {
     this.db = new DatabaseSync(databasePath, { enableForeignKeyConstraints: true, timeout: 5000 });
     try {
       this.db.exec('PRAGMA journal_mode = WAL');
+      // Confirmar cada transacción sólo después de sincronizar el WAL con el disco.
+      this.db.exec('PRAGMA synchronous = FULL');
       const version = this.db.prepare('PRAGMA user_version').get();
       if (!version || numberColumn(version, 'user_version') > 1) throw new Error('Unsupported database schema version.');
       this.db.exec('BEGIN IMMEDIATE');

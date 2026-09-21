@@ -62,7 +62,7 @@ El respaldo del catálogo y detalle sólo se usa ante errores de red o tiempo de
 
 `getItems(): CartItem[]` obtiene las líneas y `items()` permite leer el signal en la plantilla. `totalItems()`, `getTotalItems()`, `getTotal()` y `getSubtotal(item)` facilitan mostrar unidades e importes. Los importes se calculan en centavos antes de expresarlos en USD.
 
-Al restaurar el carrito se descartan datos inválidos, se agrupan identificadores duplicados y se ajustan cantidades al stock almacenado. Si `localStorage` está bloqueado, el carrito sigue funcionando en memoria durante la sesión. El stock y precio son copias locales; la compra simulada no crea pedidos ni descuenta inventario del servidor.
+Al restaurar el carrito se descartan datos inválidos, se agrupan identificadores duplicados y se ajustan cantidades al stock almacenado. Si `localStorage` está bloqueado, el carrito conserva los cambios en memoria y expone `persistenceError()`. La pantalla muestra el aviso y permite llamar a `retryPersistence(): void` para guardar el estado actual; un guardado correcto elimina el aviso. El stock y precio son copias locales; la compra simulada no crea pedidos ni descuenta inventario del servidor.
 
 ## Inyección y uso real desde una página Ionic
 

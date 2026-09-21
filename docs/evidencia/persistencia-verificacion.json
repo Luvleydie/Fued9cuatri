@@ -1,0 +1,151 @@
+{
+  "startedAt": "2026-09-21T23:39:22.852Z",
+  "recording": true,
+  "database": "SQLite en archivo, compartido entre procesos nuevos",
+  "browserStorage": "Perfil propio en disco, reutilizado sin inyectar storageState",
+  "checks": [
+    {
+      "name": "Alta y consulta del producto mediante la interfaz y respuesta HTTP 201",
+      "passed": true
+    },
+    {
+      "name": "Sesión 1: navegador cerrado y proceso servidor terminado",
+      "passed": true
+    },
+    {
+      "name": "SQLite sin servidor: Café de Oaxaca - Persistencia, 12990 centavos, stock 8",
+      "passed": true
+    },
+    {
+      "name": "Primera reapertura: mismo producto, precio y stock; sesión restaurada",
+      "passed": true
+    },
+    {
+      "name": "Primera reapertura: carrito con dos unidades, sin inyección de almacenamiento",
+      "passed": true
+    },
+    {
+      "name": "Modificación: nuevo nombre, precio 149.50, stock 11 y carrito con tres unidades",
+      "passed": true
+    },
+    {
+      "name": "Sesión 2: navegador cerrado y proceso servidor terminado",
+      "passed": true
+    },
+    {
+      "name": "SQLite sin servidor: Café de Oaxaca - Actualizado, 14950 centavos, stock 11",
+      "passed": true
+    },
+    {
+      "name": "Segunda reapertura: edición persistida en el producto original",
+      "passed": true
+    },
+    {
+      "name": "Segunda reapertura: cantidad tres conservada en la copia local del carrito",
+      "passed": true
+    },
+    {
+      "name": "Eliminación confirmada en pantalla y respuesta HTTP 204",
+      "passed": true
+    },
+    {
+      "name": "Sesión 3: navegador cerrado y proceso servidor terminado",
+      "passed": true
+    },
+    {
+      "name": "SQLite sin servidor: producto eliminado e integridad correcta",
+      "passed": true
+    },
+    {
+      "name": "Tercera reapertura: el producto eliminado no reaparece en el inventario",
+      "passed": true
+    },
+    {
+      "name": "Tercera reapertura: consultar el ID eliminado muestra producto no encontrado",
+      "passed": true
+    },
+    {
+      "name": "Tercera reapertura: borrado del carrito persistido",
+      "passed": true
+    },
+    {
+      "name": "Sesión 4: navegador cerrado y proceso servidor terminado",
+      "passed": true
+    },
+    {
+      "name": "Sin errores JavaScript durante las cuatro sesiones",
+      "passed": true
+    }
+  ],
+  "sessions": [
+    {
+      "number": 1,
+      "serverPid": 27996,
+      "openedAt": "2026-09-21T23:39:24.140Z",
+      "browserClosedAt": "2026-09-21T23:39:37.524Z",
+      "serverClosedAt": "2026-09-21T23:39:37.536Z",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "number": 2,
+      "serverPid": 39380,
+      "openedAt": "2026-09-21T23:39:38.566Z",
+      "browserClosedAt": "2026-09-21T23:39:51.167Z",
+      "serverClosedAt": "2026-09-21T23:39:51.178Z",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "number": 3,
+      "serverPid": 32056,
+      "openedAt": "2026-09-21T23:39:52.116Z",
+      "browserClosedAt": "2026-09-21T23:40:03.527Z",
+      "serverClosedAt": "2026-09-21T23:40:03.540Z",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "number": 4,
+      "serverPid": 30184,
+      "openedAt": "2026-09-21T23:40:04.422Z",
+      "browserClosedAt": "2026-09-21T23:40:14.032Z",
+      "serverClosedAt": "2026-09-21T23:40:14.043Z",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-09-21T23:40:14.044Z",
+  "video": {
+    "file": "docs/videos/persistencia-novacart.mp4",
+    "durationSeconds": 61.2,
+    "width": 1280,
+    "height": 900,
+    "fps": 25,
+    "sha256": "b80c1c33529d50322fd9484d819315df347a8d969cd99e9d076c59938db5d95d",
+    "chapters": [
+      {
+        "title": "01 / Alta y guardado",
+        "startSeconds": 4.0,
+        "durationSeconds": 12.8
+      },
+      {
+        "title": "02 / Reabrir y modificar",
+        "startSeconds": 19.8,
+        "durationSeconds": 12.92
+      },
+      {
+        "title": "03 / Reabrir y eliminar",
+        "startSeconds": 35.72,
+        "durationSeconds": 10.2
+      },
+      {
+        "title": "04 / Reabrir y comprobar",
+        "startSeconds": 48.92,
+        "durationSeconds": 8.28
+      }
+    ],
+    "editing": "Cuatro grabaciones reales en orden, unidas con rótulos. Sin audio ni sustitución de datos."
+  }
+}

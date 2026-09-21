@@ -13,6 +13,13 @@
       <ion-button fill="clear" routerLink="/home">Seguir explorando <ion-icon slot="end" name="arrow-forward-outline" aria-hidden="true"></ion-icon></ion-button>
     </div>
 
+    @if (cart.persistenceError()) {
+      <div class="storage-warning" role="alert">
+        <p>{{ cart.persistenceError() }}</p>
+        <ion-button fill="outline" size="small" (click)="cart.retryPersistence()">Reintentar guardado</ion-button>
+      </div>
+    }
+
     <div class="cart-layout">
       <section aria-label="Productos del carrito">
         @if (!cart.items().length) {

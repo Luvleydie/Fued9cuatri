@@ -77,5 +77,33 @@ describe('CartService', () => {
     const cart = new CartService();
     cart.addProduct(product());
     expect(cart.getTotal()).toBe(9.99);
+    expect(cart.persistenceError()).toContain('No se pudo guardar');
+  });
+
+  it('avisa de un fallo de escritura y reintenta guardar las cantidades actuales', () => {
+    const cart = new CartService();
+    const write = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota'); });
+    cart.addProduct(product());
+    cart.increaseQuantity(1);
+    expect(cart.persistenceError()).toContain('Reintenta antes de cerrar');
+    expect(localStorage.getItem('novacart.cart')).toBe('[]');
+    write.mockRestore();
+    cart.retryPersistence();
+    expect(cart.persistenceError()).toBe('');
+    expect(new CartService().items()).toEqual([{ product: product(), quantity: 2 }]);
+  });
+
+  it('conserva el aviso si el reintento falla y persiste el borrado cuando se recupera', () => {
+    const cart = new CartService();
+    cart.addProduct(product());
+    const write = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota'); });
+    cart.removeProduct(1);
+    cart.retryPersistence();
+    expect(cart.persistenceError()).not.toBe('');
+    expect(JSON.parse(localStorage.getItem('novacart.cart')!)).toHaveLength(1);
+    write.mockRestore();
+    cart.retryPersistence();
+    expect(cart.persistenceError()).toBe('');
+    expect(new CartService().items()).toEqual([]);
   });
 });

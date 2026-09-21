@@ -2,6 +2,8 @@
 .cart-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 2rem; }
 .cart-heading h1 { margin: 0.4rem 0; font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 750; letter-spacing: -0.06em; }
 .accent-dot { color: var(--ion-color-primary); }
+.storage-warning { padding: 1rem; margin-bottom: 1rem; border: 1px solid #c98619; border-radius: 12px; background: #fff8e8; color: #68420a; }
+.storage-warning p { margin: 0 0 0.5rem; line-height: 1.5; }
 .cart-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 2rem; align-items: start; }
 .cart-item { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 1.3rem; padding: 1.4rem; border: 1px solid #e8eaf2; border-radius: 20px; background: white; margin-bottom: 1rem; }
 .item-image { display: grid; place-items: center; width: 112px; height: 126px; background: #f5f5fa; border-radius: 14px; }

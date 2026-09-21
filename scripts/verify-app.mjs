@@ -183,6 +183,32 @@ try {
     await expect(page.locator('.cart-item:visible')).toHaveCount(0);
   });
 
+  await test('Carrito: fallo de guardado visible y recuperación sin perder cantidades', async (page) => {
+    await navigate(page, '/product/1');
+    await page.getByRole('button', { name: 'Agregar al carrito', exact: true }).click();
+    await navigate(page, '/cart');
+    await expect(quantity(page)).toHaveText('1');
+    await page.evaluate((key) => {
+      const original = Storage.prototype.setItem;
+      window.restoreCartStorageForTest = () => { Storage.prototype.setItem = original; };
+      Storage.prototype.setItem = function (name, value) {
+        if (name === key) throw new DOMException('Cuota de prueba', 'QuotaExceededError');
+        return original.call(this, name, value);
+      };
+    }, cartKey);
+    await page.getByRole('button', { name: 'Aumentar cantidad de Essence Mascara Lash Princess', exact: true }).click();
+    await expect(quantity(page)).toHaveText('2');
+    await expect(page.getByRole('alert')).toContainText('No se pudo guardar el carrito');
+    await page.getByRole('button', { name: 'Reintentar guardado', exact: true }).click();
+    await expect(page.getByRole('alert')).toBeVisible();
+    await page.evaluate(() => { window.restoreCartStorageForTest(); delete window.restoreCartStorageForTest; });
+    await page.getByRole('button', { name: 'Reintentar guardado', exact: true }).click();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await page.reload();
+    await expect(quantity(page)).toHaveText('2');
+    await expect(page.getByRole('alert')).toHaveCount(0);
+  });
+
   await test('Compra simulada: el carrito se limpia sólo después de aceptar', async (page) => {
     await navigate(page, '/cart');
     await setCart(page, [{ product: actualProducts.find((item) => item.id === 1), quantity: 2 }]);
@@ -313,7 +339,7 @@ try {
       await expect(row).toContainText('$31.50');
       await expect(row).toContainText('7 en existencia');
       await page.getByRole('link', { name: updatedTitle, exact: true }).click();
-      await expect(page.getByRole('heading', { name: updatedTitle, exact: true })).toBeVisible();
+      await expect(page.getByRole('heading', { name: updatedTitle, level: 1, exact: true })).toBeVisible();
       await page.getByRole('navigation').getByRole('link', { name: 'Productos', exact: true }).click();
       await expect(page.locator('ion-card-title:visible').filter({ hasText: updatedTitle })).toBeVisible();
       await page.getByRole('navigation').getByRole('link', { name: 'Gestión', exact: true }).click();
