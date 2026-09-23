@@ -1,0 +1,59 @@
+# CRUD de un usuario de práctica. El id se toma de la respuesta del alta.
+@baseUrl = http://localhost/novacart/api
+@token = {{login.response.body.$.accessToken}}
+@userId = {{crearUsuario.response.body.$.id}}
+@username = alumno_crud
+
+### 1. Autenticar
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "username": "emilys", "password": "emilyspass" }
+
+### 2. Consultar listado -> 200: { users: [...] }
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### 3. Crear -> 201: User
+# @name crearUsuario
+POST {{baseUrl}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "firstName": "Luis",
+  "lastName": "Pérez",
+  "email": "luis.crud@example.test",
+  "password": "Practica123!"
+}
+
+### 4. Consultar el usuario creado -> 200
+GET {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+
+### 5. Modificar -> 200; password vacío conserva la contraseña actual
+PUT {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "firstName": "Luis actualizado",
+  "lastName": "Pérez",
+  "email": "luis.crud@example.test",
+  "password": ""
+}
+
+### 6. Eliminar únicamente el usuario creado en el paso 3 -> 204
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+
+### 7. Confirmar eliminación -> 404
+GET {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+
+### 8. Cerrar sesión
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}

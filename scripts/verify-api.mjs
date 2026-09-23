@@ -20,6 +20,9 @@ const b = input('_b');
 try {
   const health = await request('/health');
   check(health.status === 200 && health.body.database === 'mysql', 'MySQL XAMPP conectado');
+  check((await request('/auth/login')).status === 405, 'Login acepta únicamente POST');
+  check((await request('/auth/register')).status === 405, 'Registro acepta únicamente POST');
+  check((await fetch(base + '/endpoints/login.php')).status === 403, 'Los archivos internos no se ejecutan por URL');
   check((await request('/users')).status === 401, 'Usuarios requieren autenticación');
   const created = await request('/auth/register', 'POST', a);
   check(created.status === 201 && created.body.username === a.username, 'Registro persistente');

@@ -17,6 +17,7 @@ export class CartService {
 
   // "Setear" es asignar una cantidad: PUT envía ese valor a PHP y MySQL.
   async setQuantity(productId: number, quantity: number): Promise<CartResponse> {
+    // Este método entrega el carrito cuando PHP confirma la escritura en MySQL.
     const { data } = await api.put<CartResponse>(`/cart/${productId}`, { quantity });
     return data;
   }

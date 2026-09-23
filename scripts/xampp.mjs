@@ -17,9 +17,10 @@ if (mode === 'db') {
   run(php, ['server/install.php']);
 } else {
   await mkdir(path.join(target, 'api'), { recursive: true });
-  for (const name of ['index.php', 'config.php', 'database.php', 'validation.php', '.htaccess']) {
+  for (const name of ['index.php', 'config.php', 'database.php', 'validation.php', 'http.php', 'auth.php', '.htaccess']) {
     await copyFile(path.join(root, 'server', name), path.join(target, 'api', name));
   }
+  await cp(path.join(root, 'server/endpoints'), path.join(target, 'api/endpoints'), { recursive: true });
   try { await copyFile(path.join(root, 'server/config.local.php'), path.join(target, 'api/config.local.php')); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
   if (mode === 'deploy') {

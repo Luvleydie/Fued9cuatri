@@ -1,0 +1,37 @@
+# Registro público. Cambia username si ya existe una cuenta con este nombre.
+@baseUrl = http://localhost/novacart/api
+@username = alumno_registro
+
+### 1. POST registro -> 201 y User; no crea una sesión
+# @name registro
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "firstName": "Ana",
+  "lastName": "López",
+  "email": "ana.registro@example.test",
+  "password": "Practica123!"
+}
+
+### 2. Con los mismos datos -> 409 por username duplicado
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "firstName": "Ana",
+  "lastName": "López",
+  "email": "ana.registro@example.test",
+  "password": "Practica123!"
+}
+
+### 3. Login de la cuenta creada -> 200 y token
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "Practica123!"
+}

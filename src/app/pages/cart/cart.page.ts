@@ -34,6 +34,7 @@ export class CartPage {
     this.isLoading = true;
     this.errorMessage = '';
     try {
+      // Las dos consultas son independientes: empiezan juntas y esperamos ambas respuestas.
       const [products, cart] = await Promise.all([this.cartService.getProducts(), this.cartService.getCart()]);
       this.products = products;
       this.setCart(cart);
@@ -49,7 +50,8 @@ export class CartPage {
     return this.items.find(item => item.productId === productId)?.quantity ?? 0;
   }
 
-  // Asignamos ("seteamos") los valores recibidos, respetando la interfaz CartResponse.
+  // Asignación inmediata en memoria: aquí no hace falta async ni Promise.
+  // La interfaz CartResponse describe la forma de los datos que recibimos.
   setCart(cart: CartResponse): void {
     this.items = cart.items;
     this.total = cart.total;

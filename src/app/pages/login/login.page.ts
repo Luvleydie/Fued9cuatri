@@ -41,6 +41,7 @@ export class LoginPage implements OnDestroy {
     this.credentials = { username: 'emilys', password: 'emilyspass' };
   }
 
+  // async crea una promesa; void indica que el formulario no recibe un dato de retorno.
   async login(): Promise<void> {
     if (this.isSubmitting) return;
     this.clearTimers();
@@ -57,6 +58,7 @@ export class LoginPage implements OnDestroy {
         username: this.credentials.username.trim(),
         password: this.credentials.password,
       };
+      // Axios devuelve una promesa. await espera la respuesta; data contiene el JSON de PHP.
       const { data } = await api.post<AuthResponse>('/auth/login', credentials);
       saveSession(data);
       const navigated = await this.router.navigateByUrl('/home', { replaceUrl: true });

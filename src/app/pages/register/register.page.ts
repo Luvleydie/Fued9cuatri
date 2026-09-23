@@ -26,6 +26,7 @@ export class RegisterPage {
     private readonly changeDetector: ChangeDetectorRef,
   ) {}
 
+  // La promesa termina después de registrar en MySQL y navegar al login, o tratar el error.
   async register(): Promise<void> {
     if (this.isSubmitting || this.successMessage) return;
     this.errorMessage = '';

@@ -5,7 +5,7 @@ Ejecutada el 22 de septiembre de 2026 (hora local). La app instalada se probó e
 | Comprobación | Resultado |
 |---|---|
 | Angular: npm test -- --watch=false | 33 pruebas aprobadas en 6 archivos |
-| API PHP/MySQL: npm run test:api | 23 comprobaciones aprobadas |
+| API PHP/MySQL: npm run test:api | 26 comprobaciones aprobadas tras separar los endpoints |
 | Navegador: npm run test:e2e | 5 escenarios aprobados |
 | npm run lint | Sin errores |
 | npm run deploy:xampp | Compilación y copia a Apache correctas |
@@ -13,6 +13,8 @@ Ejecutada el 22 de septiembre de 2026 (hora local). La app instalada se probó e
 | MCP desde Codex | describe_schema y list_products consultaron MySQL realmente |
 
 ## Lo que se comprobó
+
+La separación en `server/endpoints/` se volvió a comprobar contra Apache. Se añadieron verificaciones de métodos HTTP de login/registro y del bloqueo de acceso directo a los archivos internos. Todos los archivos PHP pasaron la comprobación de sintaxis.
 
 - Rutas protegidas, campos vacíos y credenciales incorrectas.
 - Registro, username duplicado, login real y sesión en sessionStorage.

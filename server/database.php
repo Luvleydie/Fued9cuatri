@@ -27,3 +27,11 @@ function findUser(PDO $db, int $id): array
     if (!$user) throw new ApiException(404, 'Usuario no encontrado.');
     return $user;
 }
+
+function createUser(PDO $db, array $input): array
+{
+    query($db, 'INSERT INTO users (username, email, first_name, last_name, password_hash) VALUES (?, ?, ?, ?, ?)',
+        [$input['username'], $input['email'], $input['firstName'], $input['lastName'],
+         password_hash($input['password'], PASSWORD_ARGON2ID)]);
+    return findUser($db, (int) $db->lastInsertId());
+}

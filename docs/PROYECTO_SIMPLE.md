@@ -2,6 +2,8 @@
 
 Versión actual: cuatro pantallas, Angular/Ionic, Axios, PHP, MySQL de XAMPP y MCP local.
 
+Ampliación: [setear, promesas y flujo completo de datos](FLUJO_DATOS_Y_PROMESAS.md). Las APIs están separadas en [server/endpoints](../server/endpoints/), con [ejemplos HTTP por función](api/README.md).
+
 ## 1. Qué se implementó
 
 | Pantalla | Archivos en src/app/pages | Qué hace |

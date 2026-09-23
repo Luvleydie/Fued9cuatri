@@ -51,6 +51,8 @@ El CRUD es una práctica sin roles: todos los usuarios autenticados pueden admin
 
 [Documento explicado](docs/PROYECTO_SIMPLE.md) · [PDF](output/pdf/NovaCart_Guia.pdf) · [Verificación](docs/VERIFICACION_SIMPLE.md)
 
+[Setear, promesas y flujo de datos paso a paso](docs/FLUJO_DATOS_Y_PROMESAS.md) · [APIs en archivos separados y ejemplos HTTP](docs/api/README.md)
+
 [Video de persistencia](docs/videos/novacart-mysql.mp4) · [Capturas](docs/screenshots-simple/)
 
 ```powershell

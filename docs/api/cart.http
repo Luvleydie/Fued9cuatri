@@ -1,0 +1,47 @@
+# Estas peticiones cambian el carrito de la cuenta del bloque login.
+# Puedes sustituir las credenciales demo por una cuenta de práctica.
+@baseUrl = http://localhost/novacart/api
+@token = {{login.response.body.$.accessToken}}
+@productId = 1
+
+### 1. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "username": "emilys", "password": "emilyspass" }
+
+### 2. Productos -> 200; elige un id y actualiza productId arriba
+GET {{baseUrl}}/products
+Authorization: Bearer {{token}}
+
+### 3. Carrito actual -> 200: { items: [...], total: número }
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### 4. Setear cantidad a 2 -> guarda en MySQL y devuelve el carrito actualizado
+# Repetir este PUT mantiene 2; no suma otras 2 unidades.
+PUT {{baseUrl}}/cart/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "quantity": 2 }
+
+### 5. Consultar de nuevo -> muestra el dato guardado
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### 6. Cantidad inválida -> 400; conserva el dato anterior
+PUT {{baseUrl}}/cart/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "quantity": -1 }
+
+### 7. Quitar -> 200 con el carrito resultante
+DELETE {{baseUrl}}/cart/{{productId}}
+Authorization: Bearer {{token}}
+
+### 8. Cerrar sesión
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
