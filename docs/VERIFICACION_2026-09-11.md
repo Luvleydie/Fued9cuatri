@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Verificación de NovaCart
 
 Pruebas realizadas el 11 de septiembre de 2026, hora de Ciudad de México (12 de septiembre en los informes UTC). Los resultados reflejan comprobaciones ejecutadas, no sólo inspección de archivos.

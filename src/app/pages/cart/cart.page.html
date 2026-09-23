@@ -1,75 +1,47 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar><ion-title>NovaCart <span class="toolbar-label">/ Carrito</span></ion-title></ion-toolbar>
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Carrito</ion-title>
+    <ion-buttons slot="end"><ion-button routerLink="/home">Usuarios</ion-button></ion-buttons>
+  </ion-toolbar>
 </ion-header>
-
 <ion-content>
-  <div class="page-shell">
-    <div class="cart-heading">
-      <div>
-        <p class="eyebrow">TU SELECCIÓN</p>
-        <h1>Tu carrito<span class="accent-dot">.</span></h1>
-        <p class="muted">{{ cart.getTotalItems() }} {{ cart.getTotalItems() === 1 ? 'artículo listo' : 'artículos listos' }} para ti.</p>
-      </div>
-      <ion-button fill="clear" routerLink="/home">Seguir explorando <ion-icon slot="end" name="arrow-forward-outline" aria-hidden="true"></ion-icon></ion-button>
-    </div>
-
-    @if (cart.persistenceError()) {
-      <div class="storage-warning" role="alert">
-        <p>{{ cart.persistenceError() }}</p>
-        <ion-button fill="outline" size="small" (click)="cart.retryPersistence()">Reintentar guardado</ion-button>
-      </div>
-    }
-
-    <div class="cart-layout">
-      <section aria-label="Productos del carrito">
-        @if (!cart.items().length) {
-          <div class="empty-state">
-            <ion-icon name="bag-handle-outline" aria-hidden="true"></ion-icon>
-            <h2>Tu próxima compra empieza aquí</h2>
-            <p class="muted">Explora el catálogo y guarda tus favoritos en el carrito.</p>
-            <ion-button routerLink="/home">Explorar productos</ion-button>
-          </div>
-        }
-        @for (item of cart.items(); track item.product.id) {
-          <article class="cart-item" [attr.data-product-id]="item.product.id">
-            <a [routerLink]="['/product', item.product.id]" class="item-image" [attr.aria-label]="'Ver ' + item.product.title">
-              <img [src]="item.product.thumbnail || 'assets/products/product-placeholder.svg'" [alt]="item.product.title" (error)="imageError($event)" />
-            </a>
-            <div class="item-description">
-              <p class="eyebrow">{{ item.product.category }}</p>
-              <a [routerLink]="['/product', item.product.id]"><h2>{{ item.product.title }}</h2></a>
-              <p class="unit-price">{{ item.product.price | currency:'USD':'symbol':'1.2-2' }} USD <span class="muted">/ unidad</span></p>
-              <div class="item-actions">
-                <div class="quantity-controls" [attr.aria-label]="'Cantidad de ' + item.product.title">
-                  <ion-button fill="clear" size="small" [disabled]="item.quantity <= 1" (click)="cart.decreaseQuantity(item.product.id)" [attr.aria-label]="'Disminuir cantidad de ' + item.product.title">−</ion-button>
-                  <span aria-live="polite" data-testid="quantity">{{ item.quantity }}</span>
-                  <ion-button fill="clear" size="small" [disabled]="item.quantity >= cart.getStockLimit(item.product)" (click)="cart.increaseQuantity(item.product.id)" [attr.aria-label]="'Aumentar cantidad de ' + item.product.title">+</ion-button>
-                </div>
-                <ion-button class="remove-button" fill="clear" size="small" color="medium" (click)="cart.removeProduct(item.product.id)" [attr.aria-label]="'Eliminar ' + item.product.title"><ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>Eliminar</ion-button>
-              </div>
-              @if (item.quantity >= cart.getStockLimit(item.product)) {
-                <p class="stock-note">Alcanzaste el stock disponible.</p>
-              }
-            </div>
-            <div class="item-subtotal">
-              <span class="muted">Subtotal</span>
-              <strong>{{ cart.getSubtotal(item) | currency:'USD':'symbol':'1.2-2' }}</strong>
-            </div>
+  <main class="home-shell fade-in">
+    <header class="page-heading">
+      <div><span class="brand">NovaCart</span><h1>Tu carrito</h1><p class="muted">Agrega productos y ajusta sus cantidades.</p></div>
+      <button class="secondary-button" (click)="loadCart()" [disabled]="isLoading || isSubmitting">Actualizar</button>
+    </header>
+    @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
+    @if (isLoading) { <p role="status">Cargando carrito…</p> }
+    <div class="home-grid cart-grid" [attr.aria-busy]="isSubmitting || isLoading">
+      <section class="panel" aria-labelledby="products-title">
+        <h2 id="products-title">Productos</h2>
+        @for (product of products; track product.id) {
+          <article class="user-row">
+            <div class="user-info"><h3>{{ product.title }}</h3><p>{{ product.price | currency:'MXN':'symbol-narrow' }} MXN</p><p class="muted">Disponibles: {{ product.stock }}</p></div>
+            <div class="row-actions"><button class="secondary-button" (click)="setQuantity(product.id, quantityOf(product.id) + 1)"
+              [disabled]="isSubmitting || isLoading || quantityOf(product.id) >= product.stock || quantityOf(product.id) >= 99"
+              [attr.aria-label]="'Agregar ' + product.title">Agregar</button></div>
           </article>
         }
-        @if (cart.items().length) {
-          <ion-button fill="clear" color="medium" [disabled]="dialogOpen()" (click)="confirmClear()"><ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>Vaciar carrito</ion-button>
-        }
       </section>
-
-      <aside class="order-summary" aria-label="Resumen de compra">
-        <p class="eyebrow">UN PASO MÁS</p>
-        <h2>Resumen de compra</h2>
-        <div class="summary-line"><span>Productos ({{ cart.getTotalItems() }})</span><span>{{ cart.getTotal() | currency:'USD':'symbol':'1.2-2' }}</span></div>
-        <div class="summary-line total-line"><strong>Total</strong><strong class="price" data-testid="cart-total">{{ cart.getTotal() | currency:'USD':'symbol':'1.2-2' }} <small>USD</small></strong></div>
-        <ion-button expand="block" [disabled]="!cart.getTotalItems() || dialogOpen()" (click)="checkout()">Finalizar compra <ion-icon slot="end" name="arrow-forward-outline" aria-hidden="true"></ion-icon></ion-button>
-        <p class="simulation-note"><ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>Compra de demostración. Sin cobros reales.</p>
-      </aside>
+      <section class="panel" aria-labelledby="cart-title">
+        <h2 id="cart-title">Artículos guardados</h2>
+        @if (!items.length && !isLoading) { <p class="muted">Tu carrito está vacío.</p> }
+        @for (item of items; track item.productId) {
+          <article class="user-row cart-item" [attr.data-product-id]="item.productId">
+            <div class="user-info"><h3>{{ item.title }}</h3><p>{{ item.price * item.quantity | currency:'MXN':'symbol-narrow' }} MXN</p>
+              <div class="quantity-actions">
+                <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity - 1)" [disabled]="isSubmitting || isLoading || item.quantity === 1" [attr.aria-label]="'Disminuir ' + item.title">−</button>
+                <span data-testid="quantity" aria-live="polite">{{ item.quantity }}</span>
+                <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity + 1)" [disabled]="isSubmitting || isLoading || item.quantity >= item.stock || item.quantity >= 99" [attr.aria-label]="'Aumentar ' + item.title">+</button>
+              </div>
+            </div>
+            <div class="row-actions"><button class="danger-button" (click)="setQuantity(item.productId, 0)" [disabled]="isSubmitting || isLoading" [attr.aria-label]="'Quitar ' + item.title">Quitar</button></div>
+          </article>
+        }
+        <p class="cart-total" data-testid="cart-total">Total: {{ total | currency:'MXN':'symbol-narrow' }} MXN</p>
+        <p class="muted">El carrito se guarda en tu cuenta. Esta práctica no realiza compras.</p>
+      </section>
     </div>
-  </div>
+  </main>
 </ion-content>

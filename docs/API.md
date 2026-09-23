@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # API propia de NovaCart
 
 **Revisión: 21 de septiembre de 2026.** API HTTP implementada en TypeScript con `node:http` y persistencia SQLite mediante `node:sqlite`. Las rutas están en [server/app.ts](../server/app.ts); la persistencia en [server/database.ts](../server/database.ts) y la validación en [server/validation.ts](../server/validation.ts).

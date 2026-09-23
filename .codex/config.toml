@@ -1,0 +1,11 @@
+# MCP local para este proyecto. Si mueves la carpeta, ajusta cwd.
+[mcp_servers.novacart_mysql]
+command = "node"
+args = ["mcp/server.mjs"]
+cwd = "C:/Fued3"
+startup_timeout_sec = 20
+tool_timeout_sec = 30
+enabled = true
+
+[mcp_servers.novacart_mysql.env]
+PHP_BIN = "C:/xampp/php/php.exe"

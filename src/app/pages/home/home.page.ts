@@ -1,64 +1,156 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { ToastController } from '@ionic/angular/lazy';
-import { addIcons } from 'ionicons';
-import { bagAddOutline, cubeOutline, star } from 'ionicons/icons';
-import { Product, ProductSource } from '../../models/product.model';
-import { CartService } from '../../services/cart.service';
-import { filterProducts, ProductsService } from '../../services/products.service';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { IonicModule } from '@ionic/angular/lazy';
+import axios, { AxiosError } from 'axios';
+import api from '../../core/api/axios-client';
+import { clearSession, readUser, updateStoredUser } from '../../core/api/session-storage';
+import { ApiError } from '../../models/api-error.model';
+import { User } from '../../models/user.model';
+import { UserInput } from '../../models/user-input.model';
+import { UsersService } from '../../services/users.service';
+
+const emptyUser = (): UserInput => ({ username: '', firstName: '', lastName: '', email: '', password: '' });
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
-  styleUrls: ['./home.page.scss'],
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule],
 })
-export class HomePage {
-  private readonly productsService = inject(ProductsService);
-  private readonly cart = inject(CartService);
-  private readonly toastController = inject(ToastController);
-  readonly products = signal<Product[]>([]);
-  readonly query = signal('');
-  readonly loading = signal(true);
-  readonly error = signal('');
-  readonly source = signal<ProductSource>('api');
-  readonly failedImages = signal<Set<number>>(new Set());
-  readonly filteredProducts = computed(() => filterProducts(this.products(), this.query()));
+export class HomePage implements OnInit {
+  users: User[] = [];
+  currentUser: User | null = readUser();
+  userForm: UserInput = emptyUser();
+  editingId: number | null = null;
+  isLoading = false;
+  isSubmitting = false;
+  errorMessage = '';
+  successMessage = '';
 
-  constructor() {
-    addIcons({ bagAddOutline, cubeOutline, star });
+  constructor(private usersService: UsersService, private router: Router, private cdr: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    void this.loadUsers();
   }
 
   ionViewWillEnter(): void {
-    void this.loadProducts();
+    this.currentUser = readUser();
+    void this.loadUsers();
   }
 
-  async loadProducts(): Promise<void> {
-    this.loading.set(true);
-    this.error.set('');
-    this.failedImages.set(new Set());
+  async loadUsers(): Promise<void> {
+    if (this.isLoading || this.isSubmitting) return;
+    this.isLoading = true;
+    this.errorMessage = '';
     try {
-      const result = await this.productsService.getProducts();
-      this.products.set(result.products);
-      this.source.set(result.source);
-    } catch {
-      this.error.set('No pudimos cargar los productos. Intenta de nuevo en un momento.');
+      this.users = await this.usersService.getUsers();
+      this.currentUser = this.users.find(user => user.id === this.currentUser?.id) ?? this.currentUser;
+    } catch (error: unknown) {
+      await this.handleError(error, 'No se pudieron cargar los usuarios. Intenta de nuevo.');
     } finally {
-      this.loading.set(false);
+      this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
-  imageFailed(id: number): void {
-    this.failedImages.update((ids) => new Set([...ids, id]));
+  editUser(user: User): void {
+    if (this.isSubmitting || this.isLoading) return;
+    this.editingId = user.id;
+    this.userForm = {
+      username: user.username, firstName: user.firstName ?? '', lastName: user.lastName ?? '',
+      email: user.email ?? '', password: '',
+    };
+    this.errorMessage = '';
+    this.successMessage = '';
   }
 
-  async addProduct(product: Product): Promise<void> {
-    const added = this.cart.addProduct(product);
-    const toast = await this.toastController.create({
-      message: added ? 'Producto agregado al carrito.' : 'Ya alcanzaste el stock disponible.',
-      duration: 1700,
-      position: 'top',
-      color: added ? 'success' : 'warning',
-    });
-    await toast.present();
+  cancelEdit(): void {
+    this.editingId = null;
+    this.userForm = emptyUser();
+  }
+
+  async saveUser(): Promise<void> {
+    if (this.isSubmitting || this.isLoading) return;
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    const id = this.editingId;
+    const input: UserInput = {
+      ...this.userForm, username: this.userForm.username.trim(), email: this.userForm.email.trim(),
+      firstName: this.userForm.firstName.trim(), lastName: this.userForm.lastName.trim(),
+    };
+    try {
+      const user = id === null
+        ? await this.usersService.createUser(input)
+        : await this.usersService.updateUser(id, input);
+      this.users = id === null ? [...this.users, user] : this.users.map(item => item.id === id ? user : item);
+      this.cancelEdit();
+      this.successMessage = id === null ? 'Usuario creado.' : 'Usuario actualizado.';
+      if (user.id === this.currentUser?.id) {
+        if (input.password) {
+          clearSession();
+          await this.router.navigateByUrl('/login?updated=1', { replaceUrl: true });
+        } else {
+          this.currentUser = user;
+          try { updateStoredUser(user); }
+          catch { clearSession(); await this.router.navigateByUrl('/login', { replaceUrl: true }); }
+        }
+      }
+    } catch (error: unknown) {
+      await this.handleError(error, 'No se pudo guardar. Tus datos siguen en el formulario.');
+    } finally {
+      this.isSubmitting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async deleteUser(user: User): Promise<void> {
+    if (this.isSubmitting || this.isLoading || user.id === this.currentUser?.id) return;
+    if (!window.confirm(`¿Eliminar al usuario ${user.username}?`)) return;
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    try {
+      await this.usersService.deleteUser(user.id);
+      this.users = this.users.filter(item => item.id !== user.id);
+      if (this.editingId === user.id) this.cancelEdit();
+      this.successMessage = 'Usuario eliminado.';
+    } catch (error: unknown) {
+      await this.handleError(error, 'No se pudo eliminar el usuario.');
+    } finally {
+      this.isSubmitting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async logout(): Promise<void> {
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+    try { await api.post('/auth/logout'); }
+    catch { /* También permite salir cuando la API no está disponible. */ }
+    finally {
+      clearSession();
+      this.users = [];
+      this.currentUser = null;
+      this.cancelEdit();
+      await this.router.navigateByUrl('/login', { replaceUrl: true });
+      this.isSubmitting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private async handleError(error: unknown, fallback: string): Promise<void> {
+    if (axios.isAxiosError<ApiError>(error)) {
+      const requestError: AxiosError<ApiError> = error;
+      this.errorMessage = requestError.response?.data?.message || fallback;
+      if (requestError.response?.status === 401) {
+        clearSession();
+        await this.router.navigateByUrl('/login', { replaceUrl: true });
+      }
+    } else {
+      this.errorMessage = fallback;
+    }
   }
 }

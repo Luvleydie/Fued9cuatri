@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Evidencia de uso de Inteligencia Artificial
 
 **Registro reconstruido de instrucciones de IA utilizadas durante las etapas del desarrollo.**

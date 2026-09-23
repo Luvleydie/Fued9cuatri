@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Persistencia de información
 
 **NovaCart | Angular e Ionic | 21 de septiembre de 2026**

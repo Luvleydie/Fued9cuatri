@@ -1,23 +1,25 @@
 {
   "name": "novacart",
   "version": "1.0.0",
-  "description": "E-commerce académico con Ionic, Angular, TypeScript y API SQLite propia",
+  "description": "App sencilla Ionic con login, usuarios, carrito, PHP, MySQL y MCP",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "dev": "npm run build:api && node scripts/dev.mjs",
-    "build:api": "tsc -p tsconfig.server.json",
-    "api": "npm run build:api && node dist/server/server/index.js",
-    "serve:prod": "npm run build && npm run api",
-    "test:api": "npm run build:api && node --test dist/server/server/tests/*.test.js",
+    "dev": "npm run api:deploy && ng serve --host localhost --port 8100",
+    "test:api": "node scripts/verify-api.mjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
     "test:e2e": "node scripts/verify-app.mjs",
-    "test:persistence": "npm run build && npm run build:api && node scripts/verify-persistence.mjs",
-    "video:persistence": "npm run build && npm run build:api && node scripts/verify-persistence.mjs --record && python scripts/render-persistence-video.py",
-    "screenshots": "node scripts/capture-screenshots.mjs"
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "api:deploy": "node scripts/xampp.mjs api",
+    "db:setup": "node scripts/xampp.mjs db",
+    "deploy:xampp": "node scripts/xampp.mjs deploy",
+    "test:mcp": "node scripts/verify-mcp.mjs",
+    "mcp": "node mcp/server.mjs",
+    "video:demo": "node scripts/record-demo.mjs",
+    "document": "python scripts/render-guide.py"
   },
   "private": true,
   "dependencies": {
@@ -42,6 +44,7 @@
     "@angular/language-service": "22.1.6",
     "@capacitor/cli": "8.4.3",
     "@ionic/angular-toolkit": "^13.0.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "22.20.2",
     "angular-eslint": "22.0.0",
@@ -49,7 +52,8 @@
     "jsdom": "^26.0.0",
     "typescript": "~6.0.0",
     "typescript-eslint": "^8.61.0",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "zod": "^4.6.5"
   },
   "engines": {
     "node": "^22.22.3 || ^24.15.0 || >=26.0.0",

@@ -1,64 +1,89 @@
-import { Component, inject, signal } from '@angular/core';
-import { AlertController } from '@ionic/angular/lazy';
-import { addIcons } from 'ionicons';
-import { arrowForwardOutline, bagHandleOutline, lockClosedOutline, trashOutline } from 'ionicons/icons';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { IonicModule } from '@ionic/angular/lazy';
+import axios, { AxiosError } from 'axios';
+import { clearSession } from '../../core/api/session-storage';
+import { ApiError } from '../../models/api-error.model';
+import { CartItem, CartResponse } from '../../models/cart-item.model';
+import { Product } from '../../models/product.model';
 import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-cart',
   templateUrl: './cart.page.html',
-  styleUrls: ['./cart.page.scss'],
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, RouterModule, IonicModule],
 })
 export class CartPage {
-  readonly cart = inject(CartService);
-  readonly dialogOpen = signal(false);
-  private readonly alerts = inject(AlertController);
+  products: Product[] = [];
+  items: CartItem[] = [];
+  total = 0;
+  isLoading = false;
+  isSubmitting = false;
+  errorMessage = '';
 
-  constructor() {
-    addIcons({ arrowForwardOutline, bagHandleOutline, lockClosedOutline, trashOutline });
+  constructor(private cartService: CartService, private router: Router, private cdr: ChangeDetectorRef) {}
+
+  ionViewWillEnter(): void {
+    void this.loadCart();
   }
 
-  async confirmClear(): Promise<void> {
-    if (this.dialogOpen() || !this.cart.getTotalItems()) return;
-    this.dialogOpen.set(true);
+  async loadCart(): Promise<void> {
+    if (this.isLoading || this.isSubmitting) return;
+    this.isLoading = true;
+    this.errorMessage = '';
     try {
-      const alert = await this.alerts.create({
-        header: '¿Vaciar carrito?',
-        message: 'Se eliminarán todos los productos de tu carrito.',
-        buttons: [
-          { text: 'Cancelar', role: 'cancel' },
-          { text: 'Vaciar carrito', role: 'destructive', handler: () => this.cart.clearCart() },
-        ],
-      });
-      await alert.present();
-      await alert.onDidDismiss();
+      const [products, cart] = await Promise.all([this.cartService.getProducts(), this.cartService.getCart()]);
+      this.products = products;
+      this.setCart(cart);
+    } catch (error: unknown) {
+      await this.handleError(error);
     } finally {
-      this.dialogOpen.set(false);
+      this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
-  async checkout(): Promise<void> {
-    if (this.dialogOpen() || !this.cart.getTotalItems()) return;
-    this.dialogOpen.set(true);
+  quantityOf(productId: number): number {
+    return this.items.find(item => item.productId === productId)?.quantity ?? 0;
+  }
+
+  // Asignamos ("seteamos") los valores recibidos, respetando la interfaz CartResponse.
+  setCart(cart: CartResponse): void {
+    this.items = cart.items;
+    this.total = cart.total;
+  }
+
+  async setQuantity(productId: number, quantity: number): Promise<void> {
+    if (this.isSubmitting || this.isLoading) return;
+    this.isSubmitting = true;
+    this.errorMessage = '';
     try {
-      const total = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(this.cart.getTotal());
-      const alert = await this.alerts.create({
-        header: '¡Compra simulada correctamente!',
-        message: `Tu selección suma ${total} USD. Esta es una demostración; no se realizó ningún cobro.`,
-        backdropDismiss: false,
-        buttons: [{ text: 'Aceptar', handler: () => this.cart.clearCart() }],
-      });
-      await alert.present();
-      await alert.onDidDismiss();
+      const cart = quantity === 0
+        ? await this.cartService.removeItem(productId)
+        : await this.cartService.setQuantity(productId, quantity);
+      this.setCart(cart);
+    } catch (error: unknown) {
+      await this.handleError(error);
     } finally {
-      this.dialogOpen.set(false);
+      this.isSubmitting = false;
+      this.cdr.markForCheck();
     }
   }
 
-  imageError(event: Event): void {
-    const image = event.target as HTMLImageElement;
-    image.onerror = null;
-    image.src = 'assets/products/product-placeholder.svg';
+  private async handleError(error: unknown): Promise<void> {
+    this.errorMessage = 'No se pudo guardar o cargar el carrito. Intenta de nuevo.';
+    if (axios.isAxiosError<ApiError>(error)) {
+      const requestError: AxiosError<ApiError> = error;
+      this.errorMessage = requestError.response?.data?.message || this.errorMessage;
+      if (requestError.response?.status === 401) {
+        clearSession();
+        this.items = [];
+        this.products = [];
+        this.total = 0;
+        await this.router.navigateByUrl('/login', { replaceUrl: true });
+      }
+    }
   }
 }

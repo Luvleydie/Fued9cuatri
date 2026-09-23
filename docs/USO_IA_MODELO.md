@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Uso de IA para generar y revisar el modelo
 
 **Actualización: 21 de septiembre de 2026.** La IA se utilizó para revisar el modelo de NovaCart y preparar la entrega de entidades, interfaces TypeScript, servicios Angular/Ionic, CRUD y diagramas.

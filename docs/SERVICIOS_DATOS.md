@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Servicios Angular para acceso a datos
 
 **Actualización: 21 de septiembre de 2026.** La capa de datos de NovaCart está implementada en [src/app/services](../src/app/services). Las páginas Ionic inyectan servicios Angular y trabajan con las [interfaces TypeScript compartidas](INTERFACES_TYPESCRIPT.md).

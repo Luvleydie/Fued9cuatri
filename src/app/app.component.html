@@ -1,13 +1,3 @@
 <ion-app>
-  <ion-router-outlet [class.with-navigation]="showNavigation()"></ion-router-outlet>
-  @if (showNavigation()) {
-    <ion-footer class="app-navigation ion-no-border">
-      <nav aria-label="Navegación principal">
-        <a routerLink="/home" [class.active]="currentUrl().startsWith('/home') || currentUrl().startsWith('/product/')" [attr.aria-current]="currentUrl().startsWith('/home') ? 'page' : null"><ion-icon name="grid-outline" aria-hidden="true"></ion-icon><span>Productos</span></a>
-        <a routerLink="/cart" routerLinkActive="active" ariaCurrentWhenActive="page"><span class="cart-icon"><ion-icon name="bag-handle-outline" aria-hidden="true"></ion-icon>@if (cart.getTotalItems()) { <ion-badge aria-label="Artículos en el carrito">{{ cart.getTotalItems() }}</ion-badge> }</span><span>Carrito</span></a>
-        <a routerLink="/inventory" routerLinkActive="active" ariaCurrentWhenActive="page"><ion-icon name="create-outline" aria-hidden="true"></ion-icon><span>Gestión</span></a>
-        <a routerLink="/profile" routerLinkActive="active" ariaCurrentWhenActive="page"><ion-icon name="person-outline" aria-hidden="true"></ion-icon><span>Perfil</span></a>
-      </nav>
-    </ion-footer>
-  }
+  <ion-router-outlet></ion-router-outlet>
 </ion-app>

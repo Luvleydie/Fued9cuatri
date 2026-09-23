@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Modelo de datos y diagrama de entidades
 
 **Actualización: 21 de septiembre de 2026.** NovaCart utiliza una base SQLite propia para usuarios, sesiones y productos. El esquema ejecutable está en [server/schema.sql](../server/schema.sql). El carrito sigue almacenado en el navegador.

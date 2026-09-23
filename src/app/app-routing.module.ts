@@ -6,36 +6,28 @@ const routes: Routes = [
   {
     path: 'login',
     canActivate: [guestGuard],
-    loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
+    loadComponent: () => import('./pages/login/login.page').then(m => m.LoginPage)
+  },
+  {
+    path: 'register', canActivate: [guestGuard],
+    loadComponent: () => import('./pages/register/register.page').then(m => m.RegisterPage)
   },
   {
     path: 'home',
     canActivate: [authGuard],
-    loadChildren: () => import('./pages/home/home.module').then(m => m.HomePageModule)
-  },
-  {
-    path: '',
-    redirectTo: 'home',
-    pathMatch: 'full'
-  },
-  {
-    path: 'product/:id', canActivate: [authGuard],
-    loadChildren: () => import('./pages/product-detail/product-detail.module').then(m => m.ProductDetailPageModule)
+    loadComponent: () => import('./pages/home/home.page').then(m => m.HomePage)
   },
   {
     path: 'cart', canActivate: [authGuard],
-    loadChildren: () => import('./pages/cart/cart.module').then(m => m.CartPageModule)
-  },
-  { path: 'products', redirectTo: 'home', pathMatch: 'full' },
-  {
-    path: 'inventory', canActivate: [authGuard],
-    loadChildren: () => import('./pages/inventory/inventory.module').then(m => m.InventoryPageModule)
+    loadComponent: () => import('./pages/cart/cart.page').then(m => m.CartPage)
   },
   {
-    path: 'profile', canActivate: [authGuard],
-    loadChildren: () => import('./pages/profile/profile.module').then(m => m.ProfilePageModule)
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
   },
-  { path: '**', redirectTo: 'home' },
+  { path: 'index', redirectTo: 'login', pathMatch: 'full' },
+  { path: '**', redirectTo: 'login' },
 ];
 
 @NgModule({

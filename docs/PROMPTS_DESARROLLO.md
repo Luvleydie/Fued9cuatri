@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # NovaCart: desarrollo explicado mediante prompts
 
 Este documento presenta **prompts reconstruidos con fines académicos**. El proyecto se solicitó mediante una instrucción general y se trabajó por etapas; los textos siguientes representan esas tareas y no son transcripciones de conversaciones separadas.

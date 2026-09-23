@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Interfaces, objetos y fases de las pantallas
 
 **Actualización: 21 de septiembre de 2026.** Las interfaces propias de la aplicación se encuentran en [src/app/models](../src/app/models). Las pantallas importan esos contratos; los servicios reciben o devuelven objetos con ellos y las plantillas HTML muestran sus propiedades.

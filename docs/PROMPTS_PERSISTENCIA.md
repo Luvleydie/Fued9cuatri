@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Prompts relevantes para la entrega de persistencia
 
 **Fecha: 21 de septiembre de 2026.** Este registro reproduce instrucciones reales del usuario. Las explicaciones posteriores describen cómo se atendieron; no son prompts adicionales atribuidos al usuario.

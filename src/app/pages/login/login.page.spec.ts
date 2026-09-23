@@ -1,62 +1,123 @@
-import { TestBed } from '@angular/core/testing';
-import { FormBuilder } from '@angular/forms';
-import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular/lazy';
+import { ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { AxiosError, AxiosResponse } from 'axios';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { LoginCredentials } from '../../models/auth-request.model';
-import { AuthService } from '../../services/auth.service';
+import api from '../../core/api/axios-client';
+import { clearSession, readToken, readUser, saveSession } from '../../core/api/session-storage';
+import { AuthResponse } from '../../models/auth-response.model';
 import { LoginPage } from './login.page';
 
-describe('LoginPage: objeto del formulario y fases', () => {
-  const auth = { login: vi.fn<(credentials: LoginCredentials) => Promise<void>>() };
+describe('LoginPage', () => {
+  const response: AuthResponse = {
+    id: 1,
+    username: 'emilys',
+    accessToken: 'a'.repeat(64),
+    expiresAt: Math.floor(Date.now() / 1000) + 3600,
+  };
   const router = { navigateByUrl: vi.fn().mockResolvedValue(true) };
-  const toast = { create: vi.fn().mockResolvedValue({ present: vi.fn().mockResolvedValue(undefined) }) };
+  const changeDetector = { markForCheck: vi.fn() };
   let page: LoginPage;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
-    auth.login.mockResolvedValue(undefined);
-    TestBed.configureTestingModule({ providers: [
-      FormBuilder, { provide: AuthService, useValue: auth },
-      { provide: Router, useValue: router }, { provide: ToastController, useValue: toast },
-    ] });
-    page = TestBed.runInInjectionContext(() => new LoginPage());
-  });
-  afterEach(() => TestBed.resetTestingModule());
-
-  it('no envía campos vacíos ni un usuario formado solo por espacios', async () => {
-    await page.submit();
-    page.form.setValue({ username: '   ', password: 'demo' });
-    await page.submit();
-    expect(auth.login).not.toHaveBeenCalled();
-    expect(page.phase()).toBe('idle');
+    clearSession();
+    router.navigateByUrl.mockResolvedValue(true);
+    vi.spyOn(api, 'post').mockResolvedValue({ data: response } as AxiosResponse<AuthResponse>);
+    page = new LoginPage(
+      router as unknown as Router,
+      changeDetector as unknown as ChangeDetectorRef,
+      { snapshot: { queryParamMap: convertToParamMap({ registered: '1' }) } } as ActivatedRoute,
+    );
   });
 
-  it('envía un objeto tipado una sola vez mientras la petición está pendiente', async () => {
-    let finish!: () => void;
-    auth.login.mockImplementation(() => new Promise<void>((resolve) => { finish = resolve; }));
-    page.fillDemo();
-    const request = page.submit();
-    expect(page.phase()).toBe('loading');
-    await page.submit();
-    expect(auth.login).toHaveBeenCalledExactlyOnceWith({ username: 'emilys', password: 'emilyspass' });
-    finish();
-    await request;
-    expect(page.phase()).toBe('success');
-    expect(page.form.getRawValue()).toEqual({ username: '', password: '' });
+  afterEach(() => {
+    page.ngOnDestroy();
+    clearSession();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('rechaza campos vacíos sin enviar una petición', async () => {
+    page.credentials = { username: '  ', password: 'secreto' };
+    await page.login();
+    expect(api.post).not.toHaveBeenCalled();
+    expect(page.errorMessage).toContain('Escribe tu usuario');
+    expect(page.isSubmitting).toBe(false);
+  });
+
+  it('envía las credenciales, guarda la sesión y reemplaza la ruta de login', async () => {
+    page.credentials = { username: ' emilys ', password: 'emilyspass' };
+    await page.login();
+    expect(api.post).toHaveBeenCalledWith('/auth/login', { username: 'emilys', password: 'emilyspass' });
+    expect(readToken()).toBe(response.accessToken);
+    expect(readUser()).toEqual({ id: 1, username: 'emilys' });
     expect(router.navigateByUrl).toHaveBeenCalledWith('/home', { replaceUrl: true });
+    expect(page.credentials.password).toBe('');
+    expect(page.registrationSuccess).toBe(true);
+    expect(page.isSubmitting).toBe(false);
   });
 
-  it('permite reintentar después de credenciales rechazadas', async () => {
-    auth.login.mockRejectedValueOnce({ isAxiosError: true, response: { status: 401 } });
+  it('bloquea un segundo envío mientras espera la respuesta', async () => {
+    let resolveRequest!: (value: AxiosResponse<AuthResponse>) => void;
+    vi.mocked(api.post).mockImplementationOnce(() => new Promise((resolve) => { resolveRequest = resolve; }));
     page.fillDemo();
-    await page.submit();
-    expect(page.phase()).toBe('error');
-    expect(page.loading()).toBe(false);
-    expect(page.error()).toBe('Usuario o contraseña incorrectos.');
+    const request = page.login();
+    expect(page.isSubmitting).toBe(true);
+    await page.login();
+    expect(api.post).toHaveBeenCalledTimes(1);
+    resolveRequest({ data: response } as AxiosResponse<AuthResponse>);
+    await request;
+    expect(page.isSubmitting).toBe(false);
+  });
+
+  it('muestra el error de la API y termina la animación después de 500 ms', async () => {
+    saveSession(response);
+    vi.mocked(api.post).mockRejectedValueOnce({ isAxiosError: true, response: { status: 401, data: { message: 'Usuario o contraseña incorrectos.' } } });
+    page.fillDemo();
+    await page.login();
+    expect(page.errorMessage).toBe('Usuario o contraseña incorrectos.');
+    expect(page.failLogin).toBe(true);
+    expect(page.timer).toHaveLength(1);
+    expect(readToken()).toBeNull();
+    expect(readUser()).toBeNull();
     expect(router.navigateByUrl).not.toHaveBeenCalled();
-    await page.submit();
-    expect(page.phase()).toBe('success');
-    expect(page.error()).toBe('');
+    vi.advanceTimersByTime(500);
+    expect(page.failLogin).toBe(false);
+    expect(changeDetector.markForCheck).toHaveBeenCalled();
+  });
+
+  it('permite reintentar después de un timeout y limpia el error anterior', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce(new AxiosError('Timeout', 'ECONNABORTED'));
+    page.fillDemo();
+    await page.login();
+    expect(page.errorMessage).toContain('Revisa tu conexión');
+    expect(page.isSubmitting).toBe(false);
+    await page.login();
+    expect(page.errorMessage).toBe('');
+    expect(page.failLogin).toBe(false);
+    expect(page.timer).toEqual([]);
+    expect(readToken()).toBe(response.accessToken);
+  });
+
+  it('borra la sesión si el router rechaza la navegación', async () => {
+    router.navigateByUrl.mockResolvedValueOnce(false);
+    page.fillDemo();
+    await page.login();
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/home', { replaceUrl: true });
+    expect(readToken()).toBeNull();
+    expect(readUser()).toBeNull();
+    expect(page.errorMessage).toContain('No pudimos completar');
+    expect(page.failLogin).toBe(true);
+    expect(page.isSubmitting).toBe(false);
+  });
+
+  it('cancela los temporizadores al destruir la página', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce(new AxiosError('Sin conexión'));
+    page.fillDemo();
+    await page.login();
+    page.ngOnDestroy();
+    expect(page.timer).toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

@@ -1,79 +1,54 @@
-<ion-header class="ion-no-border">
+<ion-header>
   <ion-toolbar>
-    <ion-title>Nova<span class="wordmark-accent">Cart</span></ion-title>
-    <ion-buttons slot="end"><ion-button routerLink="/inventory" aria-label="Gestionar productos">Gestionar</ion-button><ion-button routerLink="/cart" aria-label="Ir al carrito">Mi carrito</ion-button></ion-buttons>
+    <ion-title>Usuarios</ion-title>
+    <ion-buttons slot="end"><ion-button routerLink="/cart">Carrito</ion-button><ion-button (click)="logout()" [disabled]="isSubmitting">Cerrar sesión</ion-button></ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <main class="page-shell">
-    <section class="catalog-hero" aria-labelledby="catalog-title">
-      <div>
-        <p class="eyebrow">DESCUBRE NOVACART</p>
-        <h1 id="catalog-title">Tu próximo favorito<br />está aquí.</h1>
-        <p>Encuentra pequeños detalles y grandes descubrimientos para tu día a día.</p>
-        <span class="hero-tag">Una selección para cada momento</span>
-      </div>
-      <div class="hero-art" aria-hidden="true">
-        <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span>
-        <div class="hero-bag"><ion-icon name="bag-add-outline"></ion-icon></div>
-        <span class="spark spark-one">✦</span><span class="spark spark-two">✦</span>
-      </div>
-    </section>
+  <main class="home-shell fade-in">
+    <header class="page-heading">
+      <div><span class="brand">NovaCart · Usuarios</span><h1>Hola, {{ currentUser?.firstName || currentUser?.username }}</h1><p class="muted">Crea, consulta, edita y elimina usuarios desde aquí.</p></div>
+      <span class="user-badge">{{ currentUser?.username }}</span>
+    </header>
 
-    <div class="catalog-heading">
-      <div><p class="eyebrow">EXPLORA LA COLECCIÓN</p><h2>Productos</h2></div>
-      @if (!loading()) { <p class="muted" aria-live="polite">{{ filteredProducts().length }} productos</p> }
+    @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
+    @if (successMessage) { <p class="form-success" role="status">{{ successMessage }}</p> }
+
+    <div class="home-grid">
+      <section class="panel" aria-labelledby="editor-title">
+        <h2 id="editor-title">{{ editingId === null ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+        <form #editor="ngForm" (ngSubmit)="saveUser()">
+          <fieldset [disabled]="isSubmitting || isLoading">
+            <div class="field"><label for="user-username">Usuario</label><input id="user-username" name="username" [(ngModel)]="userForm.username" required minlength="3" maxlength="100" autocomplete="off" /></div>
+            <div class="field-grid">
+              <div class="field"><label for="user-firstName">Nombre</label><input id="user-firstName" name="firstName" [(ngModel)]="userForm.firstName" required maxlength="100" /></div>
+              <div class="field"><label for="user-lastName">Apellido</label><input id="user-lastName" name="lastName" [(ngModel)]="userForm.lastName" required maxlength="100" /></div>
+            </div>
+            <div class="field"><label for="user-email">Correo</label><input id="user-email" name="email" type="email" [(ngModel)]="userForm.email" required email maxlength="254" /></div>
+            <div class="field"><label for="user-password">{{ editingId === null ? 'Contraseña' : 'Nueva contraseña (opcional)' }}</label><input id="user-password" name="password" type="password" [(ngModel)]="userForm.password" [required]="editingId === null" minlength="8" maxlength="200" autocomplete="new-password" /><small class="muted">{{ editingId === null ? 'Mínimo 8 caracteres.' : 'Déjala vacía para conservar la actual.' }}</small></div>
+            <div class="form-actions">
+              <button type="submit" class="primary-button" [disabled]="editor.invalid || isSubmitting || isLoading">{{ isSubmitting ? 'Guardando…' : editingId === null ? 'Crear usuario' : 'Guardar cambios' }}</button>
+              @if (editingId !== null) { <button type="button" class="secondary-button" (click)="cancelEdit()">Cancelar</button> }
+            </div>
+          </fieldset>
+        </form>
+      </section>
+
+      <section class="panel" aria-labelledby="users-title" [attr.aria-busy]="isLoading">
+        <div class="list-heading"><h2 id="users-title">Usuarios registrados <span class="count">{{ users.length }}</span></h2><button class="secondary-button" (click)="loadUsers()" [disabled]="isLoading || isSubmitting">Actualizar</button></div>
+        @if (isLoading) { <p role="status">Cargando usuarios…</p> }
+        @else if (!users.length) { <p class="muted">No hay usuarios para mostrar.</p> }
+        @for (user of users; track user.id) {
+          <article class="user-row" [attr.data-user-id]="user.id">
+            <div class="user-info"><h3>{{ user.username }}</h3><p>{{ user.firstName }} {{ user.lastName }}</p><p class="muted">{{ user.email }}</p></div>
+            <div class="row-actions">
+              <button class="secondary-button" (click)="editUser(user)" [disabled]="isSubmitting || isLoading" [attr.aria-label]="'Editar ' + user.username">Editar</button>
+              <button class="danger-button" (click)="deleteUser(user)" [disabled]="isSubmitting || isLoading || user.id === currentUser?.id" [attr.aria-label]="'Eliminar ' + user.username">Eliminar</button>
+            </div>
+          </article>
+        }
+      </section>
     </div>
-    <ion-searchbar
-      [value]="query()"
-      (ionInput)="query.set($event.detail.value ?? '')"
-      placeholder="Buscar por nombre, categoría o marca"
-      aria-label="Buscar productos"
-      [debounce]="150">
-    </ion-searchbar>
-
-    @if (loading()) {
-      <div class="empty-state" role="status"><ion-spinner name="crescent"></ion-spinner><p>Cargando productos…</p></div>
-    } @else if (error()) {
-      <div class="empty-state" role="alert"><ion-icon name="cube-outline"></ion-icon><h2>No pudimos abrir el catálogo</h2><p>{{ error() }}</p><ion-button (click)="loadProducts()">Reintentar</ion-button></div>
-    } @else {
-      @if (source() === 'local') {
-        <div class="notice" role="status"><div><strong>Estás viendo el catálogo de respaldo.</strong><p>La conexión no está disponible. Estos seis productos están guardados en tu aplicación.</p></div><ion-button fill="outline" size="small" (click)="loadProducts()">Reintentar</ion-button></div>
-      }
-      @if (filteredProducts().length === 0) {
-        <div class="empty-state"><ion-icon name="cube-outline"></ion-icon><h2>{{ products().length ? 'Sin coincidencias' : 'No hay productos disponibles' }}</h2><p>{{ products().length ? 'Prueba con otro nombre, categoría o marca.' : 'Vuelve a consultar el catálogo en un momento.' }}</p>@if (query()) { <ion-button fill="outline" (click)="query.set('')">Limpiar búsqueda</ion-button> }</div>
-      } @else {
-        <ion-grid class="product-grid">
-          <ion-row>
-            @for (product of filteredProducts(); track product.id) {
-              <ion-col size="12" size-md="6" size-lg="3">
-                <ion-card class="product-card">
-                  <a class="product-media" [routerLink]="['/product', product.id]" [attr.aria-label]="'Ver ' + product.title">
-                    @if (product.thumbnail && !failedImages().has(product.id)) {
-                      <img [src]="product.thumbnail" [alt]="product.title" loading="lazy" (error)="imageFailed(product.id)" />
-                    } @else {
-                      <span class="image-placeholder"><ion-icon name="cube-outline"></ion-icon><span>Imagen no disponible</span></span>
-                    }
-                  </a>
-                  <ion-card-header>
-                    <div class="card-meta"><span>{{ product.category }}</span>@if (product.rating !== undefined) { <span class="rating"><ion-icon name="star" aria-hidden="true"></ion-icon>{{ product.rating | number:'1.1-1' }}<span class="sr-only"> de 5</span></span> }</div>
-                    <ion-card-title>{{ product.title }}</ion-card-title>
-                  </ion-card-header>
-                  <ion-card-content>
-                    <p class="brand">{{ product.brand || 'Selección NovaCart' }}</p>
-                    <p class="price">{{ product.price | currency:'USD':'symbol':'1.2-2' }} <small>USD</small></p>
-                    <div class="card-actions">
-                      <ion-button fill="outline" size="small" [routerLink]="['/product', product.id]" [attr.aria-label]="'Ver detalles de ' + product.title">Detalles</ion-button>
-                      <ion-button size="small" (click)="addProduct(product)" [disabled]="product.stock !== undefined && product.stock <= 0" [attr.aria-label]="'Agregar ' + product.title + ' al carrito'"><ion-icon slot="start" name="bag-add-outline" aria-hidden="true"></ion-icon>{{ product.stock === 0 ? 'Agotado' : 'Agregar' }}</ion-button>
-                    </div>
-                  </ion-card-content>
-                </ion-card>
-              </ion-col>
-            }
-          </ion-row>
-        </ion-grid>
-      }
-    }
   </main>
 </ion-content>

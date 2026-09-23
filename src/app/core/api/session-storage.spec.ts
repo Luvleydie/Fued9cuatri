@@ -1,46 +1,65 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearSession, readToken, readUser, TOKEN_KEY, toUser, USER_KEY } from './session-storage';
+import { clearSession, readToken, readUser, saveSession, TOKEN_KEY, toUser, USER_KEY, EXPIRY_KEY } from './session-storage';
 
-const token = (exp = Math.floor(Date.now() / 1000) + 3600) =>
-  `header.${btoa(JSON.stringify({ exp }))}.signature`;
+const session = () => ({ id: 1, username: 'emilys', accessToken: 'a'.repeat(64), expiresAt: Math.floor(Date.now() / 1000) + 3600 });
 
 describe('Almacenamiento de sesión', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => { sessionStorage.clear(); localStorage.clear(); });
   afterEach(() => vi.restoreAllMocks());
 
-  it('restaura una sesión vigente y conserva sólo los campos públicos del usuario', () => {
-    const accessToken = token();
-    localStorage.setItem(TOKEN_KEY, accessToken);
-    localStorage.setItem(USER_KEY, JSON.stringify({ id: 1, username: 'emilys', firstName: 'Emily', password: 'demo', bank: { cardNumber: '123' } }));
-    expect(readToken()).toBe(accessToken);
+  it('guarda y restaura token, vencimiento y campos públicos', () => {
+    const response = session();
+    saveSession({ ...response, firstName: 'Emily' });
+    expect(readToken()).toBe(response.accessToken);
     expect(readUser()).toEqual({ id: 1, username: 'emilys', firstName: 'Emily' });
+    expect(sessionStorage.getItem(EXPIRY_KEY)).toBe(String(response.expiresAt));
   });
 
-  it.each(['broken', 'header.invalid.signature', token(1)])('elimina la sesión con un token inválido o vencido', (value) => {
-    localStorage.setItem(TOKEN_KEY, value);
-    localStorage.setItem(USER_KEY, JSON.stringify({ id: 1, username: 'emilys' }));
-    expect(readToken()).toBeNull();
-    expect(localStorage.getItem(USER_KEY)).toBeNull();
-    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
-  });
-
-  it.each(['{', 'null', '{"id":1}', '{"id":"1","username":"emilys"}'])('invalida la sesión si el usuario persistido está dañado: %s', (raw) => {
-    localStorage.setItem(TOKEN_KEY, token());
-    localStorage.setItem(USER_KEY, raw);
+  it.each(['broken', 'header.payload.signature', ''])('elimina sesión con token inválido: %s', value => {
+    saveSession(session());
+    sessionStorage.setItem(TOKEN_KEY, value);
     expect(readUser()).toBeNull();
-    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
+    expect(sessionStorage.getItem(USER_KEY)).toBeNull();
   });
 
-  it('no expone datos sensibles provenientes de /auth/me', () => {
-    expect(toUser({ id: 1, username: 'emilys', email: 'emily@example.test', password: 'secret', accessToken: 'token', ssn: '123' }))
-      .toEqual({ id: 1, username: 'emilys', email: 'emily@example.test' });
+  it.each(['0', 'NaN', '1'])('elimina sesión vencida o dañada: %s', value => {
+    saveSession(session());
+    sessionStorage.setItem(EXPIRY_KEY, value);
+    expect(readToken()).toBeNull();
+    expect(sessionStorage.getItem(USER_KEY)).toBeNull();
   });
 
-  it('borra únicamente la sesión y tolera almacenamiento bloqueado', () => {
+  it.each(['{', 'null', '{"id":1}', '{"id":"1","username":"emilys"}'])('invalida un perfil dañado: %s', raw => {
+    saveSession(session());
+    sessionStorage.setItem(USER_KEY, raw);
+    expect(readUser()).toBeNull();
+    expect(sessionStorage.getItem(TOKEN_KEY)).toBeNull();
+  });
+
+  it('no proyecta credenciales ni campos sensibles', () => {
+    expect(toUser({ id: 1, username: 'emilys', password: 'secret', accessToken: 'token' }))
+      .toEqual({ id: 1, username: 'emilys' });
+  });
+
+  it('retira solo la sesión local antigua; la pestaña nueva requiere login', () => {
+    localStorage.setItem(TOKEN_KEY, 'legacy');
+    localStorage.setItem(USER_KEY, '{}');
     localStorage.setItem('novacart.cart', '[]');
-    localStorage.setItem(TOKEN_KEY, token());
-    clearSession();
+    saveSession(session());
+    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
+    expect(localStorage.getItem(USER_KEY)).toBeNull();
     expect(localStorage.getItem('novacart.cart')).toBe('[]');
+    sessionStorage.clear();
+    expect(readUser()).toBeNull();
+  });
+
+  it('limpia una sesión incompleta si el guardado falla', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked'); });
+    expect(() => saveSession(session())).toThrow('guardar la sesión');
+    expect(readUser()).toBeNull();
+  });
+
+  it('tolera almacenamiento bloqueado', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked'); });
     vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new Error('blocked'); });
     expect(readToken()).toBeNull();

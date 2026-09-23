@@ -3,7 +3,7 @@ import { environment } from '../../../environments/environment';
 import { readToken } from './session-storage';
 
 const api = axios.create({
-  baseURL: environment.apiUrl,
+  baseURL: new URL(environment.apiUrl, document.baseURI).href,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 });

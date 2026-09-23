@@ -1,4 +1,2 @@
-# Sólo para generar el video y el PDF; no se necesitan para ejecutar la app.
-imageio-ffmpeg==0.6.0
-Pillow>=10.0
 reportlab>=4.0
+imageio-ffmpeg>=0.6

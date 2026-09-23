@@ -81,3 +81,6 @@ Thumbs.db
 
 # Base SQLite local y sus archivos auxiliares
 /server/data/
+
+# Configuracion privada local de PHP
+/server/config.local.php

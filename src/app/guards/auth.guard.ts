@@ -1,9 +1,9 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { readUser } from '../core/api/session-storage';
 
 export const authGuard: CanActivateFn = () =>
-  inject(AuthService).isAuthenticated() || inject(Router).createUrlTree(['/login']);
+  Boolean(readUser()) || inject(Router).createUrlTree(['/login']);
 
 export const guestGuard: CanActivateFn = () =>
-  !inject(AuthService).isAuthenticated() || inject(Router).createUrlTree(['/home']);
+  !readUser() || inject(Router).createUrlTree(['/home']);

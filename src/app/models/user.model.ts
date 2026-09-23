@@ -6,3 +6,7 @@ export interface User {
   lastName?: string;
   image?: string;
 }
+
+export interface UsersResponse {
+  users: User[];
+}

@@ -1,3 +1,5 @@
+> Documento de la version anterior. La entrega vigente usa cuatro pantallas y PHP/MySQL: [guia actual](PROYECTO_SIMPLE.md).
+
 # Verificación de la entrega de NovaCart
 
 **Fecha: 21 de septiembre de 2026.** Resultados ejecutados sobre la aplicación con servicios Angular, API propia y SQLite. El [registro del 11 de septiembre](VERIFICACION_2026-09-11.md) se conserva como antecedente de la versión que utilizaba DummyJSON.

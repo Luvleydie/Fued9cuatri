@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import api from './axios-client';
-import { TOKEN_KEY } from './session-storage';
+import { EXPIRY_KEY, TOKEN_KEY } from './session-storage';
 
 describe('Cliente Axios', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => sessionStorage.clear());
 
   it('envía el token vigente, consulta el almacenamiento en cada petición y respeta el timeout', async () => {
     const requestHeaders: Array<string | undefined> = [];
@@ -16,22 +16,24 @@ describe('Cliente Axios', () => {
       },
     });
     await request();
-    const value = `header.${btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))}.signature`;
-    localStorage.setItem(TOKEN_KEY, value);
+    const value = 'a'.repeat(64);
+    sessionStorage.setItem(TOKEN_KEY, value);
+    sessionStorage.setItem(EXPIRY_KEY, String(Date.now() / 1000 + 3600));
     await request();
-    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
     await request();
     expect(requestHeaders).toEqual([undefined, `Bearer ${value}`, undefined]);
   });
 
   it('no adjunta un token vencido', async () => {
-    localStorage.setItem(TOKEN_KEY, `header.${btoa(JSON.stringify({ exp: 1 }))}.signature`);
-    await api.get('/products', {
+    sessionStorage.setItem(TOKEN_KEY, 'a'.repeat(64));
+    sessionStorage.setItem(EXPIRY_KEY, '1');
+    await api.get('/users', {
       adapter: async (config) => {
         expect(config.headers.has('Authorization')).toBe(false);
         return { config, data: {}, headers: {}, status: 200, statusText: 'OK' };
       },
     });
-    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
+    expect(sessionStorage.getItem(TOKEN_KEY)).toBeNull();
   });
 });
