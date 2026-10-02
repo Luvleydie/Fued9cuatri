@@ -1,0 +1,73 @@
+{
+  "at": "2026-10-02T23:03:19.401Z",
+  "baseURL": "http://localhost/novacart/",
+  "offlineSimulation": "Playwright BrowserContext.setOffline(true)",
+  "results": [
+    {
+      "name": "Desconexión real, lectura temporal, recarga y recuperación",
+      "passed": true,
+      "durationMs": 7339,
+      "screenshot": "docs/screenshots-conexion/01-carrito-sin-conexion.png",
+      "mobileScreenshot": "docs/screenshots-conexion/01-carrito-sin-conexion-movil.png",
+      "serviceWorker": {
+        "scope": "http://localhost/novacart/",
+        "state": "activated"
+      },
+      "userCount": 2,
+      "productCount": 3,
+      "publicCache": {
+        "assetCount": 1468,
+        "containsApi": false
+      },
+      "offlineReloadPassed": true,
+      "recovered": true
+    },
+    {
+      "name": "Servidor 503 con copia válida y actualización posterior",
+      "passed": true,
+      "durationMs": 1535,
+      "screenshot": "docs/screenshots-conexion/03-servicio-no-disponible.png",
+      "cachedUsers": 2,
+      "technicalDetailsHidden": true
+    },
+    {
+      "name": "Sin conexión y sin copia previa del carrito",
+      "passed": true,
+      "durationMs": 2248,
+      "screenshot": "docs/screenshots-conexion/04-sin-copia-disponible.png",
+      "missingDataNotShownAsEmptyCart": true
+    },
+    {
+      "name": "Sesión 401: elimina copia y exige iniciar sesión",
+      "passed": true,
+      "durationMs": 2158,
+      "tokenPresent": false,
+      "cacheCount": 0,
+      "screenshot": "docs/screenshots-conexion/05-sesion-vencida.png"
+    },
+    {
+      "name": "Cuota de almacenamiento: respaldo en memoria y aviso al recargar",
+      "passed": true,
+      "durationMs": 2070,
+      "screenshot": "docs/screenshots-conexion/06-almacenamiento-en-memoria.png",
+      "memoryFallbackPassed": true,
+      "volatileDataLossExplained": true
+    },
+    {
+      "name": "Escritura 503: un solo envío y formulario conservado",
+      "passed": true,
+      "durationMs": 1540,
+      "screenshot": "docs/screenshots-conexion/07-escritura-no-confirmada.png",
+      "writes": 1,
+      "formPreserved": true,
+      "noRecordCreated": true
+    },
+    {
+      "name": "Inicio de sesión y registro deshabilitados sin conexión",
+      "passed": true,
+      "durationMs": 2549,
+      "screenshot": "docs/screenshots-conexion/08-registro-sin-conexion.png",
+      "offlineNavigationPassed": true
+    }
+  ]
+}

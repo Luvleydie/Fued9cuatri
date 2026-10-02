@@ -1,0 +1,108 @@
+{
+  "at": "2026-10-02T23:00:06.850Z",
+  "baseURL": "http://localhost/novacart/",
+  "scope": "UI Reactive Forms: datos y errores API simulados en contextos aislados, sin mutaciones reales en MySQL.",
+  "apiSimulation": "Playwright BrowserContext.route; todas las rutas /api/ interceptadas; las inesperadas se bloquean.",
+  "serviceWorkers": "Bloqueados para garantizar la intercepción; funcionamiento offline se verifica en test:offline.",
+  "screenshots": "Los campos de contraseña y la leyenda demo se enmascaran. Anchos 1440 y 390 px; altura ampliada al contenido para capturar el scroll interno de Ionic, con animaciones desactivadas.",
+  "results": [
+    {
+      "name": "Login: formulario inválido, patch de demo y sesión sin contraseña",
+      "passed": true,
+      "durationMs": 896,
+      "browserErrors": [],
+      "calls": {
+        "login": 1,
+        "register": 0,
+        "createUser": 0,
+        "cartUpdate": 0,
+        "cartDelete": 0,
+        "unexpected": []
+      },
+      "screenshots": {
+        "desktop": "docs/screenshots-data-driven/01-login-modelo-valido.png",
+        "mobile": "docs/screenshots-data-driven/01-login-modelo-valido-movil.png"
+      },
+      "invalidSubmitBlocked": true,
+      "demoPatched": true,
+      "passwordNotStored": true
+    },
+    {
+      "name": "Registro: validadores locales, confirmación y errores por campo del servidor",
+      "passed": true,
+      "durationMs": 625,
+      "browserErrors": [],
+      "calls": {
+        "login": 0,
+        "register": 1,
+        "createUser": 0,
+        "cartUpdate": 0,
+        "cartDelete": 0,
+        "unexpected": []
+      },
+      "invalidScreenshots": {
+        "desktop": "docs/screenshots-data-driven/02-registro-validacion-local.png",
+        "mobile": "docs/screenshots-data-driven/02-registro-validacion-local-movil.png"
+      },
+      "serverScreenshot": "docs/screenshots-data-driven/03-registro-error-servidor.png",
+      "invalidRequests": 0,
+      "confirmationOnlyInUi": true,
+      "serverErrorClearedOnEdit": true
+    },
+    {
+      "name": "Usuarios: crear/editar, reglas de contraseña y datos conservados ante 503",
+      "passed": true,
+      "durationMs": 1339,
+      "browserErrors": [],
+      "calls": {
+        "login": 1,
+        "register": 0,
+        "createUser": 1,
+        "cartUpdate": 0,
+        "cartDelete": 0,
+        "unexpected": []
+      },
+      "screenshots": {
+        "desktop": "docs/screenshots-data-driven/04-usuarios-fallo-datos-conservados.png",
+        "mobile": "docs/screenshots-data-driven/04-usuarios-fallo-datos-conservados-movil.png"
+      },
+      "editPasswordOptional": true,
+      "createPasswordRequired": true,
+      "formPreserved": true,
+      "confirmationOnlyInUi": true,
+      "noRecordCreated": true
+    },
+    {
+      "name": "Carrito: FormArray, reindexación tras quitar una fila y borrador conservado ante 503",
+      "passed": true,
+      "durationMs": 1795,
+      "browserErrors": [],
+      "calls": {
+        "login": 1,
+        "register": 0,
+        "createUser": 0,
+        "cartUpdate": 2,
+        "cartDelete": 1,
+        "unexpected": []
+      },
+      "invalidScreenshots": {
+        "desktop": "docs/screenshots-data-driven/05-carrito-cantidad-invalida.png",
+        "mobile": "docs/screenshots-data-driven/05-carrito-cantidad-invalida-movil.png"
+      },
+      "reindexedScreenshot": "docs/screenshots-data-driven/06-carrito-fila-reindexada.png",
+      "failedScreenshot": "docs/screenshots-data-driven/07-carrito-borrador-conservado.png",
+      "initialFormArrayRows": 2,
+      "rowsAfterDelete": 1,
+      "survivingProductId": 12,
+      "reindexedControlSavedCorrectly": true,
+      "invalidQuantities": [
+        0,
+        1.5,
+        6
+      ],
+      "draftQuantity": 3,
+      "confirmedQuantity": 2,
+      "confirmedTotalUnchanged": true
+    }
+  ]
+}

@@ -25,6 +25,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid #a594dd; outline-offs
 .field input:focus { outline: 2px solid #a594dd; border-color: #8c75d6; }
 .field small { font-size: 12px; font-weight: 400; }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field.full-width { grid-column: 1 / -1; }
+.field-error { display: block; color: #982a43; font-size: 13px; line-height: 1.5; margin-top: 4px; }
+.field input[aria-invalid="true"] { border-color: #b63552; background: #fff9fa; }
+.quantity-editor { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-top: 14px; }
+.quantity-editor .field { width: 90px; margin-bottom: 0; }
 fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
 .form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
 button { font: inherit; cursor: pointer; min-height: 42px; border-radius: 8px; padding: 10px 15px; font-size: 14px; font-weight: 600; }
@@ -66,4 +71,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 
 .quantity-actions { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
 .cart-total { font-size: 22px; font-weight: 700; margin-top: 24px; color: #2c2840; }
+.connection-notice, .cache-notice { padding: 12px 14px; border-radius: 8px; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.connection-notice { background: #edf5f0; color: #265438; border: 1px solid #c5decd; }
+.connection-warning, .cache-notice { background: #fff6df; color: #694b12; border: 1px solid #e6cc8b; }
+.cache-date { font-size: 13px; color: #696479; line-height: 1.5; }
 @media (max-width: 860px) { .cart-grid > section:last-child { order: 0; } }

@@ -2,6 +2,7 @@ import { cp, mkdir, copyFile, access } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildOfflineWorker } from './build-offline.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const xampp = process.env.XAMPP_PATH || 'C:/xampp';
@@ -25,6 +26,7 @@ if (mode === 'db') {
   catch (error) { if (error.code !== 'ENOENT') throw error; }
   if (mode === 'deploy') {
     run(process.execPath, ['node_modules/@angular/cli/bin/ng.js', 'build', '--base-href=/novacart/']);
+    await buildOfflineWorker(path.join(root, 'www'));
     await cp(path.join(root, 'www'), target, { recursive: true });
     await copyFile(path.join(root, 'scripts/apache.htaccess'), path.join(target, '.htaccess'));
     console.log('App: http://localhost/novacart/');

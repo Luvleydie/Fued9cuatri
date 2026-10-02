@@ -4,38 +4,65 @@
       <a class="brand" routerLink="/login">Usuarios</a>
       <h1 id="register-title">Crear cuenta</h1>
       <p class="muted">Completa tus datos para comenzar.</p>
-      <form #form="ngForm" (ngSubmit)="register()" [attr.aria-busy]="isSubmitting">
+      <app-connection-notice />
+      <form [formGroup]="registerForm" (ngSubmit)="register()" [attr.aria-busy]="isSubmitting" novalidate>
         <label class="field" for="register-username">
           Usuario
-          <input id="register-username" name="username" [(ngModel)]="user.username" required minlength="3"
-            maxlength="100" autocomplete="username" placeholder="Tu usuario" [disabled]="isSubmitting">
+          <input id="register-username" name="username" formControlName="username" aria-required="true"
+            autocomplete="username" placeholder="Tu usuario"
+            [attr.aria-invalid]="fieldError('username') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('username') ? 'register-username-help register-username-error' : 'register-username-help'">
+          <span id="register-username-help" class="muted">De 3 a 100 letras, números, puntos o guiones.</span>
+          @if (fieldError('username'); as message) { <span id="register-username-error" class="field-error">{{ message }}</span> }
         </label>
         <div class="field-grid">
           <label class="field" for="register-firstname">
             Nombre
-            <input id="register-firstname" name="firstName" [(ngModel)]="user.firstName" required
-              maxlength="100" autocomplete="given-name" [disabled]="isSubmitting">
+            <input id="register-firstname" name="firstName" formControlName="firstName" aria-required="true"
+              autocomplete="given-name"
+              [attr.aria-invalid]="fieldError('firstName') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('firstName') ? 'register-firstname-error' : null">
+            @if (fieldError('firstName'); as message) { <span id="register-firstname-error" class="field-error">{{ message }}</span> }
           </label>
           <label class="field" for="register-lastname">
             Apellido
-            <input id="register-lastname" name="lastName" [(ngModel)]="user.lastName" required
-              maxlength="100" autocomplete="family-name" [disabled]="isSubmitting">
+            <input id="register-lastname" name="lastName" formControlName="lastName" aria-required="true"
+              autocomplete="family-name"
+              [attr.aria-invalid]="fieldError('lastName') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('lastName') ? 'register-lastname-error' : null">
+            @if (fieldError('lastName'); as message) { <span id="register-lastname-error" class="field-error">{{ message }}</span> }
           </label>
         </div>
         <label class="field" for="register-email">
           Correo electrónico
-          <input id="register-email" name="email" type="email" email [(ngModel)]="user.email" required
-            maxlength="254" autocomplete="email" placeholder="nombre@ejemplo.com" [disabled]="isSubmitting">
+          <input id="register-email" name="email" type="email" formControlName="email" aria-required="true"
+            autocomplete="email" placeholder="nombre@ejemplo.com"
+            [attr.aria-invalid]="fieldError('email') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('email') ? 'register-email-error' : null">
+          @if (fieldError('email'); as message) { <span id="register-email-error" class="field-error">{{ message }}</span> }
         </label>
         <label class="field" for="register-password">
           Contraseña
-          <input id="register-password" name="password" type="password" [(ngModel)]="user.password" required
-            minlength="8" maxlength="200" autocomplete="new-password" placeholder="Mínimo 8 caracteres" [disabled]="isSubmitting">
+          <input id="register-password" name="password" type="password" formControlName="password" aria-required="true"
+            autocomplete="new-password" placeholder="Mínimo 8 caracteres"
+            [attr.aria-invalid]="fieldError('password') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('password') ? 'register-password-help register-password-error' : 'register-password-help'">
+          <span id="register-password-help" class="muted">Usa de 8 a 200 caracteres.</span>
+          @if (fieldError('password'); as message) { <span id="register-password-error" class="field-error">{{ message }}</span> }
+        </label>
+        <label class="field" for="register-confirm-password">
+          Confirmar contraseña
+          <input id="register-confirm-password" name="confirmPassword" type="password" formControlName="confirmPassword" aria-required="true"
+            autocomplete="new-password" placeholder="Repite tu contraseña"
+            [attr.aria-invalid]="fieldError('confirmPassword') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('confirmPassword') ? 'register-confirm-password-help register-confirm-password-error' : 'register-confirm-password-help'">
+          <span id="register-confirm-password-help" class="muted">Debe coincidir con tu contraseña.</span>
+          @if (fieldError('confirmPassword'); as message) { <span id="register-confirm-password-error" class="field-error">{{ message }}</span> }
         </label>
         @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
         @if (successMessage) { <p class="form-success" role="status">{{ successMessage }}</p> }
         <div class="form-actions">
-          <button class="primary-button" type="submit" [disabled]="form.invalid || isSubmitting || !!successMessage">
+          <button class="primary-button" type="submit" [disabled]="registerForm.invalid || registerForm.pending || registerForm.disabled || isSubmitting || !!successMessage || connection.offline()">
             @if (isSubmitting) { <ion-spinner name="crescent" aria-hidden="true"></ion-spinner> }
             {{ isSubmitting ? 'Guardando…' : 'Crear cuenta' }}
           </button>

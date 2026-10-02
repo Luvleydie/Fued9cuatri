@@ -1,0 +1,26 @@
+{
+  "at": "2026-09-29T20:24:18.001Z",
+  "baseURL": "http://localhost/novacart/",
+  "results": [
+    {
+      "name": "Rutas protegidas y error de login",
+      "passed": true
+    },
+    {
+      "name": "Registro, duplicado y sesión en sessionStorage",
+      "passed": true
+    },
+    {
+      "name": "CRUD completo y errores Axios preservan formulario y listado",
+      "passed": true
+    },
+    {
+      "name": "Carrito persiste al cerrar pestaña y cambiar de sesión",
+      "passed": true
+    },
+    {
+      "name": "Cuatro pantallas adaptables: 390, 768 y 1440 px",
+      "passed": true
+    }
+  ]
+}

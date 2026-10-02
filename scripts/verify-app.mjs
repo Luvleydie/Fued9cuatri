@@ -25,6 +25,7 @@ async function fillUser(page, name, firstName = 'Prueba') {
   await page.locator('#user-lastName').fill('Navegador');
   await page.locator('#user-email').fill(name + '@example.test');
   await page.locator('#user-password').fill(password);
+  await page.locator('#user-confirm-password').fill(password);
 }
 const row = (page, name) => page.locator('.user-row').filter({ has: page.getByRole('heading', { name, exact: true }) });
 try {
@@ -49,6 +50,7 @@ try {
     await page.locator('#register-lastname').fill('Nuevo');
     await page.locator('#register-email').fill(name + '@example.test');
     await page.locator('#register-password').fill(password);
+    await page.locator('#register-confirm-password').fill(password);
     await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
     await expect(page).toHaveURL(/\/login\?registered=1$/);
     created.push(name);
@@ -68,6 +70,7 @@ try {
     await page.locator('#register-lastname').fill('Nuevo');
     await page.locator('#register-email').fill(name + '@example.test');
     await page.locator('#register-password').fill(password);
+    await page.locator('#register-confirm-password').fill(password);
     await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
     await expect(page.getByRole('alert')).toContainText('ya está registrado');
   });
@@ -78,10 +81,11 @@ try {
     await page.route('**/api/users', route => route.request().method() === 'POST'
       ? route.fulfill({ status: 503, json: { message: 'Fallo simulado de guardado' } }) : route.continue());
     await page.getByRole('button', { name: 'Crear usuario', exact: true }).click();
-    await expect(page.getByRole('alert')).toContainText('Fallo simulado');
+    await expect(page.getByRole('alert')).toContainText('No pudimos confirmar');
     await expect(page.locator('#user-username')).toHaveValue(name);
     await expect(row(page, name)).toHaveCount(0);
     await page.unroute('**/api/users');
+    await page.getByRole('button', { name: 'Actualizar', exact: true }).click();
     await page.getByRole('button', { name: 'Crear usuario', exact: true }).click();
     await expect(row(page, name)).toBeVisible(); created.push(name);
     await row(page, name).getByRole('button', { name: 'Editar ' + name, exact: true }).click();
@@ -97,9 +101,12 @@ try {
     await row(page, name).getByRole('button', { name: 'Eliminar ' + name, exact: true }).click();
     await expect(row(page, name)).toHaveCount(0);
     await page.reload(); await expect(row(page, name)).toHaveCount(0);
+    // Esperar la consulta inicial antes de simular el error del siguiente refresco.
+    await expect(page.getByTestId('users-cache-status')).toContainText('Última actualización');
+    await expect(page.getByRole('button', { name: 'Actualizar', exact: true })).toBeEnabled();
     await page.route('**/api/users', route => route.fulfill({ status: 401, json: { message: 'Sesión vencida' } }));
     await page.getByRole('button', { name: 'Actualizar', exact: true }).click();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/login\?expired=1$/);
     assert.equal(await page.evaluate(key => sessionStorage.getItem(key), tokenKey), null);
   });
   await scenario('Carrito persiste al cerrar pestaña y cambiar de sesión', async (page, context) => {

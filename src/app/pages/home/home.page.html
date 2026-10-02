@@ -12,23 +12,32 @@
       <span class="user-badge">{{ currentUser?.username }}</span>
     </header>
 
+    <app-connection-notice />
+    @if (dataNotice) { <p [class]="readOnly ? 'cache-notice' : 'cache-date'" data-testid="users-cache-status" role="status">{{ dataNotice }}</p> }
+    @if (needsRefresh && snapshot?.source !== 'cache') { <p class="cache-notice">Actualiza los datos antes de guardar más cambios.</p> }
     @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
     @if (successMessage) { <p class="form-success" role="status">{{ successMessage }}</p> }
 
     <div class="home-grid">
       <section class="panel" aria-labelledby="editor-title">
         <h2 id="editor-title">{{ editingId === null ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
-        <form #editor="ngForm" (ngSubmit)="saveUser()">
-          <fieldset [disabled]="isSubmitting || isLoading">
-            <div class="field"><label for="user-username">Usuario</label><input id="user-username" name="username" [(ngModel)]="userForm.username" required minlength="3" maxlength="100" autocomplete="off" /></div>
+        <form [formGroup]="userForm" (ngSubmit)="saveUser()" novalidate [attr.aria-busy]="isSubmitting">
+          <fieldset [disabled]="isSubmitting || isLoading || readOnly">
             <div class="field-grid">
-              <div class="field"><label for="user-firstName">Nombre</label><input id="user-firstName" name="firstName" [(ngModel)]="userForm.firstName" required maxlength="100" /></div>
-              <div class="field"><label for="user-lastName">Apellido</label><input id="user-lastName" name="lastName" [(ngModel)]="userForm.lastName" required maxlength="100" /></div>
+              @for (field of userFields; track field.key) {
+                <div class="field" [class.full-width]="field.key !== 'firstName' && field.key !== 'lastName'">
+                  <label [for]="fieldId(field.key)">{{ field.key === 'password' && editingId !== null ? 'Nueva contraseña (opcional)' : field.label }}</label>
+                  <input [id]="fieldId(field.key)" [type]="field.type" [formControlName]="field.key"
+                    [attr.autocomplete]="field.autocomplete" [attr.placeholder]="field.placeholder"
+                    [attr.aria-invalid]="fieldError(field.key) ? 'true' : null"
+                    [attr.aria-describedby]="fieldId(field.key) + '-hint' + (fieldError(field.key) ? ' ' + fieldId(field.key) + '-error' : '')" />
+                  <small class="muted" [id]="fieldId(field.key) + '-hint'">{{ (field.key === 'password' || field.key === 'confirmPassword') && editingId !== null ? 'Déjala vacía para conservar la contraseña actual.' : field.hint }}</small>
+                  @if (fieldError(field.key)) { <small class="field-error" [id]="fieldId(field.key) + '-error'" aria-live="polite">{{ fieldError(field.key) }}</small> }
+                </div>
+              }
             </div>
-            <div class="field"><label for="user-email">Correo</label><input id="user-email" name="email" type="email" [(ngModel)]="userForm.email" required email maxlength="254" /></div>
-            <div class="field"><label for="user-password">{{ editingId === null ? 'Contraseña' : 'Nueva contraseña (opcional)' }}</label><input id="user-password" name="password" type="password" [(ngModel)]="userForm.password" [required]="editingId === null" minlength="8" maxlength="200" autocomplete="new-password" /><small class="muted">{{ editingId === null ? 'Mínimo 8 caracteres.' : 'Déjala vacía para conservar la actual.' }}</small></div>
             <div class="form-actions">
-              <button type="submit" class="primary-button" [disabled]="editor.invalid || isSubmitting || isLoading">{{ isSubmitting ? 'Guardando…' : editingId === null ? 'Crear usuario' : 'Guardar cambios' }}</button>
+              <button type="submit" class="primary-button" [disabled]="userForm.invalid || userForm.pending || isSubmitting || isLoading || readOnly">{{ isSubmitting ? 'Guardando…' : editingId === null ? 'Crear usuario' : 'Guardar cambios' }}</button>
               @if (editingId !== null) { <button type="button" class="secondary-button" (click)="cancelEdit()">Cancelar</button> }
             </div>
           </fieldset>
@@ -38,13 +47,13 @@
       <section class="panel" aria-labelledby="users-title" [attr.aria-busy]="isLoading">
         <div class="list-heading"><h2 id="users-title">Usuarios registrados <span class="count">{{ users.length }}</span></h2><button class="secondary-button" (click)="loadUsers()" [disabled]="isLoading || isSubmitting">Actualizar</button></div>
         @if (isLoading) { <p role="status">Cargando usuarios…</p> }
-        @else if (!users.length) { <p class="muted">No hay usuarios para mostrar.</p> }
+        @else if (!users.length && !errorMessage) { <p class="muted">No hay usuarios para mostrar.</p> }
         @for (user of users; track user.id) {
           <article class="user-row" [attr.data-user-id]="user.id">
             <div class="user-info"><h3>{{ user.username }}</h3><p>{{ user.firstName }} {{ user.lastName }}</p><p class="muted">{{ user.email }}</p></div>
             <div class="row-actions">
-              <button class="secondary-button" (click)="editUser(user)" [disabled]="isSubmitting || isLoading" [attr.aria-label]="'Editar ' + user.username">Editar</button>
-              <button class="danger-button" (click)="deleteUser(user)" [disabled]="isSubmitting || isLoading || user.id === currentUser?.id" [attr.aria-label]="'Eliminar ' + user.username">Eliminar</button>
+              <button class="secondary-button" (click)="editUser(user)" [disabled]="isSubmitting || isLoading || readOnly" [attr.aria-label]="'Editar ' + user.username">Editar</button>
+              <button class="danger-button" (click)="deleteUser(user)" [disabled]="isSubmitting || isLoading || readOnly || user.id === currentUser?.id" [attr.aria-label]="'Eliminar ' + user.username">Eliminar</button>
             </div>
           </article>
         }

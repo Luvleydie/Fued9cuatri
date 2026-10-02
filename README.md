@@ -2,6 +2,10 @@
 
 App académica con **Angular/Ionic, interfaces TypeScript, Axios, PHP y MySQL de XAMPP**.
 
+**[Documento de entrega: funcionalidades, evidencias, repositorio, APK y bitácora de IA](ENTREGA_PROYECTO_IONIC.md).**
+
+Repositorio: [Luvleydie/Fued9cuatri](https://github.com/Luvleydie/Fued9cuatri), rama principal `main`.
+
 | Pantalla | Ruta | Función |
 |---|---|---|
 | Login | /login | Autenticar y guardar la sesión en sessionStorage |
@@ -49,6 +53,14 @@ El CRUD es una práctica sin roles: todos los usuarios autenticados pueden admin
 
 ## Documento y comprobaciones
 
+[Actividad Data Driven](docs/ACTIVIDAD_DATA_DRIVEN.md) · [Texto resumido: objetivo, prompt y resultado](docs/RESUMEN_DATA_DRIVEN.md)
+
+Login, registro y usuarios usan formularios reactivos tipados con validación compartida y errores por campo. El carrito genera sus controles de cantidad con `FormArray`. La confirmación de contraseña es solo de la interfaz y no se envía a la API. Prueba específica: `npm run test:data-driven`.
+
+[Conexión, errores y caché sin red](docs/CONEXION_Y_CACHE.md) · [Bitácora de problemas y prompts de IA](docs/BITACORA_IA_CONEXION.md)
+
+La app detecta la desconexión y conserva datos de consulta durante una hora por sesión. Los avisos muestran cuándo se usa una copia temporal; al usar esa copia, hay que recuperar la conexión y actualizar los datos antes de guardar cambios. La versión de producción permite recargar sin red después de instalar sus recursos en una primera visita. Prueba automatizada: `npm run test:offline` (requiere la app instalada en XAMPP).
+
 [Documento explicado](docs/PROYECTO_SIMPLE.md) · [PDF](output/pdf/NovaCart_Guia.pdf) · [Verificación](docs/VERIFICACION_SIMPLE.md)
 
 [Setear, promesas y flujo de datos paso a paso](docs/FLUJO_DATOS_Y_PROMESAS.md) · [APIs en archivos separados y ejemplos HTTP](docs/api/README.md)
@@ -64,6 +76,10 @@ npm run test:mcp
 ```
 
 Las pruebas de API y navegador crean usuarios temporales y eliminan únicamente los registros de esa ejecución. Requieren Apache, MySQL y la API instalada.
+
+## Android y APK
+
+El proyecto incluye la estructura de Android en `android/` y la dependencia de Capacitor. **El APK está pendiente de generación y verificación**: antes de compilar se debe configurar una API accesible desde Android; la dirección relativa utilizada en la web no conecta con XAMPP dentro del teléfono. Consulta el [estado y pasos de entrega Android](ENTREGA_PROYECTO_IONIC.md#9-apk).
 
 El MCP ya se comprobó desde Codex. Para cargarlo en otra sesión, vuelve a abrir el proyecto. `codex mcp get novacart_mysql` muestra su configuración; `npm run test:mcp` comprueba la conexión real.
 

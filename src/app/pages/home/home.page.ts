@@ -1,39 +1,58 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { Router, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular/lazy';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import api from '../../core/api/axios-client';
 import { clearSession, readUser, updateStoredUser } from '../../core/api/session-storage';
-import { ApiError } from '../../models/api-error.model';
+import { ConnectionNoticeComponent } from '../../core/connection-notice.component';
+import { connectionState } from '../../core/api/connection-state';
+import { getErrorMessage, isRecoverableReadError } from '../../core/api/api-errors';
+import { CachedResult, DataValidationError } from '../../core/api/data-cache';
+import { cacheNotice } from '../../core/cache-notice';
+import { applyServerErrors, bindFormChanges, createUserForm, getFieldError, setUserFormMode, USER_FIELD_DEFINITIONS, userInputFromForm } from '../../core/forms/form-models';
 import { User } from '../../models/user.model';
-import { UserInput } from '../../models/user-input.model';
 import { UsersService } from '../../services/users.service';
-
-const emptyUser = (): UserInput => ({ username: '', firstName: '', lastName: '', email: '', password: '' });
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, IonicModule, RouterModule, ConnectionNoticeComponent],
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
   users: User[] = [];
   currentUser: User | null = readUser();
-  userForm: UserInput = emptyUser();
+  readonly userForm = createUserForm();
+  readonly userFields = USER_FIELD_DEFINITIONS;
+  submitted = false;
+  private formChanges?: Subscription;
   editingId: number | null = null;
   isLoading = false;
   isSubmitting = false;
   errorMessage = '';
   successMessage = '';
+  readonly connection = connectionState;
+  snapshot: CachedResult<User[]> | null = null;
+  needsRefresh = false;
+
+  get readOnly(): boolean { return this.connection.offline() || this.snapshot?.source === 'cache' || this.needsRefresh; }
+  get dataNotice(): string { return cacheNotice(this.snapshot, this.connection.offline()); }
 
   constructor(private usersService: UsersService, private router: Router, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
+    this.formChanges = bindFormChanges(this.userForm, () => this.cdr.markForCheck());
     void this.loadUsers();
   }
+
+  ngOnDestroy(): void { this.formChanges?.unsubscribe(); }
+
+  fieldError(field: string): string { return getFieldError(this.userForm, field, this.submitted); }
+
+  fieldId(field: string): string { return field === 'confirmPassword' ? 'user-confirm-password' : `user-${field}`; }
 
   ionViewWillEnter(): void {
     this.currentUser = readUser();
@@ -45,10 +64,16 @@ export class HomePage implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     try {
-      this.users = await this.usersService.getUsers();
+      this.snapshot = await this.usersService.getUsers();
+      this.users = this.snapshot.data;
+      this.needsRefresh = this.snapshot.source === 'cache';
       this.currentUser = this.users.find(user => user.id === this.currentUser?.id) ?? this.currentUser;
     } catch (error: unknown) {
+      this.snapshot = null;
+      this.users = [];
+      this.needsRefresh = true;
       await this.handleError(error, 'No se pudieron cargar los usuarios. Intenta de nuevo.');
+      if (isRecoverableReadError(error)) this.errorMessage += ' No hay copia temporal válida. Conéctate y pulsa Actualizar.';
     } finally {
       this.isLoading = false;
       this.cdr.markForCheck();
@@ -56,31 +81,39 @@ export class HomePage implements OnInit {
   }
 
   editUser(user: User): void {
-    if (this.isSubmitting || this.isLoading) return;
+    if (this.isSubmitting || this.isLoading || this.readOnly) return;
     this.editingId = user.id;
-    this.userForm = {
+    setUserFormMode(this.userForm, 'edit');
+    this.userForm.reset({
       username: user.username, firstName: user.firstName ?? '', lastName: user.lastName ?? '',
-      email: user.email ?? '', password: '',
-    };
+      email: user.email ?? '', password: '', confirmPassword: '',
+    });
+    this.submitted = false;
     this.errorMessage = '';
     this.successMessage = '';
   }
 
   cancelEdit(): void {
     this.editingId = null;
-    this.userForm = emptyUser();
+    setUserFormMode(this.userForm, 'create');
+    this.userForm.reset();
+    this.submitted = false;
   }
 
   async saveUser(): Promise<void> {
-    if (this.isSubmitting || this.isLoading) return;
-    this.isSubmitting = true;
+    if (this.isSubmitting || this.isLoading || this.readOnly) return;
     this.errorMessage = '';
     this.successMessage = '';
+    this.submitted = true;
+    if (this.userForm.invalid || this.userForm.pending || this.userForm.disabled) {
+      this.userForm.markAllAsTouched();
+      this.errorMessage = 'Revisa los campos indicados antes de guardar.';
+      return;
+    }
+    const input = userInputFromForm(this.userForm);
+    this.isSubmitting = true;
+    this.userForm.disable({ emitEvent: false });
     const id = this.editingId;
-    const input: UserInput = {
-      ...this.userForm, username: this.userForm.username.trim(), email: this.userForm.email.trim(),
-      firstName: this.userForm.firstName.trim(), lastName: this.userForm.lastName.trim(),
-    };
     try {
       const user = id === null
         ? await this.usersService.createUser(input)
@@ -99,15 +132,20 @@ export class HomePage implements OnInit {
         }
       }
     } catch (error: unknown) {
-      await this.handleError(error, 'No se pudo guardar. Tus datos siguen en el formulario.');
+      this.userForm.enable({ emitEvent: false });
+      applyServerErrors(this.userForm, error);
+      this.needsRefresh = isRecoverableReadError(error) || error instanceof DataValidationError;
+      await this.handleError(error, 'No se pudo guardar. Tus datos siguen en el formulario.', true);
     } finally {
+      if (this.userForm.disabled) this.userForm.enable({ emitEvent: false });
       this.isSubmitting = false;
       this.cdr.markForCheck();
     }
+    if (this.successMessage && readUser()) await this.loadUsers();
   }
 
   async deleteUser(user: User): Promise<void> {
-    if (this.isSubmitting || this.isLoading || user.id === this.currentUser?.id) return;
+    if (this.isSubmitting || this.isLoading || this.readOnly || user.id === this.currentUser?.id) return;
     if (!window.confirm(`¿Eliminar al usuario ${user.username}?`)) return;
     this.isSubmitting = true;
     this.errorMessage = '';
@@ -118,11 +156,13 @@ export class HomePage implements OnInit {
       if (this.editingId === user.id) this.cancelEdit();
       this.successMessage = 'Usuario eliminado.';
     } catch (error: unknown) {
-      await this.handleError(error, 'No se pudo eliminar el usuario.');
+      this.needsRefresh = isRecoverableReadError(error) || error instanceof DataValidationError;
+      await this.handleError(error, 'No se pudo eliminar el usuario.', true);
     } finally {
       this.isSubmitting = false;
       this.cdr.markForCheck();
     }
+    if (this.successMessage) await this.loadUsers();
   }
 
   async logout(): Promise<void> {
@@ -133,6 +173,7 @@ export class HomePage implements OnInit {
     finally {
       clearSession();
       this.users = [];
+      this.snapshot = null;
       this.currentUser = null;
       this.cancelEdit();
       await this.router.navigateByUrl('/login', { replaceUrl: true });
@@ -141,16 +182,15 @@ export class HomePage implements OnInit {
     }
   }
 
-  private async handleError(error: unknown, fallback: string): Promise<void> {
-    if (axios.isAxiosError<ApiError>(error)) {
-      const requestError: AxiosError<ApiError> = error;
-      this.errorMessage = requestError.response?.data?.message || fallback;
-      if (requestError.response?.status === 401) {
-        clearSession();
-        await this.router.navigateByUrl('/login', { replaceUrl: true });
-      }
-    } else {
-      this.errorMessage = fallback;
+  private async handleError(error: unknown, fallback: string, mutation = false): Promise<void> {
+    this.errorMessage = getErrorMessage(error, fallback, mutation);
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      clearSession();
+      this.snapshot = null;
+      this.users = [];
+      this.currentUser = null;
+      this.cancelEdit();
+      await this.router.navigateByUrl('/login?expired=1', { replaceUrl: true });
     }
   }
 }

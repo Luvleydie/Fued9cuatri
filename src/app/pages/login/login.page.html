@@ -4,6 +4,8 @@
       <a class="brand" routerLink="/login">Usuarios</a>
       <h1 id="login-title">Iniciar sesión</h1>
       <p class="muted">Entra para consultar y administrar usuarios.</p>
+      <app-connection-notice />
+      @if (sessionExpired) { <p class="form-error" role="alert">Tu sesión venció. Conéctate e inicia sesión de nuevo.</p> }
 
       @if (registrationSuccess) {
         <p class="form-success" role="status">Cuenta creada. Ya puedes iniciar sesión.</p>
@@ -11,20 +13,26 @@
       @if (passwordUpdated) {
         <p class="form-success" role="status">Contraseña actualizada. Inicia sesión de nuevo.</p>
       }
-      <form #form="ngForm" (ngSubmit)="login()" [attr.aria-busy]="isSubmitting">
+      <form [formGroup]="loginForm" (ngSubmit)="login()" [attr.aria-busy]="isSubmitting" novalidate>
         <label class="field" for="login-username">
           Usuario
-          <input id="login-username" name="username" [(ngModel)]="credentials.username" required
-            maxlength="100" autocomplete="username" placeholder="Tu usuario" [disabled]="isSubmitting">
+          <input id="login-username" name="username" formControlName="username" aria-required="true"
+            autocomplete="username" placeholder="Tu usuario"
+            [attr.aria-invalid]="fieldError('username') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('username') ? 'login-username-error' : null">
+          @if (fieldError('username'); as message) { <span id="login-username-error" class="field-error">{{ message }}</span> }
         </label>
         <label class="field" for="login-password">
           Contraseña
-          <input id="login-password" name="password" type="password" [(ngModel)]="credentials.password"
-            required maxlength="200" autocomplete="current-password" placeholder="Tu contraseña" [disabled]="isSubmitting">
+          <input id="login-password" name="password" type="password" formControlName="password"
+            aria-required="true" autocomplete="current-password" placeholder="Tu contraseña"
+            [attr.aria-invalid]="fieldError('password') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('password') ? 'login-password-error' : null">
+          @if (fieldError('password'); as message) { <span id="login-password-error" class="field-error">{{ message }}</span> }
         </label>
         @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
         <div class="form-actions">
-          <button class="primary-button" type="submit" [disabled]="form.invalid || isSubmitting">
+          <button class="primary-button" type="submit" [disabled]="loginForm.invalid || loginForm.pending || loginForm.disabled || isSubmitting || connection.offline()">
             @if (isSubmitting) { <ion-spinner name="crescent" aria-hidden="true"></ion-spinner> }
             {{ isSubmitting ? 'Ingresando…' : 'Ingresar' }}
           </button>

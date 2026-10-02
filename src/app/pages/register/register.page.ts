@@ -1,67 +1,79 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular/lazy';
-import axios, { AxiosError } from 'axios';
+import { Subscription } from 'rxjs';
 import api from '../../core/api/axios-client';
-import { ApiError } from '../../models/api-error.model';
-import { UserInput } from '../../models/user-input.model';
+import { ConnectionNoticeComponent } from '../../core/connection-notice.component';
+import { connectionState } from '../../core/api/connection-state';
+import { getErrorMessage } from '../../core/api/api-errors';
 import { User } from '../../models/user.model';
+import { applyServerErrors, bindFormChanges, createUserForm, getFieldError, userInputFromForm } from '../../core/forms/form-models';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.page.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, IonicModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, IonicModule, ConnectionNoticeComponent],
 })
-export class RegisterPage {
-  user: UserInput = { username: '', firstName: '', lastName: '', email: '', password: '' };
+export class RegisterPage implements OnDestroy {
+  readonly registerForm = createUserForm('create');
+  submitted = false;
   isSubmitting = false;
   errorMessage = '';
   successMessage = '';
+  readonly connection = connectionState;
+  private readonly formChanges: Subscription;
 
   constructor(
     private readonly router: Router,
     private readonly changeDetector: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.formChanges = bindFormChanges(this.registerForm, () => this.changeDetector.markForCheck());
+  }
+
+  fieldError(field: keyof RegisterPage['registerForm']['controls']): string {
+    return getFieldError(this.registerForm, field, this.submitted);
+  }
 
   // La promesa termina después de registrar en MySQL y navegar al login, o tratar el error.
   async register(): Promise<void> {
-    if (this.isSubmitting || this.successMessage) return;
+    if (this.isSubmitting || this.successMessage || this.connection.offline()) return;
     this.errorMessage = '';
-    if (!this.user.username.trim() || !this.user.firstName.trim() || !this.user.lastName.trim()
-      || !this.user.email.trim() || (this.user.password?.length ?? 0) < 8) {
+    this.submitted = true;
+    if (this.registerForm.invalid || this.registerForm.pending || this.registerForm.disabled) {
+      this.registerForm.markAllAsTouched();
       this.errorMessage = 'Completa todos los campos y usa una contraseña de al menos 8 caracteres.';
       return;
     }
 
+    const input = userInputFromForm(this.registerForm);
     this.isSubmitting = true;
+    this.registerForm.disable({ emitEvent: false });
+    let submissionError: unknown;
     try {
-      const input: UserInput = {
-        username: this.user.username.trim(),
-        firstName: this.user.firstName.trim(),
-        lastName: this.user.lastName.trim(),
-        email: this.user.email.trim(),
-        password: this.user.password,
-      };
       await api.post<User>('/auth/register', input);
       this.successMessage = 'Cuenta creada. Ya puedes iniciar sesión.';
-      this.user.password = '';
-      await this.router.navigateByUrl('/login?registered=1', { replaceUrl: true });
+      this.registerForm.controls.password.reset('', { emitEvent: false });
+      this.registerForm.controls.confirmPassword.reset('', { emitEvent: false });
+      this.submitted = false;
+      const navigated = await this.router.navigateByUrl('/login?registered=1', { replaceUrl: true });
+      if (!navigated) this.errorMessage = 'Usa el enlace Iniciar sesión para continuar.';
     } catch (error: unknown) {
-      if (axios.isAxiosError<ApiError>(error)) {
-        const apiError: AxiosError<ApiError> = error;
-        this.errorMessage = apiError.response?.data?.message
-          || 'No pudimos registrar tu cuenta. Revisa tu conexión e inténtalo de nuevo.';
-      } else {
-        this.errorMessage = this.successMessage
-          ? 'Usa el enlace Iniciar sesión para continuar.'
-          : 'No pudimos registrar tu cuenta. Inténtalo de nuevo.';
-      }
+      if (!this.successMessage) submissionError = error;
+      this.errorMessage = this.successMessage
+        ? 'Usa el enlace Iniciar sesión para continuar.'
+        : getErrorMessage(error, 'No pudimos registrar tu cuenta. Inténtalo de nuevo.', true);
     } finally {
       this.isSubmitting = false;
+      this.registerForm.enable({ emitEvent: false });
+      applyServerErrors(this.registerForm, submissionError);
       this.changeDetector.markForCheck();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.formChanges.unsubscribe();
   }
 }

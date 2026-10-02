@@ -10,36 +10,56 @@
       <div><span class="brand">NovaCart</span><h1>Tu carrito</h1><p class="muted">Agrega productos y ajusta sus cantidades.</p></div>
       <button class="secondary-button" (click)="loadCart()" [disabled]="isLoading || isSubmitting">Actualizar</button>
     </header>
+    <app-connection-notice />
+    @if (needsRefresh) { <p class="cache-notice">Actualiza el carrito antes de guardar más cambios.</p> }
     @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
     @if (isLoading) { <p role="status">Cargando carrito…</p> }
     <div class="home-grid cart-grid" [attr.aria-busy]="isSubmitting || isLoading">
       <section class="panel" aria-labelledby="products-title">
         <h2 id="products-title">Productos</h2>
+        @if (productsNotice) { <p [class]="readOnly ? 'cache-notice' : 'cache-date'" data-testid="products-cache-status" role="status">{{ productsNotice }}</p> }
         @for (product of products; track product.id) {
           <article class="user-row">
             <div class="user-info"><h3>{{ product.title }}</h3><p>{{ product.price | currency:'MXN':'symbol-narrow' }} MXN</p><p class="muted">Disponibles: {{ product.stock }}</p></div>
             <div class="row-actions"><button class="secondary-button" (click)="setQuantity(product.id, quantityOf(product.id) + 1)"
-              [disabled]="isSubmitting || isLoading || quantityOf(product.id) >= product.stock || quantityOf(product.id) >= 99"
+              [disabled]="isSubmitting || isLoading || readOnly || quantityOf(product.id) >= product.stock || quantityOf(product.id) >= 99"
               [attr.aria-label]="'Agregar ' + product.title">Agregar</button></div>
           </article>
         }
       </section>
-      <section class="panel" aria-labelledby="cart-title">
+      <section class="panel" aria-labelledby="cart-title" [formGroup]="quantityForm">
         <h2 id="cart-title">Artículos guardados</h2>
-        @if (!items.length && !isLoading) { <p class="muted">Tu carrito está vacío.</p> }
-        @for (item of items; track item.productId) {
-          <article class="user-row cart-item" [attr.data-product-id]="item.productId">
+        @if (cartNotice) { <p [class]="readOnly ? 'cache-notice' : 'cache-date'" data-testid="cart-cache-status" role="status">{{ cartNotice }}</p> }
+        @if (!items.length && !isLoading && cartSnapshot) { <p class="muted">Tu carrito está vacío.</p> }
+        <div formArrayName="items">
+        @for (item of items; track $index; let index = $index) {
+          <article class="user-row cart-item" [attr.data-product-id]="item.productId" [formGroupName]="index">
             <div class="user-info"><h3>{{ item.title }}</h3><p>{{ item.price * item.quantity | currency:'MXN':'symbol-narrow' }} MXN</p>
               <div class="quantity-actions">
-                <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity - 1)" [disabled]="isSubmitting || isLoading || item.quantity === 1" [attr.aria-label]="'Disminuir ' + item.title">−</button>
+                <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity - 1)" [disabled]="isSubmitting || isLoading || readOnly || item.quantity === 1" [attr.aria-label]="'Disminuir ' + item.title">−</button>
                 <span data-testid="quantity" aria-live="polite">{{ item.quantity }}</span>
-                <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity + 1)" [disabled]="isSubmitting || isLoading || item.quantity >= item.stock || item.quantity >= 99" [attr.aria-label]="'Aumentar ' + item.title">+</button>
+                <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity + 1)" [disabled]="isSubmitting || isLoading || readOnly || item.quantity >= item.stock || item.quantity >= 99" [attr.aria-label]="'Aumentar ' + item.title">+</button>
               </div>
+              <fieldset [disabled]="isSubmitting || isLoading || readOnly">
+                <div class="quantity-editor">
+                  <div class="field">
+                    <label [for]="'cart-quantity-' + item.productId">Cantidad</label>
+                    <input [id]="'cart-quantity-' + item.productId" type="number" formControlName="quantity" inputmode="numeric" step="1"
+                      [attr.aria-invalid]="quantityError(index) ? 'true' : null"
+                      [attr.aria-describedby]="quantityError(index) ? 'cart-quantity-error-' + item.productId : null" />
+                  </div>
+                  <button type="button" class="secondary-button" (click)="saveQuantity(index)"
+                    [disabled]="readOnly || isLoading || isSubmitting || quantityRows.at(index).invalid || quantityRows.at(index).controls.quantity.value === item.quantity"
+                    [attr.aria-label]="'Guardar cantidad ' + item.title">Guardar cantidad</button>
+                </div>
+              </fieldset>
+              @if (quantityError(index)) { <small class="field-error" [id]="'cart-quantity-error-' + item.productId" aria-live="polite">{{ quantityError(index) }}</small> }
             </div>
-            <div class="row-actions"><button class="danger-button" (click)="setQuantity(item.productId, 0)" [disabled]="isSubmitting || isLoading" [attr.aria-label]="'Quitar ' + item.title">Quitar</button></div>
+            <div class="row-actions"><button class="danger-button" (click)="setQuantity(item.productId, 0)" [disabled]="isSubmitting || isLoading || readOnly" [attr.aria-label]="'Quitar ' + item.title">Quitar</button></div>
           </article>
         }
-        <p class="cart-total" data-testid="cart-total">Total: {{ total | currency:'MXN':'symbol-narrow' }} MXN</p>
+        </div>
+        @if (cartSnapshot) { <p class="cart-total" data-testid="cart-total">Total: {{ total | currency:'MXN':'symbol-narrow' }} MXN</p> }
         <p class="muted">El carrito se guarda en tu cuenta. Esta práctica no realiza compras.</p>
       </section>
     </div>

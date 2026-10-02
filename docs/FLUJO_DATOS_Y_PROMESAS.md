@@ -1,6 +1,6 @@
 # Setear, promesas y flujo de datos en NovaCart
 
-Esta explicación utiliza el código actual de la aplicación. Para ver las peticiones HTTP por separado, abre [el índice de APIs](api/README.md).
+Esta explicación corresponde a la versión previa con `ngModel`. Desde la actividad Data Driven los valores se gestionan con formularios reactivos; consulta [el flujo y código actuales](ACTIVIDAD_DATA_DRIVEN.md). Las explicaciones de promesas y las [peticiones HTTP](api/README.md) siguen siendo aplicables.
 
 ## 1. Setear significa asignar
 

@@ -1,0 +1,28 @@
+{
+  "verifiedOn": "2026-10-02",
+  "recordType": "Consolidación de resultados observados al ejecutar los comandos de verificación; los reportes enlazados fueron generados por sus scripts.",
+  "application": "NovaCart",
+  "repository": "https://github.com/Luvleydie/Fued9cuatri",
+  "branch": "main",
+  "environment": {
+    "platform": "Windows / XAMPP / Chrome",
+    "baseURL": "http://localhost/novacart/",
+    "database": "mysql"
+  },
+  "checks": [
+    { "command": "npm test -- --watch=false", "passed": true, "tests": 208, "files": 13 },
+    { "command": "npm run test:offline-shell", "passed": true, "tests": 6 },
+    { "command": "npm run lint", "passed": true },
+    { "command": "npm run deploy:xampp", "passed": true, "scope": "Compilación de producción, generación del worker y despliegue web local" },
+    { "command": "npm run test:api", "passed": true, "checks": 26, "report": "api-entrega.json", "scope": "API PHP y persistencia MySQL reales" },
+    { "command": "npm run test:e2e", "passed": true, "scenarios": 5, "report": "regresion-entrega.json", "scope": "Integración web con MySQL y errores controlados de API" },
+    { "command": "npm run test:offline", "passed": true, "scenarios": 7, "report": "conexion-verificacion.json", "scope": "Desconexión del navegador, recarga por service worker, caché y fallos controlados" },
+    { "command": "npm run test:data-driven", "passed": true, "scenarios": 4, "report": "data-driven-verificacion.json", "scope": "Formularios reactivos con API simulada, sin mutaciones de MySQL" }
+  ],
+  "android": {
+    "scaffoldPresent": true,
+    "apkProduced": false,
+    "deviceTested": false,
+    "status": "Pendiente: configurar API accesible desde Android, sincronizar recursos, compilar e instalar para verificar."
+  }
+}

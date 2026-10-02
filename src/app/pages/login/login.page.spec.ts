@@ -21,6 +21,7 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
+    window.dispatchEvent(new Event('online'));
     clearSession();
     router.navigateByUrl.mockResolvedValue(true);
     vi.spyOn(api, 'post').mockResolvedValue({ data: response } as AxiosResponse<AuthResponse>);
@@ -33,27 +34,30 @@ describe('LoginPage', () => {
 
   afterEach(() => {
     page.ngOnDestroy();
+    window.dispatchEvent(new Event('online'));
     clearSession();
     vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
   it('rechaza campos vacíos sin enviar una petición', async () => {
-    page.credentials = { username: '  ', password: 'secreto' };
+    page.loginForm.setValue({ username: '  ', password: 'secreto' });
     await page.login();
     expect(api.post).not.toHaveBeenCalled();
     expect(page.errorMessage).toContain('Escribe tu usuario');
     expect(page.isSubmitting).toBe(false);
+    expect(page.loginForm.controls.username.touched).toBe(true);
+    expect(page.fieldError('username')).not.toBe('');
   });
 
   it('envía las credenciales, guarda la sesión y reemplaza la ruta de login', async () => {
-    page.credentials = { username: ' emilys ', password: 'emilyspass' };
+    page.loginForm.setValue({ username: ' emilys ', password: 'emilyspass' });
     await page.login();
     expect(api.post).toHaveBeenCalledWith('/auth/login', { username: 'emilys', password: 'emilyspass' });
     expect(readToken()).toBe(response.accessToken);
     expect(readUser()).toEqual({ id: 1, username: 'emilys' });
     expect(router.navigateByUrl).toHaveBeenCalledWith('/home', { replaceUrl: true });
-    expect(page.credentials.password).toBe('');
+    expect(page.loginForm.controls.password.value).toBe('');
     expect(page.registrationSuccess).toBe(true);
     expect(page.isSubmitting).toBe(false);
   });
@@ -64,11 +68,13 @@ describe('LoginPage', () => {
     page.fillDemo();
     const request = page.login();
     expect(page.isSubmitting).toBe(true);
+    expect(page.loginForm.disabled).toBe(true);
     await page.login();
     expect(api.post).toHaveBeenCalledTimes(1);
     resolveRequest({ data: response } as AxiosResponse<AuthResponse>);
     await request;
     expect(page.isSubmitting).toBe(false);
+    expect(page.loginForm.enabled).toBe(true);
   });
 
   it('muestra el error de la API y termina la animación después de 500 ms', async () => {
@@ -93,6 +99,7 @@ describe('LoginPage', () => {
     await page.login();
     expect(page.errorMessage).toContain('Revisa tu conexión');
     expect(page.isSubmitting).toBe(false);
+    expect(page.loginForm.enabled).toBe(true);
     await page.login();
     expect(page.errorMessage).toBe('');
     expect(page.failLogin).toBe(false);
@@ -119,5 +126,56 @@ describe('LoginPage', () => {
     page.ngOnDestroy();
     expect(page.timer).toEqual([]);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('valida longitudes también cuando se invoca el método directamente', async () => {
+    page.loginForm.setValue({ username: 'a'.repeat(101), password: 'secreto' });
+    await page.login();
+    expect(api.post).not.toHaveBeenCalled();
+    expect(page.fieldError('username')).not.toBe('');
+    page.loginForm.setValue({ username: 'ana', password: 'x'.repeat(201) });
+    await page.login();
+    expect(api.post).not.toHaveBeenCalled();
+    expect(page.fieldError('password')).not.toBe('');
+  });
+
+  it.each(['disabled', 'pending'])('no envía el formulario en estado %s', async state => {
+    page.fillDemo();
+    if (state === 'disabled') page.loginForm.disable();
+    else page.loginForm.markAsPending();
+    await page.login();
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it('conserva espacios en la contraseña enviada', async () => {
+    page.loginForm.setValue({ username: ' emilys ', password: ' emilyspass ' });
+    await page.login();
+    expect(api.post).toHaveBeenCalledWith('/auth/login', { username: 'emilys', password: ' emilyspass ' });
+  });
+
+  it('no envía credenciales cuando el navegador está sin conexión', async () => {
+    page.fillDemo();
+    window.dispatchEvent(new Event('offline'));
+    await page.login();
+    expect(api.post).not.toHaveBeenCalled();
+    expect(page.loginForm.enabled).toBe(true);
+    expect(page.loginForm.controls.password.value).toBe('emilyspass');
+  });
+
+  it('muestra el error del servidor en el campo y permite corregirlo', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce({ isAxiosError: true, response: {
+      status: 422, data: { message: 'Revisa el usuario.', errors: { username: 'Este usuario no está disponible.' } },
+    } });
+    page.fillDemo();
+    await page.login();
+    expect(page.loginForm.enabled).toBe(true);
+    expect(page.fieldError('username')).toBe('Este usuario no está disponible.');
+    expect(page.loginForm.invalid).toBe(true);
+    page.loginForm.controls.password.setValue('otraContraseña');
+    expect(page.fieldError('username')).toBe('Este usuario no está disponible.');
+    page.loginForm.controls.username.setValue('ana');
+    expect(page.fieldError('username')).toBe('');
+    await page.login();
+    expect(api.post).toHaveBeenCalledTimes(2);
   });
 });

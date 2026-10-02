@@ -1,6 +1,6 @@
 # NovaCart: guía del proyecto simplificado
 
-Versión actual: cuatro pantallas, Angular/Ionic, Axios, PHP, MySQL de XAMPP y MCP local.
+Guía de la versión base: cuatro pantallas, Angular/Ionic, Axios, PHP, MySQL de XAMPP y MCP local. Los ejemplos con `ngModel` son anteriores a la [migración actual a formularios Data Driven](ACTIVIDAD_DATA_DRIVEN.md).
 
 Ampliación: [setear, promesas y flujo completo de datos](FLUJO_DATOS_Y_PROMESAS.md). Las APIs están separadas en [server/endpoints](../server/endpoints/), con [ejemplos HTTP por función](api/README.md).
 
