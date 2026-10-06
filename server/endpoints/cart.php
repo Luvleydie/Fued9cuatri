@@ -14,11 +14,15 @@ function readCart(PDO $db, int $userId): array
     return ['items' => $items, 'total' => $totalCents / 100];
 }
 
-// GET /api/cart; PUT o DELETE /api/cart/:productId -> CartResponse.
+// GET o DELETE /api/cart; PUT o DELETE /api/cart/:productId -> CartResponse.
 function cartEndpoint(PDO $db, int $userId, ?int $productId): never
 {
     if ($productId === null) {
-        requireMethod(['GET']);
+        $method = requireMethod(['GET', 'DELETE']);
+        if ($method === 'DELETE') {
+            // La sesión determina la cuenta; nunca se acepta userId desde el cliente.
+            query($db, 'DELETE FROM cart_items WHERE user_id = ?', [$userId]);
+        }
         respond(readCart($db, $userId));
     }
 

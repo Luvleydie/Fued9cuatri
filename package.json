@@ -17,6 +17,7 @@
     "test:offline": "node scripts/verify-offline.mjs",
     "test:data-driven": "node scripts/verify-data-driven.mjs",
     "test:d3": "node scripts/verify-d3.mjs",
+    "test:catalog": "node scripts/verify-catalog.mjs",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "api:deploy": "node scripts/xampp.mjs api",
     "db:setup": "node scripts/xampp.mjs db",

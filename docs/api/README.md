@@ -72,8 +72,11 @@ Las rutas de esta tabla se agregan a la base `http://localhost/novacart/api`.
 | DELETE /users/:id | Sin cuerpo | 204: sin cuerpo |
 | GET /products | Sin cuerpo | 200: { products: Product[] } |
 | GET /cart | Sin cuerpo | 200: CartResponse |
+| DELETE /cart | Sin cuerpo | 200: { items: [], total: 0 } de la cuenta autenticada |
 | PUT /cart/:productId | { quantity: entero } | 200: CartResponse actualizado |
 | DELETE /cart/:productId | Sin cuerpo | 200: CartResponse actualizado |
+
+`DELETE /cart` vacía únicamente el carrito de la sesión que envía el token. El servidor obtiene `userId` de esa sesión y no acepta otra cuenta en el cuerpo. Repetir la solicitud sobre un carrito vacío devuelve 200 con `items: []` y `total: 0`; no modifica productos ni carritos de otras cuentas. [CartService.clearCart()](../../src/app/services/cart.service.ts) confirma la respuesta antes de reemplazar la caché y no reintenta una escritura fallida.
 
 Registro, login y health son públicos. Las demás operaciones requieren el token. Los errores habituales son 400 (datos inválidos), 401 (sin sesión válida), 404 (registro o ruta inexistente), 405 (método incorrecto), 409 (conflicto, por ejemplo username repetido) y 503 (MySQL no disponible).
 

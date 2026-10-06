@@ -42,6 +42,15 @@ Content-Type: application/json
 DELETE {{baseUrl}}/cart/{{productId}}
 Authorization: Bearer {{token}}
 
-### 8. Cerrar sesión
+### 8. Vaciar todo el carrito -> 200: { items: [], total: 0 }
+# Sólo elimina artículos de la cuenta autenticada; repetir DELETE mantiene el vacío.
+DELETE {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### 9. Confirmar que el carrito quedó vacío en MySQL
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### 10. Cerrar sesión
 POST {{baseUrl}}/auth/logout
 Authorization: Bearer {{token}}

@@ -83,6 +83,12 @@ La pantalla **Carrito** incluye tres gráficas D3: precios del catálogo, existe
 
 [Dónde está el código y cómo funciona D3](docs/GRAFICAS_D3.md). Prueba: `npm run test:d3`.
 
+## Catálogo y carrito
+
+El catálogo permite ordenar por nombre o precio, filtrar por existencias y buscar sin distinguir tildes. Orden y disponibilidad se conservan al recargar; también funcionan sobre una copia válida sin conexión. **Vaciar carrito** solicita confirmación y elimina únicamente los artículos de la cuenta conectada. El total y la gráfica se actualizan cuando el servidor confirma; ante un fallo se conservan los datos visibles y se solicita actualizar.
+
+[Código, funcionamiento y bitácora de esta ampliación](docs/MEJORAS_CATALOGO_Y_CARRITO.md). Prueba de interfaz y recarga offline: `npm run test:catalog`.
+
 ## Android y APK
 
 El proyecto incluye la estructura de Android en `android/` y la dependencia de Capacitor. **El APK está pendiente de generación y verificación**: antes de compilar se debe configurar una API accesible desde Android; la dirección relativa utilizada en la web no conecta con XAMPP dentro del teléfono. Consulta el [estado y pasos de entrega Android](ENTREGA_PROYECTO_IONIC.md#9-apk).

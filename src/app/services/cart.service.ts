@@ -38,6 +38,12 @@ export class CartService {
     return this.confirmCart(data, scope);
   }
 
+  async clearCart(): Promise<CartResponse> {
+    const scope = readCacheScope();
+    const { data } = await runSessionMutation(scope, readCacheScope, () => api.delete<CartResponse>('/cart'));
+    return this.confirmCart(data, scope);
+  }
+
   private confirmCart(value: unknown, scope: string | null): CartResponse {
     // La respuesta debe ser válida antes de reemplazar la copia del carrito.
     if (scope !== readCacheScope()) throw new SessionChangedError();

@@ -179,3 +179,13 @@ Carrito incorpora tres gráficas mediante D3.js: precios del catálogo, existenc
 La [guía de gráficas](docs/GRAFICAS_D3.md) explica los archivos y el funcionamiento e incluye el objetivo, el prompt y el resultado. El [reporte D3 y diseño](docs/evidencia/d3-verificacion.json) y las [capturas actualizadas](docs/screenshots-diseno/) documentan esta ampliación. Las cifras de la sección 6 corresponden a la entrega inicial del 2 de octubre.
 
 Verificación de esta ampliación: **225 pruebas unitarias, 4 escenarios D3/diseño, 4 escenarios de formularios, 5 escenarios de integración, 7 escenarios de conexión y 6 pruebas del service worker aprobados**. También pasaron lint y la compilación de producción. El [reporte consolidado](docs/evidencia/diseno-d3-verificacion.json) enlaza la evidencia vigente.
+
+## 12. Ampliación del catálogo y del carrito
+
+El catálogo incorpora orden por nombre o precio, filtros de existencias y búsqueda normalizada. Las preferencias visuales se conservan en el navegador sin incluir datos personales; sobre una copia válida también se pueden usar sin red. Las gráficas mantienen los datos completos del catálogo.
+
+Vaciar carrito utiliza una confirmación Ionic y `DELETE /api/cart` para eliminar los artículos de la cuenta autenticada. El resumen y la gráfica circular cambian cuando se confirma la respuesta; ante una escritura incierta se conserva la selección visible y se solicita actualizar.
+
+La [guía y bitácora](docs/MEJORAS_CATALOGO_Y_CARRITO.md) contiene el objetivo, los prompts técnicos y tres problemas resueltos. Las pruebas y capturas están en el [reporte de catálogo](docs/evidencia/catalogo-verificacion.json).
+
+Verificación de esta ampliación: **263 pruebas unitarias, 35 comprobaciones de API, 7 escenarios de catálogo/vaciado, 4 escenarios D3, 5 de integración, 7 de conexión y 6 pruebas del service worker aprobados**, además de lint y compilación. Consulta el [reporte consolidado](docs/evidencia/ampliacion-catalogo-verificacion.json).

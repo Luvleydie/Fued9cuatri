@@ -156,6 +156,12 @@ fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
 
 /* Catálogo, edición de cantidades y resumen confirmado. */
 .cart-grid { grid-template-columns: minmax(0, 1.2fr) minmax(310px, .9fr); }
+.catalog-search { margin-bottom: 15px; }
+.catalog-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.catalog-filters select { display: block; width: 100%; min-width: 0; min-height: 43px; padding: 10px 9px; border: 1px solid #dfdbe9; border-radius: 9px; background: #fafafd; color: var(--nc-ink); font: inherit; font-size: 12px; font-weight: 400; }
+.catalog-filters select:focus { outline: none; border-color: #9b8bdc; box-shadow: 0 0 0 3px #5f49cf12; }
+.catalog-results { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 38px; margin-top: 9px; }
+.catalog-results .muted, .catalog-results .text-button { font-size: 11px; }
 .product-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
 .product-card { border: 1px solid var(--nc-border); border-radius: 12px; overflow: hidden; background: #fff; min-width: 0; }
 .product-art { display: flex; align-items: center; justify-content: center; min-height: 135px; background: #f3f0fc; color: #7c66c4; }

@@ -1,12 +1,12 @@
 {
-  "at": "2026-10-06T01:37:13.085Z",
+  "at": "2026-10-06T01:54:16.864Z",
   "baseURL": "http://localhost/novacart/",
   "offlineSimulation": "Playwright BrowserContext.setOffline(true)",
   "results": [
     {
       "name": "Desconexión real, lectura temporal, recarga y recuperación",
       "passed": true,
-      "durationMs": 5105,
+      "durationMs": 12282,
       "screenshot": "docs/screenshots-conexion/01-carrito-sin-conexion.png",
       "mobileScreenshot": "docs/screenshots-conexion/01-carrito-sin-conexion-movil.png",
       "serviceWorker": {
@@ -26,22 +26,22 @@
     {
       "name": "Servidor 503 con copia válida y actualización posterior",
       "passed": true,
-      "durationMs": 2506,
+      "durationMs": 2773,
       "screenshot": "docs/screenshots-conexion/03-servicio-no-disponible.png",
-      "cachedUsers": 2,
+      "cachedUsers": 3,
       "technicalDetailsHidden": true
     },
     {
       "name": "Sin conexión y sin copia previa del carrito",
       "passed": true,
-      "durationMs": 5657,
+      "durationMs": 6209,
       "screenshot": "docs/screenshots-conexion/04-sin-copia-disponible.png",
       "missingDataNotShownAsEmptyCart": true
     },
     {
       "name": "Sesión 401: elimina copia y exige iniciar sesión",
       "passed": true,
-      "durationMs": 2243,
+      "durationMs": 2382,
       "tokenPresent": false,
       "cacheCount": 0,
       "screenshot": "docs/screenshots-conexion/05-sesion-vencida.png"
@@ -49,7 +49,7 @@
     {
       "name": "Cuota de almacenamiento: respaldo en memoria y aviso al recargar",
       "passed": true,
-      "durationMs": 2762,
+      "durationMs": 5121,
       "screenshot": "docs/screenshots-conexion/06-almacenamiento-en-memoria.png",
       "memoryFallbackPassed": true,
       "volatileDataLossExplained": true
@@ -57,7 +57,7 @@
     {
       "name": "Escritura 503: un solo envío y formulario conservado",
       "passed": true,
-      "durationMs": 1690,
+      "durationMs": 2904,
       "screenshot": "docs/screenshots-conexion/07-escritura-no-confirmada.png",
       "writes": 1,
       "formPreserved": true,
@@ -66,7 +66,7 @@
     {
       "name": "Inicio de sesión y registro deshabilitados sin conexión",
       "passed": true,
-      "durationMs": 2492,
+      "durationMs": 3267,
       "screenshot": "docs/screenshots-conexion/08-registro-sin-conexion.png",
       "offlineNavigationPassed": true
     }

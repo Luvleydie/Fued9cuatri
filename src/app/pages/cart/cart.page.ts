@@ -13,6 +13,7 @@ import { connectionState } from '../../core/api/connection-state';
 import { getErrorMessage, isRecoverableReadError } from '../../core/api/api-errors';
 import { CachedResult, DataValidationError } from '../../core/api/data-cache';
 import { cacheNotice } from '../../core/cache-notice';
+import { DEFAULT_CATALOG_PREFERENCES, isCatalogAvailability, isCatalogSort, normalizeCatalogSearch, readCatalogPreferences, saveCatalogPreferences } from '../../core/catalog-preferences';
 import { CartItem, CartResponse } from '../../models/cart-item.model';
 import { Product } from '../../models/product.model';
 import { CartService } from '../../services/cart.service';
@@ -32,11 +33,18 @@ export class CartPage {
   isLoading = false;
   isSubmitting = false;
   errorMessage = '';
+  successMessage = '';
+  clearConfirmationOpen = false;
+  readonly clearCartButtons = [
+    { text: 'Cancelar', role: 'cancel' },
+    { text: 'Vaciar', role: 'destructive', handler: () => { void this.clearCart(); } },
+  ];
   readonly connection = connectionState;
   productsSnapshot: CachedResult<Product[]> | null = null;
   cartSnapshot: CachedResult<CartResponse> | null = null;
   needsRefresh = false;
   searchQuery = '';
+  catalogPreferences = readCatalogPreferences();
   currentUsername = readUser()?.username ?? '';
   private requestVersion = 0;
   readonly quantityForm = new FormGroup({ items: new FormArray<QuantityGroup>([]) });
@@ -44,16 +52,49 @@ export class CartPage {
   get quantityRows(): FormArray<QuantityGroup> { return this.quantityForm.controls.items; }
 
   get filteredProducts(): Product[] {
-    const query = this.searchQuery.trim().toLocaleLowerCase('es');
-    return query ? this.products.filter(product => product.title.toLocaleLowerCase('es').includes(query)) : this.products;
+    const query = normalizeCatalogSearch(this.searchQuery);
+    const filtered = this.products.filter(product => (!query || normalizeCatalogSearch(product.title).includes(query))
+      && (this.availabilityFilter === 'all' || (this.availabilityFilter === 'available' ? product.stock > 0 : product.stock === 0)));
+    if (this.sortOrder === 'default') return filtered;
+    return filtered.sort((a, b) => {
+      const comparison = this.sortOrder === 'name'
+        ? a.title.localeCompare(b.title, 'es', { sensitivity: 'base' })
+        : this.sortOrder === 'price-asc' ? a.price - b.price : b.price - a.price;
+      return comparison || a.id - b.id;
+    });
+  }
+  get sortOrder() { return this.catalogPreferences.sort; }
+  get availabilityFilter() { return this.catalogPreferences.availability; }
+  get hasCatalogFilters(): boolean {
+    return !!normalizeCatalogSearch(this.searchQuery) || this.sortOrder !== 'default' || this.availabilityFilter !== 'all';
   }
   get unitCount(): number { return this.items.reduce((sum, item) => sum + item.quantity, 0); }
   get selectedProductCount(): number { return this.items.length; }
 
   updateSearch(event: Event): void { this.searchQuery = (event.target as HTMLInputElement).value; }
 
-  focusCatalog(): void {
+  updateProductSort(event: Event): void {
+    const sort = (event.target as HTMLSelectElement).value;
+    if (!isCatalogSort(sort)) return;
+    this.catalogPreferences = { ...this.catalogPreferences, sort };
+    saveCatalogPreferences(this.catalogPreferences);
+  }
+
+  updateProductAvailability(event: Event): void {
+    const availability = (event.target as HTMLSelectElement).value;
+    if (!isCatalogAvailability(availability)) return;
+    this.catalogPreferences = { ...this.catalogPreferences, availability };
+    saveCatalogPreferences(this.catalogPreferences);
+  }
+
+  resetCatalogFilters(): void {
     this.searchQuery = '';
+    this.catalogPreferences = { ...DEFAULT_CATALOG_PREFERENCES };
+    saveCatalogPreferences(this.catalogPreferences);
+  }
+
+  focusCatalog(): void {
+    this.resetCatalogFilters();
     document.getElementById('product-search')?.focus();
   }
 
@@ -83,6 +124,7 @@ export class CartPage {
     if (this.isLoading || this.isSubmitting) return;
     this.isLoading = true;
     this.errorMessage = '';
+    this.successMessage = '';
     const version = this.requestVersion;
     try {
       // Las dos consultas son independientes: empiezan juntas y esperamos ambas respuestas.
@@ -170,12 +212,38 @@ export class CartPage {
     }
     this.isSubmitting = true;
     this.errorMessage = '';
+    this.successMessage = '';
     try {
       const cart = quantity === 0
         ? await this.cartService.removeItem(productId)
         : await this.cartService.setQuantity(productId, quantity);
       this.setCart(cart, true, productId);
       if (this.cartSnapshot) this.cartSnapshot = { ...this.cartSnapshot, data: cart, source: 'network', savedAt: Date.now() };
+    } catch (error: unknown) {
+      this.needsRefresh = isRecoverableReadError(error) || error instanceof DataValidationError;
+      await this.handleError(error, true);
+    } finally {
+      this.isSubmitting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  requestClearCart(): void {
+    if (this.isSubmitting || this.isLoading || this.readOnly || !this.items.length) return;
+    this.clearConfirmationOpen = true;
+  }
+
+  async clearCart(): Promise<void> {
+    if (this.isSubmitting || this.isLoading || this.readOnly || !this.items.length) return;
+    this.clearConfirmationOpen = false;
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    try {
+      const cart = await this.cartService.clearCart();
+      this.setCart(cart);
+      if (this.cartSnapshot) this.cartSnapshot = { ...this.cartSnapshot, data: cart, source: 'network', savedAt: Date.now() };
+      this.successMessage = 'El carrito se vació.';
     } catch (error: unknown) {
       this.needsRefresh = isRecoverableReadError(error) || error instanceof DataValidationError;
       await this.handleError(error, true);
@@ -200,6 +268,8 @@ export class CartPage {
       this.setCart({ items: [], total: 0 });
       this.needsRefresh = false;
       this.errorMessage = '';
+      this.successMessage = '';
+      this.clearConfirmationOpen = false;
       this.searchQuery = '';
       await this.router.navigateByUrl('/login', { replaceUrl: true });
       this.isSubmitting = false;
@@ -213,6 +283,8 @@ export class CartPage {
       if (error.response?.status === 401) {
         clearSession();
         this.currentUsername = '';
+        this.successMessage = '';
+        this.clearConfirmationOpen = false;
         this.items = [];
         this.products = [];
         this.total = 0;

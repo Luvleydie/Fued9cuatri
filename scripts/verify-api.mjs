@@ -24,6 +24,7 @@ try {
   check((await request('/auth/register')).status === 405, 'Registro acepta únicamente POST');
   check((await fetch(base + '/endpoints/login.php')).status === 403, 'Los archivos internos no se ejecutan por URL');
   check((await request('/users')).status === 401, 'Usuarios requieren autenticación');
+  check((await request('/cart', 'DELETE')).status === 401, 'Vaciar carrito requiere autenticación');
   const created = await request('/auth/register', 'POST', a);
   check(created.status === 201 && created.body.username === a.username, 'Registro persistente');
   records.push(created.body.id);
@@ -45,7 +46,8 @@ try {
   check((await request('/users/' + bId, 'GET', undefined, token)).body.firstName === 'Modificado', 'Datos leídos desde otra solicitud PHP');
   check((await request('/users/' + created.body.id, 'DELETE', undefined, token)).status === 409, 'No elimina cuenta activa');
   const products = await request('/products', 'GET', undefined, token);
-  const product = products.body.products[0];
+  const product = products.body.products.find(item => item.stock >= 2);
+  assert.ok(product, 'El catálogo debe ofrecer un producto con al menos dos unidades para la prueba');
   const changed = await request('/cart/' + product.id, 'PUT', { quantity: 2, price: 0, userId: bId }, token);
   check(changed.status === 200 && changed.body.total === product.price * 2, 'Carrito usa precio y usuario del servidor');
   check((await request('/cart/' + product.id, 'PUT', { quantity: 1000 }, token)).status === 400, 'Stock y cantidad validados');
@@ -58,6 +60,25 @@ try {
   check(restored.body.items[0].quantity === 2, 'Carrito persiste al cerrar e iniciar sesión');
   const cartRemoved = await request('/cart/' + product.id, 'DELETE', undefined, newToken);
   check(cartRemoved.body.items.length === 0, 'Eliminación de artículo');
+  check((await request('/cart', 'POST', {}, newToken)).status === 405, 'Carrito completo rechaza POST');
+  check((await request('/cart', 'PUT', { quantity: 1 }, newToken)).status === 405, 'Asignar cantidad requiere un productId');
+  const availableProducts = products.body.products.filter(item => item.stock >= 1);
+  for (const item of availableProducts) {
+    const saved = await request('/cart/' + item.id, 'PUT', { quantity: 1 }, newToken);
+    assert.equal(saved.status, 200, 'Preparar el carrito temporal con ' + item.title);
+  }
+  check((await request('/cart', 'GET', undefined, newToken)).body.items.length === availableProducts.length, 'Carrito temporal contiene todos los productos disponibles');
+  const secondCart = await request('/cart/' + product.id, 'PUT', { quantity: 1 }, bAuth.body.accessToken);
+  check(secondCart.status === 200 && secondCart.body.items.length === 1, 'Segunda cuenta conserva un carrito propio para probar aislamiento');
+  // Incluso un userId enviado por el cliente no permite elegir otra cuenta.
+  const cleared = await request('/cart', 'DELETE', { userId: bId }, newToken);
+  check(cleared.status === 200 && cleared.body.items.length === 0 && cleared.body.total === 0, 'Vaciar carrito devuelve items vacíos y total cero');
+  const clearedPersisted = await request('/cart', 'GET', undefined, newToken);
+  check(clearedPersisted.status === 200 && clearedPersisted.body.items.length === 0 && clearedPersisted.body.total === 0, 'Carrito vacío permanece guardado en MySQL');
+  const unaffected = await request('/cart', 'GET', undefined, bAuth.body.accessToken);
+  check(unaffected.status === 200 && unaffected.body.items.length === 1 && unaffected.body.items[0].productId === product.id && unaffected.body.items[0].quantity === 1 && unaffected.body.total === product.price, 'Vaciar una cuenta no altera los artículos ni el total de otra');
+  const clearedAgain = await request('/cart', 'DELETE', undefined, newToken);
+  check(clearedAgain.status === 200 && clearedAgain.body.items.length === 0 && clearedAgain.body.total === 0, 'Vaciar un carrito vacío es idempotente');
   const newPassword = 'Different-password-456';
   await request('/users/' + bId, 'PUT', { ...b, password: newPassword }, newToken);
   check((await request('/auth/me', 'GET', undefined, bAuth.body.accessToken)).status === 401, 'Cambiar contraseña revoca sesiones');

@@ -12,6 +12,7 @@
     <app-connection-notice />
     @if (needsRefresh) { <p class="cache-notice">Actualiza el carrito antes de guardar más cambios.</p> }
     @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
+    @if (successMessage) { <p class="form-success" role="status" data-testid="cart-success">{{ successMessage }}</p> }
     @if (isLoading) { <p role="status">Cargando carrito…</p> }
 
     @if (cartSnapshot) {
@@ -28,12 +29,34 @@
         <h2 id="products-title">Productos</h2>
         <p class="section-description">Accesorios para tu día a día. Agrega uno y ajusta la cantidad en tu carrito.</p>
         @if (productsNotice) { <p [class]="readOnly ? 'cache-notice' : 'cache-date'" data-testid="products-cache-status" role="status">{{ productsNotice }}</p> }
-        <div class="search-toolbar">
+        <div class="search-toolbar catalog-search">
           <div class="search-field">
             <label for="product-search">Buscar productos</label>
             <input id="product-search" type="search" placeholder="Buscar un accesorio…" [value]="searchQuery" (input)="updateSearch($event)" autocomplete="off" />
           </div>
-          <span class="muted" role="status">{{ filteredProducts.length }} de {{ products.length }} productos</span>
+        </div>
+        <div class="catalog-filters">
+          <div class="search-field">
+            <label for="product-sort">Ordenar por</label>
+            <select id="product-sort" [value]="sortOrder" (change)="updateProductSort($event)">
+              <option value="default">Orden del catálogo</option>
+              <option value="name">Nombre: A–Z</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+            </select>
+          </div>
+          <div class="search-field">
+            <label for="product-availability">Disponibilidad</label>
+            <select id="product-availability" [value]="availabilityFilter" (change)="updateProductAvailability($event)">
+              <option value="all">Todos los productos</option>
+              <option value="available">Con existencias</option>
+              <option value="unavailable">Agotados</option>
+            </select>
+          </div>
+        </div>
+        <div class="catalog-results">
+          <span class="muted" role="status" aria-live="polite" data-testid="products-result-count">{{ filteredProducts.length }} de {{ products.length }} productos</span>
+          @if (hasCatalogFilters) { <button type="button" class="text-button" (click)="resetCatalogFilters()">Limpiar filtros</button> }
         </div>
         <div class="product-grid">
           @for (product of filteredProducts; track product.id) {
@@ -56,15 +79,18 @@
         @if (!filteredProducts.length && !isLoading && productsSnapshot) {
           <div class="empty-state">
             <div class="empty-art" aria-hidden="true">⌕</div>
-            <h3>{{ searchQuery.trim() ? 'Sin coincidencias' : 'Estamos preparando el catálogo' }}</h3>
-            <p>{{ searchQuery.trim() ? 'Prueba con otro nombre o limpia la búsqueda para ver todos los productos.' : 'Actualiza más tarde para consultar los productos disponibles.' }}</p>
-            @if (searchQuery.trim()) { <button type="button" class="text-button" (click)="searchQuery = ''">Limpiar búsqueda</button> }
+            <h3>{{ products.length ? 'Sin coincidencias' : 'Estamos preparando el catálogo' }}</h3>
+            <p>{{ products.length ? 'Prueba con otro nombre o cambia la disponibilidad para ver más productos.' : 'Actualiza más tarde para consultar los productos disponibles.' }}</p>
           </div>
         }
       </section>
       <section class="panel cart-panel" aria-labelledby="cart-title" [formGroup]="quantityForm">
         <span class="section-eyebrow">GUARDADO EN TU CUENTA</span>
-        <h2 id="cart-title">Artículos guardados</h2>
+        <div class="list-heading">
+          <h2 id="cart-title">Artículos guardados</h2>
+          <button type="button" class="danger-button" data-testid="clear-cart" (click)="requestClearCart()"
+            [disabled]="isSubmitting || isLoading || readOnly || !items.length">Vaciar carrito</button>
+        </div>
         <p class="section-description">Tu selección se conserva cuando vuelvas a entrar.</p>
         @if (cartNotice) { <p [class]="readOnly ? 'cache-notice' : 'cache-date'" data-testid="cart-cache-status" role="status">{{ cartNotice }}</p> }
         @if (!items.length && !isLoading && cartSnapshot) {
@@ -123,6 +149,9 @@
     <app-cart-charts [products]="products" [items]="items" [loading]="isLoading" [cached]="productsSnapshot?.source === 'cache' || cartSnapshot?.source === 'cache' || connection.offline()" />
   </main>
 </ion-content>
+<ion-alert cssClass="clear-cart-alert" [isOpen]="clearConfirmationOpen" header="¿Vaciar el carrito?"
+  message="Se quitarán todos los artículos guardados en tu cuenta." [buttons]="clearCartButtons"
+  (didDismiss)="clearConfirmationOpen = false" />
 
 <ng-template #productIllustration let-title>
   <svg viewBox="0 0 120 100" fill="none" aria-hidden="true">

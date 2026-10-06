@@ -3,7 +3,7 @@
 # docs/api/login.http     -> login, perfil, error y logout
 # docs/api/register.http  -> alta pública y usuario duplicado
 # docs/api/users.http     -> CRUD de usuarios
-# docs/api/cart.http      -> productos y cantidades persistentes
+# docs/api/cart.http      -> productos, cantidades persistentes y vaciar carrito
 # Explicación completa: docs/api/README.md
 @baseUrl = http://localhost/novacart/api
 

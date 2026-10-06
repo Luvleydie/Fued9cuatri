@@ -5,6 +5,7 @@ import { AxiosError } from 'axios';
 import api from '../../core/api/axios-client';
 import { CartService } from '../../services/cart.service';
 import { clearSession, readUser, saveSession } from '../../core/api/session-storage';
+import { CATALOG_PREFERENCES_KEY, readCatalogPreferences, saveCatalogPreferences } from '../../core/catalog-preferences';
 import { CartPage } from './cart.page';
 
 describe('Carrito ante fallos de acceso', () => {
@@ -17,6 +18,7 @@ describe('Carrito ante fallos de acceso', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    localStorage.removeItem(CATALOG_PREFERENCES_KEY);
     vi.spyOn(api, 'post').mockResolvedValue({ data: {} });
     router.navigateByUrl.mockResolvedValue(true);
     window.dispatchEvent(new Event('online'));
@@ -24,7 +26,7 @@ describe('Carrito ante fallos de acceso', () => {
     service.getCart.mockResolvedValue(snapshot(cart));
     page = new CartPage(service as unknown as CartService, router as unknown as Router, { markForCheck: vi.fn() } as unknown as ChangeDetectorRef);
   });
-  afterEach(() => { vi.restoreAllMocks(); window.dispatchEvent(new Event('online')); clearSession(); });
+  afterEach(() => { vi.restoreAllMocks(); window.dispatchEvent(new Event('online')); clearSession(); localStorage.removeItem(CATALOG_PREFERENCES_KEY); });
 
   it('muestra los productos aunque falle el carrito y no muestra un total vacío como confirmado', async () => {
     service.getCart.mockRejectedValue(new AxiosError('Network Error', 'ERR_NETWORK'));
@@ -165,5 +167,90 @@ describe('Carrito ante fallos de acceso', () => {
     expect(page.products).toEqual([]);
     expect(page.cartSnapshot).toBeNull();
     expect(page.isLoading).toBe(false);
+  });
+});
+
+describe('Búsqueda, filtros y orden del catálogo', () => {
+  const products = [
+    { id: 4, title: 'Cámara web', price: 50, stock: 0 },
+    { id: 2, title: 'Teclado mecánico', price: 250, stock: 3 },
+    { id: 3, title: 'Audífonos inalámbricos', price: 50, stock: 5 },
+    { id: 1, title: 'Ratón   Óptico', price: 125, stock: 10 },
+  ];
+  const createPage = () => new CartPage({} as CartService, {} as Router, {} as ChangeDetectorRef);
+  const selectEvent = (value: string) => ({ target: { value } }) as unknown as Event;
+  let page: CartPage;
+
+  beforeEach(() => {
+    localStorage.removeItem(CATALOG_PREFERENCES_KEY);
+    page = createPage();
+    page.products = [...products];
+  });
+  afterEach(() => { vi.restoreAllMocks(); localStorage.removeItem(CATALOG_PREFERENCES_KEY); window.dispatchEvent(new Event('online')); });
+
+  it('combina búsquedas sin tildes con disponibilidad y conserva todo el catálogo', () => {
+    page.searchQuery = '  RÁTON óptico ';
+    page.updateProductAvailability(selectEvent('available'));
+    expect(page.filteredProducts.map(product => product.id)).toEqual([1]);
+    page.updateProductAvailability(selectEvent('unavailable'));
+    expect(page.filteredProducts).toEqual([]);
+    expect(page.hasCatalogFilters).toBe(true);
+    expect(page.products).toEqual(products);
+  });
+
+  it.each([
+    ['default', [4, 2, 3, 1]], ['name', [3, 4, 1, 2]],
+    ['price-asc', [3, 4, 1, 2]], ['price-desc', [2, 1, 3, 4]],
+  ])('ordena por %s y desempata por ID sin modificar productos', (sort, ids) => {
+    page.updateProductSort(selectEvent(sort as string));
+    expect(page.filteredProducts.map(product => product.id)).toEqual(ids);
+    expect(page.products).toEqual(products);
+  });
+
+  it('los filtros siguen disponibles offline aunque las escrituras estén bloqueadas', () => {
+    window.dispatchEvent(new Event('offline'));
+    page.updateProductAvailability(selectEvent('available'));
+    page.updateProductSort(selectEvent('price-desc'));
+    expect(page.readOnly).toBe(true);
+    expect(page.filteredProducts.map(product => product.id)).toEqual([2, 1, 3]);
+  });
+
+  it('recupera preferencias al crear la página y mantiene la búsqueda vacía', () => {
+    saveCatalogPreferences({ sort: 'price-desc', availability: 'unavailable' });
+    const restored = createPage();
+    expect(restored.sortOrder).toBe('price-desc');
+    expect(restored.availabilityFilter).toBe('unavailable');
+    expect(restored.searchQuery).toBe('');
+  });
+
+  it('rechaza valores desconocidos recibidos desde eventos', () => {
+    page.updateProductSort(selectEvent('invalid'));
+    page.updateProductAvailability(selectEvent('invalid'));
+    expect(page.hasCatalogFilters).toBe(false);
+    expect(localStorage.getItem(CATALOG_PREFERENCES_KEY)).toBeNull();
+  });
+
+  it('limpia búsqueda y preferencias sin cambiar cantidades ni catálogo', () => {
+    page.searchQuery = 'cámara';
+    page.updateProductSort(selectEvent('name'));
+    page.updateProductAvailability(selectEvent('unavailable'));
+    page.setCart({ items: [{ productId: 1, title: products[3].title, price: 125, quantity: 2, stock: 10 }], total: 250 });
+    page.resetCatalogFilters();
+    expect(page.hasCatalogFilters).toBe(false);
+    expect(readCatalogPreferences()).toEqual({ sort: 'default', availability: 'all' });
+    expect(page.filteredProducts).toEqual(products);
+    expect(page.unitCount).toBe(2);
+    expect(page.total).toBe(250);
+  });
+
+  it('explorar productos restablece filtros para mostrar el catálogo completo', () => {
+    const focus = vi.fn();
+    vi.spyOn(document, 'getElementById').mockReturnValue({ focus } as unknown as HTMLElement);
+    page.searchQuery = 'sin resultado';
+    page.updateProductAvailability(selectEvent('unavailable'));
+    page.focusCatalog();
+    expect(page.hasCatalogFilters).toBe(false);
+    expect(page.filteredProducts).toHaveLength(products.length);
+    expect(focus).toHaveBeenCalledOnce();
   });
 });

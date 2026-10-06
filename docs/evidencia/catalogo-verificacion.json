@@ -1,0 +1,142 @@
+{
+  "at": "2026-10-06T01:54:13.157Z",
+  "baseURL": "http://localhost/novacart/",
+  "scope": "Catálogo y vaciado de carrito con API completamente simulada; sin lecturas ni escrituras reales en PHP/MySQL.",
+  "apiSimulation": "BrowserContext.route intercepta todas las rutas /api/, incluidas las escrituras; las rutas inesperadas se bloquean.",
+  "offlineSimulation": "Un escenario permite el service worker, desconecta BrowserContext.setOffline(true), aborta la API simulada y recarga desde los recursos locales.",
+  "preferences": "localStorage conserva sólo version, sort y availability; la búsqueda no se persiste.",
+  "screenshots": "Anchos 1440 y 390 px; altura ampliada al contenido Ionic para capturar su scroll interno.",
+  "results": [
+    {
+      "name": "Búsqueda normalizada, orden estable y disponibilidad sin alterar las gráficas",
+      "passed": true,
+      "durationMs": 2888,
+      "calls": {
+        "login": 1,
+        "products": 1,
+        "cartReads": 1,
+        "clear": 0,
+        "unexpected": []
+      },
+      "screenshot": "docs/screenshots-catalogo/01-catalogo-filtros-1440.png",
+      "mobileScreenshot": "docs/screenshots-catalogo/01-catalogo-filtros-390.png",
+      "priceTieOrder": [
+        32,
+        33
+      ],
+      "normalizedAccentSearch": true,
+      "analyticsProductCount": 4,
+      "originalOrderPreserved": true
+    },
+    {
+      "name": "Las preferencias se conservan al recargar y excluyen búsqueda y datos personales",
+      "passed": true,
+      "durationMs": 4475,
+      "calls": {
+        "login": 1,
+        "products": 2,
+        "cartReads": 2,
+        "clear": 0,
+        "unexpected": []
+      },
+      "stored": {
+        "version": 1,
+        "sort": "price-desc",
+        "availability": "available"
+      },
+      "onlineReloadPassed": true,
+      "searchNotPersisted": true,
+      "personalDataNotStoredInPreferences": true
+    },
+    {
+      "name": "Cancelar no envía DELETE; confirmar vacía cantidades, total y gráfica con un solo envío",
+      "passed": true,
+      "durationMs": 6230,
+      "calls": {
+        "login": 1,
+        "products": 1,
+        "cartReads": 1,
+        "clear": 1,
+        "unexpected": []
+      },
+      "confirmationScreenshot": "docs/screenshots-catalogo/02-confirmar-vaciado.png",
+      "screenshot": "docs/screenshots-catalogo/03-carrito-vaciado.png",
+      "cancelledWrites": 0,
+      "confirmedWrites": 1,
+      "duplicateClickBlocked": true,
+      "confirmedTotal": 0,
+      "donutSlices": 0
+    },
+    {
+      "name": "Un 503 al vaciar conserva datos y borrador, bloquea reintentos y permite actualizar",
+      "passed": true,
+      "durationMs": 5532,
+      "calls": {
+        "login": 1,
+        "products": 2,
+        "cartReads": 2,
+        "clear": 1,
+        "unexpected": []
+      },
+      "screenshot": "docs/screenshots-catalogo/04-vaciado-error-datos-conservados.png",
+      "clearWrites": 1,
+      "confirmedTotalPreserved": true,
+      "chartPreserved": true,
+      "draftPreservedUntilRefresh": true,
+      "retryRequiresRefresh": true,
+      "technicalDetailsHidden": true
+    },
+    {
+      "name": "Desconexión real y recarga conservan filtros; lectura y gráficas siguen disponibles",
+      "passed": true,
+      "durationMs": 13089,
+      "calls": {
+        "login": 1,
+        "products": 1,
+        "cartReads": 1,
+        "clear": 0,
+        "unexpected": []
+      },
+      "screenshot": "docs/screenshots-catalogo/05-filtros-recarga-sin-conexion.png",
+      "mobileScreenshot": "docs/screenshots-catalogo/05-filtros-recarga-sin-conexion-390.png",
+      "serviceWorker": {
+        "scope": "http://localhost/novacart/",
+        "state": "activated"
+      },
+      "offlineSimulation": "BrowserContext.setOffline(true) y abort de API interceptada",
+      "offlineReloadPassed": true,
+      "filtersEditableOffline": true,
+      "destructiveWritesDisabled": true,
+      "chartsProductCount": 4
+    },
+    {
+      "name": "Catálogo vacío muestra su propio mensaje y deshabilita vaciar un carrito vacío",
+      "passed": true,
+      "durationMs": 2159,
+      "calls": {
+        "login": 1,
+        "products": 1,
+        "cartReads": 1,
+        "clear": 0,
+        "unexpected": []
+      },
+      "emptyCatalogDistinctFromNoResults": true,
+      "emptyCartClearDisabled": true
+    },
+    {
+      "name": "Una cuota de almacenamiento agotada no bloquea los filtros ni provoca errores",
+      "passed": true,
+      "durationMs": 2938,
+      "calls": {
+        "login": 1,
+        "products": 2,
+        "cartReads": 2,
+        "clear": 0,
+        "unexpected": []
+      },
+      "filtersUsable": true,
+      "quotaFailureHandled": true,
+      "volatilePreferencesResetAfterReload": true
+    }
+  ]
+}

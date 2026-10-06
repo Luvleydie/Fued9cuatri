@@ -1,0 +1,60 @@
+{
+  "at": "2026-10-06T01:55:17.353724+00:00",
+  "verifiedOn": "2026-10-05",
+  "timeZone": "America/Mexico_City",
+  "scope": "Ampliacion del catalogo y vaciado de carrito; produccion instalada en XAMPP.",
+  "provenance": "Consolidacion de reportes automaticos y comandos observados en esta sesion. Los resultados de unit, lint, build y offline-shell son observaciones de sus salidas, no reportes generados por esos runners.",
+  "unit": {
+    "command": "npm test -- --watch=false",
+    "passed": true,
+    "tests": 263,
+    "files": 17
+  },
+  "lint": {
+    "command": "npm run lint",
+    "passed": true
+  },
+  "build": {
+    "command": "npm run deploy:xampp",
+    "passed": true
+  },
+  "offlineShell": {
+    "command": "npm run test:offline-shell",
+    "passed": true,
+    "tests": 6
+  },
+  "api": {
+    "passed": true,
+    "checks": 35,
+    "report": "docs/evidencia/api-catalogo.json",
+    "at": "2026-10-06T01:53:18.447Z"
+  },
+  "reports": {
+    "catalog": {
+      "passed": true,
+      "scenarios": 7,
+      "report": "docs/evidencia/catalogo-verificacion.json",
+      "at": "2026-10-06T01:54:13.157Z"
+    },
+    "d3": {
+      "passed": true,
+      "scenarios": 4,
+      "report": "docs/evidencia/d3-verificacion.json",
+      "at": "2026-10-06T01:54:10.345Z"
+    },
+    "offline": {
+      "passed": true,
+      "scenarios": 7,
+      "report": "docs/evidencia/conexion-verificacion.json",
+      "at": "2026-10-06T01:54:16.864Z"
+    },
+    "browser": {
+      "passed": true,
+      "scenarios": 5,
+      "report": "docs/evidencia/regresion-catalogo.json",
+      "at": "2026-10-06T01:54:16.751Z"
+    }
+  },
+  "screenshots": "docs/screenshots-catalogo/",
+  "visualReview": "Capturas de escritorio y movil y confirmacion revisadas visualmente; sin superposicion ni desbordamiento."
+}
