@@ -1,46 +1,82 @@
 <ion-content>
   <main class="auth-shell">
-    <section class="panel auth-panel fade-in" [class.fail-login]="failLogin" aria-labelledby="login-title">
-      <a class="brand" routerLink="/login">Usuarios</a>
-      <h1 id="login-title">Iniciar sesión</h1>
-      <p class="muted">Entra para consultar y administrar usuarios.</p>
-      <app-connection-notice />
-      @if (sessionExpired) { <p class="form-error" role="alert">Tu sesión venció. Conéctate e inicia sesión de nuevo.</p> }
-
-      @if (registrationSuccess) {
-        <p class="form-success" role="status">Cuenta creada. Ya puedes iniciar sesión.</p>
-      }
-      @if (passwordUpdated) {
-        <p class="form-success" role="status">Contraseña actualizada. Inicia sesión de nuevo.</p>
-      }
-      <form [formGroup]="loginForm" (ngSubmit)="login()" [attr.aria-busy]="isSubmitting" novalidate>
-        <label class="field" for="login-username">
-          Usuario
-          <input id="login-username" name="username" formControlName="username" aria-required="true"
-            autocomplete="username" placeholder="Tu usuario"
-            [attr.aria-invalid]="fieldError('username') ? 'true' : null"
-            [attr.aria-describedby]="fieldError('username') ? 'login-username-error' : null">
-          @if (fieldError('username'); as message) { <span id="login-username-error" class="field-error">{{ message }}</span> }
-        </label>
-        <label class="field" for="login-password">
-          Contraseña
-          <input id="login-password" name="password" type="password" formControlName="password"
-            aria-required="true" autocomplete="current-password" placeholder="Tu contraseña"
-            [attr.aria-invalid]="fieldError('password') ? 'true' : null"
-            [attr.aria-describedby]="fieldError('password') ? 'login-password-error' : null">
-          @if (fieldError('password'); as message) { <span id="login-password-error" class="field-error">{{ message }}</span> }
-        </label>
-        @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
-        <div class="form-actions">
-          <button class="primary-button" type="submit" [disabled]="loginForm.invalid || loginForm.pending || loginForm.disabled || isSubmitting || connection.offline()">
-            @if (isSubmitting) { <ion-spinner name="crescent" aria-hidden="true"></ion-spinner> }
-            {{ isSubmitting ? 'Ingresando…' : 'Ingresar' }}
-          </button>
-          <button class="secondary-button" type="button" (click)="fillDemo()" [disabled]="isSubmitting">Usar cuenta demo</button>
+    <div class="auth-layout fade-in">
+      <aside class="auth-story" aria-label="Bienvenido a NovaCart">
+        <a class="auth-story-brand" routerLink="/login" aria-label="NovaCart, inicio de sesión">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14l1 14H4L5 7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 9V6a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </span>
+          NovaCart
+        </a>
+        <p class="auth-story-mobile-copy">Tu cuenta y tu carrito, en un solo lugar.</p>
+        <div class="auth-story-copy">
+          <p class="section-eyebrow">TODO A TU ALCANCE</p>
+          <h2>Tu espacio,<br>en orden.</h2>
+          <p>Una forma simple de gestionar usuarios y organizar tu carrito. Entra y continúa donde lo dejaste.</p>
         </div>
-      </form>
-      <p class="muted">Demo: emilys / emilyspass</p>
-      <p>¿Aún no tienes cuenta? <a class="auth-link" routerLink="/register">Registrarse</a></p>
-    </section>
+        <div class="auth-preview" aria-hidden="true">
+          <div class="auth-preview-top"><span>Tu espacio</span><span>Todo en orden</span></div>
+          <div class="auth-preview-row"><span></span><span></span><span>✓</span></div>
+          <div class="auth-preview-row"><span></span><span></span><span>✓</span></div>
+          <div class="auth-preview-row"><span></span><span></span><span>✓</span></div>
+        </div>
+        <ul class="auth-feature-list">
+          <li class="auth-feature"><span aria-hidden="true">01</span><div><strong>Una cuenta para comenzar</strong><p>Accede a tus datos y actualízalos fácilmente.</p></div></li>
+          <li class="auth-feature"><span aria-hidden="true">02</span><div><strong>Tu carrito, a tu manera</strong><p>Consulta productos y ajusta las cantidades.</p></div></li>
+          <li class="auth-feature"><span aria-hidden="true">03</span><div><strong>Datos disponibles sin conexión</strong><p>Revisa la información que consultaste en esta sesión.</p></div></li>
+        </ul>
+        <p class="auth-proof"><span aria-hidden="true">●</span> Simple, desde tu primer paso.</p>
+      </aside>
+
+      <section class="panel auth-panel" [class.fail-login]="failLogin" aria-labelledby="login-title">
+        <div class="auth-panel-heading">
+          <p class="section-eyebrow">BIENVENIDO DE NUEVO</p>
+          <h1 id="login-title">Iniciar sesión</h1>
+          <p class="muted">Accede a tu espacio con tu usuario y contraseña.</p>
+        </div>
+        <app-connection-notice />
+        @if (sessionExpired) { <p class="form-error" role="alert">Tu sesión venció. Conéctate e inicia sesión de nuevo.</p> }
+        @if (registrationSuccess) { <p class="form-success" role="status">Cuenta creada. Ya puedes iniciar sesión.</p> }
+        @if (passwordUpdated) { <p class="form-success" role="status">Contraseña actualizada. Inicia sesión de nuevo.</p> }
+
+        <form [formGroup]="loginForm" (ngSubmit)="login()" [attr.aria-busy]="isSubmitting" novalidate>
+          <label class="field" for="login-username">
+            Usuario
+            <input id="login-username" name="username" formControlName="username" aria-required="true"
+              autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Escribe tu usuario"
+              [attr.aria-invalid]="fieldError('username') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('username') ? 'login-username-error' : null">
+            @if (fieldError('username'); as message) { <span id="login-username-error" class="field-error">{{ message }}</span> }
+          </label>
+          <label class="field" for="login-password">
+            Contraseña
+            <span class="password-control">
+              <input id="login-password" name="password" [type]="passwordVisible ? 'text' : 'password'" formControlName="password"
+                aria-required="true" autocomplete="current-password" placeholder="Escribe tu contraseña"
+                [attr.aria-invalid]="fieldError('password') ? 'true' : null"
+                [attr.aria-describedby]="fieldError('password') ? 'login-password-error' : null">
+              <button class="password-toggle" type="button" (click)="togglePasswordVisibility()" [disabled]="isSubmitting"
+                [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                [attr.aria-pressed]="passwordVisible" aria-controls="login-password">{{ passwordVisible ? 'Ocultar' : 'Mostrar' }}</button>
+            </span>
+            @if (fieldError('password'); as message) { <span id="login-password-error" class="field-error">{{ message }}</span> }
+          </label>
+          @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
+          <div class="form-actions">
+            <button class="primary-button" type="submit" [disabled]="loginForm.invalid || loginForm.pending || loginForm.disabled || isSubmitting || connection.offline()">
+              @if (isSubmitting) { <ion-spinner name="crescent" aria-hidden="true"></ion-spinner> }
+              {{ isSubmitting ? 'Ingresando…' : 'Ingresar' }}
+            </button>
+          </div>
+        </form>
+
+        <div class="demo-card">
+          <div><strong>Explora con la cuenta demo</strong><p class="muted">Prueba las funciones antes de crear tu cuenta.</p></div>
+          <button class="secondary-button" type="button" (click)="fillDemo()" [disabled]="isSubmitting">Usar cuenta demo</button>
+          <p class="muted">Demo: emilys / emilyspass</p>
+        </div>
+        <p class="auth-footer">¿Aún no tienes cuenta? <a class="auth-link" routerLink="/register">Registrarse</a></p>
+      </section>
+    </div>
   </main>
 </ion-content>

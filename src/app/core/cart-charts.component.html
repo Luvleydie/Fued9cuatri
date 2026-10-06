@@ -1,0 +1,33 @@
+<section class="analytics-section" aria-labelledby="analytics-title">
+  <header>
+    <span class="section-eyebrow">TUS DATOS, DE UN VISTAZO</span>
+    <h2 id="analytics-title">Explora el catálogo y tu selección</h2>
+    <p class="section-description">Compara precios y existencias, y descubre cómo se distribuye el importe de tu carrito.</p>
+    @if (cached && !loading) { <p class="cache-notice">Estas gráficas muestran la información disponible. Actualiza para consultar los datos más recientes.</p> }
+    @if (loading) { <p role="status" class="muted">Actualizando gráficas…</p> }
+  </header>
+  <div class="analytics-grid">
+    <article class="chart-panel">
+      <header class="chart-heading"><h3 id="price-chart-title">Precio por producto</h3><p>Precio de una unidad en pesos mexicanos.</p></header>
+      <div class="chart-surface" [style.display]="loading || !products.length ? 'none' : null"><svg #priceSvg data-testid="price-chart" role="img" aria-labelledby="price-chart-title" aria-describedby="price-chart-caption"></svg></div>
+      @if (!products.length && !loading) { <p class="chart-empty">No hay productos disponibles para comparar precios.</p> }
+      <p id="price-chart-caption" class="chart-caption">Una barra más larga representa un precio mayor. La búsqueda del catálogo no cambia esta comparación.</p>
+      <details class="chart-details"><summary>Consultar precios exactos</summary><table><caption>Precios del catálogo</caption><thead><tr><th scope="col">Producto</th><th scope="col">Precio (MXN)</th></tr></thead><tbody>@for (product of products; track product.id) { <tr><th scope="row">{{ product.title }}</th><td>{{ product.price | currency:'MXN':'symbol-narrow' }}</td></tr> }</tbody></table></details>
+    </article>
+    <article class="chart-panel">
+      <header class="chart-heading"><h3 id="stock-chart-title">Existencias disponibles</h3><p>Existencias informadas por el catálogo.</p></header>
+      <div class="chart-surface" [style.display]="loading || !products.length ? 'none' : null"><svg #stockSvg data-testid="stock-chart" role="img" aria-labelledby="stock-chart-title" aria-describedby="stock-chart-caption"></svg></div>
+      @if (!products.length && !loading) { <p class="chart-empty">No hay productos disponibles para consultar existencias.</p> }
+      <p id="stock-chart-caption" class="chart-caption">La altura indica las unidades disponibles. Un valor de cero significa que el producto está agotado.</p>
+      <details class="chart-details"><summary>Consultar existencias exactas</summary><table><caption>Existencias del catálogo</caption><thead><tr><th scope="col">Producto</th><th scope="col">Unidades</th></tr></thead><tbody>@for (product of products; track product.id) { <tr><th scope="row">{{ product.title }}</th><td>{{ product.stock }}</td></tr> }</tbody></table></details>
+    </article>
+    <article class="chart-panel">
+      <header class="chart-heading"><h3 id="cart-chart-title">Importe de tu carrito</h3><p>Participación de cada artículo en el importe guardado.</p></header>
+      <div class="chart-surface" [style.display]="loading || cartTotal <= 0 ? 'none' : null"><svg #cartSvg data-testid="cart-chart" role="img" aria-labelledby="cart-chart-title" aria-describedby="cart-chart-caption"></svg></div>
+      @if (cartTotal <= 0 && !loading) { <p class="chart-empty">{{ items.length ? 'El importe guardado es cero. Puedes consultar tus artículos en la tabla.' : 'Agrega productos para ver cómo se distribuye el importe de tu carrito.' }}</p> }
+      @if (cartTotal > 0) { <ul class="chart-legend">@for (item of cartAmounts; track item.productId) { <li><span aria-hidden="true" [style.background]="colorOf(item.productId)"></span>{{ item.title }} · {{ percentage(item.amount) }}</li> }</ul> }
+      <p id="cart-chart-caption" class="chart-caption">Cada segmento representa precio × cantidad guardada. Los borradores se reflejan después de guardar sus cambios.</p>
+      <details class="chart-details"><summary>Consultar importes exactos</summary><table><caption>Distribución del importe guardado</caption><thead><tr><th scope="col">Artículo</th><th scope="col">Unidades</th><th scope="col">Importe (MXN)</th><th scope="col">Participación</th></tr></thead><tbody>@for (item of cartAmounts; track item.productId) { <tr><th scope="row">{{ item.title }}</th><td>{{ item.quantity }}</td><td>{{ item.amount | currency:'MXN':'symbol-narrow' }}</td><td>{{ percentage(item.amount) }}</td></tr> }</tbody></table></details>
+    </article>
+  </div>
+</section>

@@ -5,6 +5,12 @@ const result = [];
 const prefix = 'web_' + Date.now();
 const password = 'Browser-pass-123';
 const created = [];
+// Ionic conserva la pantalla anterior durante la animación. La navegación
+// compartida existe en ambas: buscar las acciones en la ruta actual.
+const active = page => {
+  const route = new URL(page.url()).pathname.replace(/\/$/, '').split('/').pop();
+  return page.locator(`app-${route}:not(.ion-page-hidden)`);
+};
 async function scenario(name, callback) {
   const { context, page, errors } = await makePage(browser);
   try {
@@ -62,7 +68,7 @@ try {
     assert.equal(saved.session, true); assert.equal(saved.local, null);
     assert.equal(saved.user.username, name); assert.equal(saved.user.password, undefined);
     await page.reload(); await expect(row(page, name)).toBeVisible();
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await active(page).getByRole('button', { name: 'Cerrar sesión' }).click();
     await expect(page).toHaveURL(/\/login$/);
     await navigate(page, 'register');
     await page.locator('#register-username').fill(name);
@@ -112,7 +118,7 @@ try {
   await scenario('Carrito persiste al cerrar pestaña y cambiar de sesión', async (page, context) => {
     const name = prefix + '_account';
     await loginReal(page, name, password);
-    await page.getByRole('link', { name: 'Carrito', exact: true }).click();
+    await active(page).getByRole('link', { name: 'Carrito', exact: true }).click();
     await expect(page).toHaveURL(/\/cart$/);
     await page.getByRole('button', { name: 'Agregar Mouse inalámbrico', exact: true }).click();
     await page.getByRole('button', { name: 'Aumentar Mouse inalámbrico', exact: true }).click();
@@ -122,13 +128,13 @@ try {
     const reopened = await context.newPage();
     await navigate(reopened, 'cart'); await expect(reopened).toHaveURL(/\/login$/);
     await loginReal(reopened, name, password);
-    await reopened.getByRole('link', { name: 'Carrito', exact: true }).click();
+    await active(reopened).getByRole('link', { name: 'Carrito', exact: true }).click();
     await expect(reopened.getByTestId('quantity')).toHaveText('2');
     await reopened.getByRole('button', { name: 'Quitar Mouse inalámbrico', exact: true }).click();
     await expect(reopened.getByText('Tu carrito está vacío.')).toBeVisible();
     await reopened.reload(); await expect(reopened.getByText('Tu carrito está vacío.')).toBeVisible();
-    await reopened.getByRole('link', { name: 'Usuarios', exact: true }).click();
-    await reopened.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await active(reopened).getByRole('link', { name: 'Usuarios', exact: true }).click();
+    await active(reopened).getByRole('button', { name: 'Cerrar sesión' }).click();
     await loginReal(reopened);
     await expect(reopened.getByRole('heading', { name: 'Hola, Emily' })).toBeVisible();
   });
@@ -138,11 +144,11 @@ try {
       await navigate(page, 'login'); await assertNoOverflow(page, width);
       await navigate(page, 'register'); await assertNoOverflow(page, width);
       await loginReal(page); await assertNoOverflow(page, width);
-      await page.getByRole('link', { name: 'Carrito', exact: true }).click();
+      await active(page).getByRole('link', { name: 'Carrito', exact: true }).click();
       await expect(page.getByRole('heading', { name: 'Tu carrito', exact: true })).toBeVisible();
       await assertNoOverflow(page, width);
-      await page.getByRole('link', { name: 'Usuarios', exact: true }).click();
-      await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+      await active(page).getByRole('link', { name: 'Usuarios', exact: true }).click();
+      await active(page).getByRole('button', { name: 'Cerrar sesión' }).click();
       await expect(page).toHaveURL(/\/login$/);
     }
   });

@@ -39,6 +39,26 @@ describe('RegisterPage', () => {
     expect(page.isSubmitting).toBe(false);
   });
 
+  it('muestra cada contraseña por separado y vuelve a ocultarlas después de crear la cuenta', async () => {
+    page.togglePasswordVisibility('password');
+    expect(page.passwordVisible).toBe(true);
+    expect(page.confirmationVisible).toBe(false);
+    expect(page.registerForm.controls.password.value).toBe('contraseña123');
+    page.togglePasswordVisibility('confirmPassword');
+    expect(page.confirmationVisible).toBe(true);
+    page.isSubmitting = true;
+    page.togglePasswordVisibility('password');
+    page.togglePasswordVisibility('confirmPassword');
+    expect(page.passwordVisible).toBe(true);
+    expect(page.confirmationVisible).toBe(true);
+    page.isSubmitting = false;
+    await page.register();
+    expect(page.passwordVisible).toBe(false);
+    expect(page.confirmationVisible).toBe(false);
+    expect(page.registerForm.controls.password.value).toBe('');
+    expect(page.registerForm.controls.confirmPassword.value).toBe('');
+  });
+
   it('requiere contraseña de ocho caracteres y campos con contenido', async () => {
     page.registerForm.controls.password.setValue('corta');
     await page.register();

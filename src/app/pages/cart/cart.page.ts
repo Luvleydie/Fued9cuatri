@@ -4,7 +4,10 @@ import { Router, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular/lazy';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import axios from 'axios';
-import { clearSession } from '../../core/api/session-storage';
+import api from '../../core/api/axios-client';
+import { clearSession, readUser } from '../../core/api/session-storage';
+import { AppNavigationComponent } from '../../core/app-navigation.component';
+import { CartChartsComponent } from '../../core/cart-charts.component';
 import { ConnectionNoticeComponent } from '../../core/connection-notice.component';
 import { connectionState } from '../../core/api/connection-state';
 import { getErrorMessage, isRecoverableReadError } from '../../core/api/api-errors';
@@ -20,7 +23,7 @@ type QuantityGroup = FormGroup<{ productId: FormControl<number>; quantity: FormC
   selector: 'app-cart',
   templateUrl: './cart.page.html',
   standalone: true,
-  imports: [CommonModule, RouterModule, IonicModule, ReactiveFormsModule, ConnectionNoticeComponent],
+  imports: [CommonModule, RouterModule, IonicModule, ReactiveFormsModule, ConnectionNoticeComponent, AppNavigationComponent, CartChartsComponent],
 })
 export class CartPage {
   products: Product[] = [];
@@ -33,9 +36,34 @@ export class CartPage {
   productsSnapshot: CachedResult<Product[]> | null = null;
   cartSnapshot: CachedResult<CartResponse> | null = null;
   needsRefresh = false;
+  searchQuery = '';
+  currentUsername = readUser()?.username ?? '';
+  private requestVersion = 0;
   readonly quantityForm = new FormGroup({ items: new FormArray<QuantityGroup>([]) });
 
   get quantityRows(): FormArray<QuantityGroup> { return this.quantityForm.controls.items; }
+
+  get filteredProducts(): Product[] {
+    const query = this.searchQuery.trim().toLocaleLowerCase('es');
+    return query ? this.products.filter(product => product.title.toLocaleLowerCase('es').includes(query)) : this.products;
+  }
+  get unitCount(): number { return this.items.reduce((sum, item) => sum + item.quantity, 0); }
+  get selectedProductCount(): number { return this.items.length; }
+
+  updateSearch(event: Event): void { this.searchQuery = (event.target as HTMLInputElement).value; }
+
+  focusCatalog(): void {
+    this.searchQuery = '';
+    document.getElementById('product-search')?.focus();
+  }
+
+  productKind(title: string): 'mouse' | 'keyboard' | 'audio' | 'generic' {
+    const normalized = title.toLocaleLowerCase('es');
+    if (/mouse|ratón|raton/.test(normalized)) return 'mouse';
+    if (/teclado|keyboard/.test(normalized)) return 'keyboard';
+    if (/audio|audífono|audifono|auricular|headphone/.test(normalized)) return 'audio';
+    return 'generic';
+  }
 
   get readOnly(): boolean {
     return this.connection.offline() || this.needsRefresh || !this.cartSnapshot || !this.productsSnapshot
@@ -47,6 +75,7 @@ export class CartPage {
   constructor(private cartService: CartService, private router: Router, private cdr: ChangeDetectorRef) {}
 
   ionViewWillEnter(): void {
+    this.currentUsername = readUser()?.username ?? '';
     void this.loadCart();
   }
 
@@ -54,9 +83,11 @@ export class CartPage {
     if (this.isLoading || this.isSubmitting) return;
     this.isLoading = true;
     this.errorMessage = '';
+    const version = this.requestVersion;
     try {
       // Las dos consultas son independientes: empiezan juntas y esperamos ambas respuestas.
       const [products, cart] = await Promise.allSettled([this.cartService.getProducts(), this.cartService.getCart()]);
+      if (version !== this.requestVersion) return;
       if (products.status === 'fulfilled') {
         this.productsSnapshot = products.value;
         this.products = products.value.data;
@@ -154,11 +185,34 @@ export class CartPage {
     }
   }
 
+  async logout(): Promise<void> {
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+    this.requestVersion++;
+    try { await api.post('/auth/logout'); }
+    catch { /* La salida también funciona si la conexión falla. */ }
+    finally {
+      clearSession();
+      this.currentUsername = '';
+      this.products = [];
+      this.productsSnapshot = null;
+      this.cartSnapshot = null;
+      this.setCart({ items: [], total: 0 });
+      this.needsRefresh = false;
+      this.errorMessage = '';
+      this.searchQuery = '';
+      await this.router.navigateByUrl('/login', { replaceUrl: true });
+      this.isSubmitting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
   private async handleError(error: unknown, mutation = false): Promise<void> {
     this.errorMessage = getErrorMessage(error, 'No se pudo guardar o cargar el carrito. Intenta de nuevo.', mutation);
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) {
         clearSession();
+        this.currentUsername = '';
         this.items = [];
         this.products = [];
         this.total = 0;

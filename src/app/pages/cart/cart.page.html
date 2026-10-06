@@ -1,67 +1,156 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Carrito</ion-title>
-    <ion-buttons slot="end"><ion-button routerLink="/home">Usuarios</ion-button></ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<app-navigation activePage="cart" [username]="currentUsername" [cartCount]="unitCount" [busy]="isSubmitting" (logout)="logout()" />
 <ion-content>
   <main class="home-shell fade-in">
     <header class="page-heading">
-      <div><span class="brand">NovaCart</span><h1>Tu carrito</h1><p class="muted">Agrega productos y ajusta sus cantidades.</p></div>
+      <div>
+        <span class="section-eyebrow">TU SELECCIÓN, A TU RITMO</span>
+        <h1>Tu carrito</h1>
+        <p class="muted">Encuentra lo que necesitas y guarda tu selección para después.</p>
+      </div>
       <button class="secondary-button" (click)="loadCart()" [disabled]="isLoading || isSubmitting">Actualizar</button>
     </header>
     <app-connection-notice />
     @if (needsRefresh) { <p class="cache-notice">Actualiza el carrito antes de guardar más cambios.</p> }
     @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
     @if (isLoading) { <p role="status">Cargando carrito…</p> }
+
+    @if (cartSnapshot) {
+      <div class="summary-grid" aria-label="Resumen de tu selección">
+        <div class="summary-card"><span class="summary-label">Productos diferentes</span><strong class="summary-value">{{ selectedProductCount }}</strong></div>
+        <div class="summary-card"><span class="summary-label">Unidades guardadas</span><strong class="summary-value">{{ unitCount }}</strong></div>
+        <div class="summary-card"><span class="summary-label">Importe guardado</span><strong class="summary-value">{{ total | currency:'MXN':'symbol-narrow' }} <small>MXN</small></strong></div>
+      </div>
+    }
+
     <div class="home-grid cart-grid" [attr.aria-busy]="isSubmitting || isLoading">
-      <section class="panel" aria-labelledby="products-title">
+      <section class="panel catalog-panel" aria-labelledby="products-title">
+        <span class="section-eyebrow">ENCUENTRA TU PRÓXIMO FAVORITO</span>
         <h2 id="products-title">Productos</h2>
+        <p class="section-description">Accesorios para tu día a día. Agrega uno y ajusta la cantidad en tu carrito.</p>
         @if (productsNotice) { <p [class]="readOnly ? 'cache-notice' : 'cache-date'" data-testid="products-cache-status" role="status">{{ productsNotice }}</p> }
-        @for (product of products; track product.id) {
-          <article class="user-row">
-            <div class="user-info"><h3>{{ product.title }}</h3><p>{{ product.price | currency:'MXN':'symbol-narrow' }} MXN</p><p class="muted">Disponibles: {{ product.stock }}</p></div>
-            <div class="row-actions"><button class="secondary-button" (click)="setQuantity(product.id, quantityOf(product.id) + 1)"
-              [disabled]="isSubmitting || isLoading || readOnly || quantityOf(product.id) >= product.stock || quantityOf(product.id) >= 99"
-              [attr.aria-label]="'Agregar ' + product.title">Agregar</button></div>
-          </article>
+        <div class="search-toolbar">
+          <div class="search-field">
+            <label for="product-search">Buscar productos</label>
+            <input id="product-search" type="search" placeholder="Buscar un accesorio…" [value]="searchQuery" (input)="updateSearch($event)" autocomplete="off" />
+          </div>
+          <span class="muted" role="status">{{ filteredProducts.length }} de {{ products.length }} productos</span>
+        </div>
+        <div class="product-grid">
+          @for (product of filteredProducts; track product.id) {
+            <article class="product-card" [class.is-selected]="quantityOf(product.id) > 0">
+              <div class="product-art" [attr.data-kind]="productKind(product.title)">
+                <ng-container [ngTemplateOutlet]="productIllustration" [ngTemplateOutletContext]="{ $implicit: product.title }" />
+              </div>
+              <div class="product-details">
+                <h3>{{ product.title }}</h3>
+                <p class="product-price">{{ product.price | currency:'MXN':'symbol-narrow' }} <small>MXN</small></p>
+                <p class="stock-label" [class.out-of-stock]="product.stock === 0">{{ product.stock === 0 ? 'Agotado por el momento' : product.stock + ' disponibles' }}</p>
+                @if (quantityOf(product.id)) { <p class="muted">{{ quantityOf(product.id) }} en tu carrito</p> }
+                <button class="secondary-button" (click)="setQuantity(product.id, quantityOf(product.id) + 1)"
+                  [disabled]="isSubmitting || isLoading || readOnly || quantityOf(product.id) >= product.stock || quantityOf(product.id) >= 99"
+                  [attr.aria-label]="'Agregar ' + product.title">{{ product.stock === 0 ? 'Agotado' : 'Agregar al carrito' }}</button>
+              </div>
+            </article>
+          }
+        </div>
+        @if (!filteredProducts.length && !isLoading && productsSnapshot) {
+          <div class="empty-state">
+            <div class="empty-art" aria-hidden="true">⌕</div>
+            <h3>{{ searchQuery.trim() ? 'Sin coincidencias' : 'Estamos preparando el catálogo' }}</h3>
+            <p>{{ searchQuery.trim() ? 'Prueba con otro nombre o limpia la búsqueda para ver todos los productos.' : 'Actualiza más tarde para consultar los productos disponibles.' }}</p>
+            @if (searchQuery.trim()) { <button type="button" class="text-button" (click)="searchQuery = ''">Limpiar búsqueda</button> }
+          </div>
         }
       </section>
-      <section class="panel" aria-labelledby="cart-title" [formGroup]="quantityForm">
+      <section class="panel cart-panel" aria-labelledby="cart-title" [formGroup]="quantityForm">
+        <span class="section-eyebrow">GUARDADO EN TU CUENTA</span>
         <h2 id="cart-title">Artículos guardados</h2>
+        <p class="section-description">Tu selección se conserva cuando vuelvas a entrar.</p>
         @if (cartNotice) { <p [class]="readOnly ? 'cache-notice' : 'cache-date'" data-testid="cart-cache-status" role="status">{{ cartNotice }}</p> }
-        @if (!items.length && !isLoading && cartSnapshot) { <p class="muted">Tu carrito está vacío.</p> }
-        <div formArrayName="items">
-        @for (item of items; track $index; let index = $index) {
-          <article class="user-row cart-item" [attr.data-product-id]="item.productId" [formGroupName]="index">
-            <div class="user-info"><h3>{{ item.title }}</h3><p>{{ item.price * item.quantity | currency:'MXN':'symbol-narrow' }} MXN</p>
-              <div class="quantity-actions">
-                <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity - 1)" [disabled]="isSubmitting || isLoading || readOnly || item.quantity === 1" [attr.aria-label]="'Disminuir ' + item.title">−</button>
-                <span data-testid="quantity" aria-live="polite">{{ item.quantity }}</span>
-                <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity + 1)" [disabled]="isSubmitting || isLoading || readOnly || item.quantity >= item.stock || item.quantity >= 99" [attr.aria-label]="'Aumentar ' + item.title">+</button>
-              </div>
-              <fieldset [disabled]="isSubmitting || isLoading || readOnly">
-                <div class="quantity-editor">
-                  <div class="field">
-                    <label [for]="'cart-quantity-' + item.productId">Cantidad</label>
-                    <input [id]="'cart-quantity-' + item.productId" type="number" formControlName="quantity" inputmode="numeric" step="1"
-                      [attr.aria-invalid]="quantityError(index) ? 'true' : null"
-                      [attr.aria-describedby]="quantityError(index) ? 'cart-quantity-error-' + item.productId : null" />
-                  </div>
-                  <button type="button" class="secondary-button" (click)="saveQuantity(index)"
-                    [disabled]="readOnly || isLoading || isSubmitting || quantityRows.at(index).invalid || quantityRows.at(index).controls.quantity.value === item.quantity"
-                    [attr.aria-label]="'Guardar cantidad ' + item.title">Guardar cantidad</button>
-                </div>
-              </fieldset>
-              @if (quantityError(index)) { <small class="field-error" [id]="'cart-quantity-error-' + item.productId" aria-live="polite">{{ quantityError(index) }}</small> }
-            </div>
-            <div class="row-actions"><button class="danger-button" (click)="setQuantity(item.productId, 0)" [disabled]="isSubmitting || isLoading || readOnly" [attr.aria-label]="'Quitar ' + item.title">Quitar</button></div>
-          </article>
+        @if (!items.length && !isLoading && cartSnapshot) {
+          <div class="empty-state">
+            <div class="empty-art" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 17h5l5 28h26l5-21H21M28 31h21" stroke-linecap="round" /><circle cx="29" cy="53" r="3" /><circle cx="47" cy="53" r="3" /></svg></div>
+            <h3>Tu carrito está vacío.</h3>
+            <p>Elige un accesorio del catálogo y pulsa Agregar al carrito para empezar.</p>
+            <button type="button" class="text-button" (click)="focusCatalog()">Explorar productos</button>
+          </div>
         }
+        <div formArrayName="items">
+          @for (item of items; track $index; let index = $index) {
+            <article class="user-row cart-item" [attr.data-product-id]="item.productId" [formGroupName]="index">
+              <div class="cart-item-avatar" [attr.data-kind]="productKind(item.title)">
+                <ng-container [ngTemplateOutlet]="productIllustration" [ngTemplateOutletContext]="{ $implicit: item.title }" />
+              </div>
+              <div class="user-info cart-item-details">
+                <h3>{{ item.title }}</h3>
+                <p class="product-price">{{ item.price * item.quantity | currency:'MXN':'symbol-narrow' }} <small>MXN</small></p>
+                <p class="muted">{{ item.price | currency:'MXN':'symbol-narrow' }} por unidad</p>
+                <div class="quantity-actions">
+                  <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity - 1)" [disabled]="isSubmitting || isLoading || readOnly || item.quantity === 1" [attr.aria-label]="'Disminuir ' + item.title">−</button>
+                  <span data-testid="quantity" aria-live="polite">{{ item.quantity }}</span>
+                  <button class="secondary-button" (click)="setQuantity(item.productId, item.quantity + 1)" [disabled]="isSubmitting || isLoading || readOnly || item.quantity >= item.stock || item.quantity >= 99" [attr.aria-label]="'Aumentar ' + item.title">+</button>
+                </div>
+                <fieldset [disabled]="isSubmitting || isLoading || readOnly">
+                  <div class="quantity-editor">
+                    <div class="field">
+                      <label [for]="'cart-quantity-' + item.productId">Cantidad</label>
+                      <input [id]="'cart-quantity-' + item.productId" type="number" formControlName="quantity" inputmode="numeric" step="1"
+                        [attr.aria-invalid]="quantityError(index) ? 'true' : null"
+                        [attr.aria-describedby]="quantityError(index) ? 'cart-quantity-error-' + item.productId : null" />
+                    </div>
+                    <button type="button" class="secondary-button" (click)="saveQuantity(index)"
+                      [disabled]="readOnly || isLoading || isSubmitting || quantityRows.at(index).invalid || quantityRows.at(index).controls.quantity.value === item.quantity"
+                      [attr.aria-label]="'Guardar cantidad ' + item.title">Guardar cantidad</button>
+                  </div>
+                </fieldset>
+                @if (quantityError(index)) { <small class="field-error" [id]="'cart-quantity-error-' + item.productId" aria-live="polite">{{ quantityError(index) }}</small> }
+              </div>
+              <div class="row-actions"><button class="danger-button" (click)="setQuantity(item.productId, 0)" [disabled]="isSubmitting || isLoading || readOnly" [attr.aria-label]="'Quitar ' + item.title">Quitar</button></div>
+            </article>
+          }
         </div>
-        @if (cartSnapshot) { <p class="cart-total" data-testid="cart-total">Total: {{ total | currency:'MXN':'symbol-narrow' }} MXN</p> }
+        @if (cartSnapshot) {
+          <div class="cart-summary">
+            <div class="summary-line"><span>Productos diferentes</span><strong>{{ selectedProductCount }}</strong></div>
+            <div class="summary-line"><span>Unidades guardadas</span><strong>{{ unitCount }}</strong></div>
+            <p class="cart-total" data-testid="cart-total">Total: {{ total | currency:'MXN':'symbol-narrow' }} MXN</p>
+            <p class="muted">Los cambios de cantidad aparecen en el total después de guardarlos.</p>
+          </div>
+        }
         <p class="muted">El carrito se guarda en tu cuenta. Esta práctica no realiza compras.</p>
       </section>
     </div>
+    <app-cart-charts [products]="products" [items]="items" [loading]="isLoading" [cached]="productsSnapshot?.source === 'cache' || cartSnapshot?.source === 'cache' || connection.offline()" />
   </main>
 </ion-content>
+
+<ng-template #productIllustration let-title>
+  <svg viewBox="0 0 120 100" fill="none" aria-hidden="true">
+    @switch (productKind(title)) {
+      @case ('mouse') {
+        <ellipse cx="63" cy="86" rx="24" ry="5" fill="currentColor" opacity=".1" />
+        <path d="M38 37c0-15 10-24 22-24s22 9 22 24v29c0 14-10 23-22 23s-22-9-22-23V37Z" fill="currentColor" opacity=".18" />
+        <path d="M38 37c0-15 10-24 22-24s22 9 22 24v29c0 14-10 23-22 23s-22-9-22-23V37Zm22-24v31M38 45h44" stroke="currentColor" stroke-width="3" />
+        <rect x="57" y="27" width="6" height="12" rx="3" fill="currentColor" />
+      }
+      @case ('keyboard') {
+        <ellipse cx="61" cy="79" rx="47" ry="5" fill="currentColor" opacity=".1" />
+        <rect x="12" y="27" width="96" height="48" rx="8" fill="currentColor" opacity=".15" />
+        <rect x="12" y="27" width="96" height="48" rx="8" stroke="currentColor" stroke-width="3" />
+        <path d="M22 39h5m8 0h5m8 0h5m8 0h5m8 0h5m8 0h10M22 50h5m8 0h5m8 0h5m8 0h5m8 0h5m8 0h10M22 62h9m9 0h39m9 0h9" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+      }
+      @case ('audio') {
+        <ellipse cx="61" cy="88" rx="32" ry="5" fill="currentColor" opacity=".1" />
+        <path d="M28 62V46a32 32 0 0 1 64 0v16" stroke="currentColor" stroke-width="7" stroke-linecap="round" />
+        <rect x="22" y="51" width="19" height="32" rx="8" fill="currentColor" opacity=".2" />
+        <rect x="79" y="51" width="19" height="32" rx="8" fill="currentColor" opacity=".2" />
+        <rect x="22" y="51" width="19" height="32" rx="8" stroke="currentColor" stroke-width="3" />
+        <rect x="79" y="51" width="19" height="32" rx="8" stroke="currentColor" stroke-width="3" />
+      }
+      @default {
+        <path d="m60 18 34 18v38L60 91 26 74V36L60 18Z" fill="currentColor" opacity=".15" />
+        <path d="m60 18 34 18v38L60 91 26 74V36L60 18Zm0 35v38M26 36l34 17 34-17M43 27l34 18v16" stroke="currentColor" stroke-width="3" stroke-linejoin="round" />
+      }
+    }
+  </svg>
+</ng-template>

@@ -77,6 +77,12 @@ npm run test:mcp
 
 Las pruebas de API y navegador crean usuarios temporales y eliminan únicamente los registros de esa ejecución. Requieren Apache, MySQL y la API instalada.
 
+## Gráficas D3.js y mejoras de diseño
+
+La pantalla **Carrito** incluye tres gráficas D3: precios del catálogo, existencias y distribución del importe por artículo. Utilizan los datos cargados de la API o su copia válida y se actualizan con las cantidades confirmadas. La aplicación incorpora navegación compartida adaptable, búsqueda de usuarios y productos y controles para mostrar u ocultar contraseñas.
+
+[Dónde está el código y cómo funciona D3](docs/GRAFICAS_D3.md). Prueba: `npm run test:d3`.
+
 ## Android y APK
 
 El proyecto incluye la estructura de Android en `android/` y la dependencia de Capacitor. **El APK está pendiente de generación y verificación**: antes de compilar se debe configurar una API accesible desde Android; la dirección relativa utilizada en la web no conecta con XAMPP dentro del teléfono. Consulta el [estado y pasos de entrega Android](ENTREGA_PROYECTO_IONIC.md#9-apk).

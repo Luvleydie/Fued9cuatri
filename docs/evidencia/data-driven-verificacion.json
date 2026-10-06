@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-02T23:00:06.850Z",
+  "at": "2026-10-06T01:33:41.833Z",
   "baseURL": "http://localhost/novacart/",
   "scope": "UI Reactive Forms: datos y errores API simulados en contextos aislados, sin mutaciones reales en MySQL.",
   "apiSimulation": "Playwright BrowserContext.route; todas las rutas /api/ interceptadas; las inesperadas se bloquean.",
@@ -9,7 +9,7 @@
     {
       "name": "Login: formulario inválido, patch de demo y sesión sin contraseña",
       "passed": true,
-      "durationMs": 896,
+      "durationMs": 1416,
       "browserErrors": [],
       "calls": {
         "login": 1,
@@ -30,7 +30,7 @@
     {
       "name": "Registro: validadores locales, confirmación y errores por campo del servidor",
       "passed": true,
-      "durationMs": 625,
+      "durationMs": 1020,
       "browserErrors": [],
       "calls": {
         "login": 0,
@@ -52,7 +52,7 @@
     {
       "name": "Usuarios: crear/editar, reglas de contraseña y datos conservados ante 503",
       "passed": true,
-      "durationMs": 1339,
+      "durationMs": 1854,
       "browserErrors": [],
       "calls": {
         "login": 1,
@@ -75,7 +75,7 @@
     {
       "name": "Carrito: FormArray, reindexación tras quitar una fila y borrador conservado ante 503",
       "passed": true,
-      "durationMs": 1795,
+      "durationMs": 2529,
       "browserErrors": [],
       "calls": {
         "login": 1,

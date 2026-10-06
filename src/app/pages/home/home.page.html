@@ -1,14 +1,13 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Usuarios</ion-title>
-    <ion-buttons slot="end"><ion-button routerLink="/cart">Carrito</ion-button><ion-button (click)="logout()" [disabled]="isSubmitting">Cerrar sesión</ion-button></ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<app-navigation activePage="home" [username]="currentUser?.username || ''" [busy]="isSubmitting" (logout)="logout()" />
 
 <ion-content>
   <main class="home-shell fade-in">
     <header class="page-heading">
-      <div><span class="brand">NovaCart · Usuarios</span><h1>Hola, {{ currentUser?.firstName || currentUser?.username }}</h1><p class="muted">Crea, consulta, edita y elimina usuarios desde aquí.</p></div>
+      <div>
+        <span class="section-eyebrow">Tu espacio de trabajo</span>
+        <h1>Hola, {{ currentUser?.firstName || currentUser?.username }}</h1>
+        <p class="section-description">Encuentra una cuenta, actualiza sus datos o crea un nuevo usuario.</p>
+      </div>
       <span class="user-badge">{{ currentUser?.username }}</span>
     </header>
 
@@ -18,9 +17,30 @@
     @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
     @if (successMessage) { <p class="form-success" role="status">{{ successMessage }}</p> }
 
+    <section class="summary-grid" aria-label="Resumen de usuarios">
+      <div class="summary-card">
+        <span class="summary-label">Usuarios registrados</span>
+        <strong class="summary-value">{{ users.length }}</strong>
+        <span class="muted">Cuentas disponibles en esta lista</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Resultados visibles</span>
+        <strong class="summary-value">{{ filteredUsers.length }}</strong>
+        <span class="muted">{{ hasSearch ? 'Coincidencias de tu búsqueda' : 'Todas las cuentas' }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Estado de los datos</span>
+        <strong class="summary-value summary-status">{{ dataStateLabel }}</strong>
+        <span class="muted">{{ isLoading ? 'Espera a que termine la actualización' : readOnly ? 'Consulta disponible; cambios en pausa' : 'Puedes crear, editar y eliminar' }}</span>
+      </div>
+    </section>
+
     <div class="home-grid">
-      <section class="panel" aria-labelledby="editor-title">
+      <section class="panel editor-panel" aria-labelledby="editor-title">
+        <span class="section-eyebrow">{{ editingId === null ? 'Nueva cuenta' : 'Datos de la cuenta' }}</span>
         <h2 id="editor-title">{{ editingId === null ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+        <p class="section-description">{{ editingId === null ? 'Completa los datos para dar de alta una cuenta.' : 'Actualiza la información. Cambiar la contraseña es opcional.' }}</p>
+        @if (readOnly) { <p class="muted">Conéctate y pulsa Actualizar para guardar cambios.</p> }
         <form [formGroup]="userForm" (ngSubmit)="saveUser()" novalidate [attr.aria-busy]="isSubmitting">
           <fieldset [disabled]="isSubmitting || isLoading || readOnly">
             <div class="field-grid">
@@ -44,13 +64,45 @@
         </form>
       </section>
 
-      <section class="panel" aria-labelledby="users-title" [attr.aria-busy]="isLoading">
-        <div class="list-heading"><h2 id="users-title">Usuarios registrados <span class="count">{{ users.length }}</span></h2><button class="secondary-button" (click)="loadUsers()" [disabled]="isLoading || isSubmitting">Actualizar</button></div>
-        @if (isLoading) { <p role="status">Cargando usuarios…</p> }
-        @else if (!users.length && !errorMessage) { <p class="muted">No hay usuarios para mostrar.</p> }
-        @for (user of users; track user.id) {
+      <section class="panel users-panel" aria-labelledby="users-title" [attr.aria-busy]="isLoading">
+        <div class="list-heading">
+          <div>
+            <span class="section-eyebrow">Directorio</span>
+            <h2 id="users-title">Usuarios registrados <span class="count">{{ users.length }}</span></h2>
+          </div>
+          <button class="secondary-button" (click)="loadUsers()" [disabled]="isLoading || isSubmitting">Actualizar</button>
+        </div>
+        <div class="search-toolbar">
+          <div class="field search-field">
+            <label for="input-search-users">Buscar usuarios</label>
+            <input id="input-search-users" type="search" placeholder="Usuario, nombre o correo" [value]="searchTerm" (input)="updateSearch($event)" autocomplete="off" aria-describedby="users-search-hint users-result-count" />
+          </div>
+          <button type="button" class="text-button" (click)="clearSearch()" [disabled]="!searchTerm">Limpiar búsqueda</button>
+        </div>
+        <p id="users-search-hint" class="muted">La búsqueda funciona también con los datos guardados sin conexión.</p>
+        <p id="users-result-count" class="muted" role="status" aria-live="polite">Mostrando {{ filteredUsers.length }} de {{ users.length }} usuarios.</p>
+        @if (isLoading) {
+          <div class="empty-state" role="status"><h3>Cargando usuarios…</h3><p>Estamos actualizando el directorio.</p></div>
+        }
+        @else if (!users.length && !errorMessage) {
+          <div class="empty-state"><h3>No hay usuarios registrados</h3><p>{{ readOnly ? 'Conéctate y actualiza los datos para gestionar las cuentas.' : 'Crea una cuenta con el formulario para comenzar.' }}</p></div>
+        }
+        @else if (users.length && !filteredUsers.length) {
+          <div class="empty-state" data-testid="users-no-results">
+            <h3>No encontramos coincidencias</h3>
+            <p>Prueba otro usuario, nombre o correo.</p>
+            <button type="button" class="secondary-button" (click)="clearSearch()">Ver todos los usuarios</button>
+          </div>
+        }
+        @for (user of filteredUsers; track user.id) {
           <article class="user-row" [attr.data-user-id]="user.id">
-            <div class="user-info"><h3>{{ user.username }}</h3><p>{{ user.firstName }} {{ user.lastName }}</p><p class="muted">{{ user.email }}</p></div>
+            <span class="avatar" aria-hidden="true">{{ initials(user) }}</span>
+            <div class="user-info">
+              <h3>{{ user.username }}</h3>
+              <p>{{ user.firstName }} {{ user.lastName }}</p>
+              <p class="muted">{{ user.email }}</p>
+              @if (user.id === currentUser?.id) { <span class="user-badge">Tu cuenta</span> }
+            </div>
             <div class="row-actions">
               <button class="secondary-button" (click)="editUser(user)" [disabled]="isSubmitting || isLoading || readOnly" [attr.aria-label]="'Editar ' + user.username">Editar</button>
               <button class="danger-button" (click)="deleteUser(user)" [disabled]="isSubmitting || isLoading || readOnly || user.id === currentUser?.id" [attr.aria-label]="'Eliminar ' + user.username">Eliminar</button>

@@ -2,12 +2,13 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { Router, RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular/lazy';
 import axios from 'axios';
 import api from '../../core/api/axios-client';
 import { clearSession, readUser, updateStoredUser } from '../../core/api/session-storage';
 import { ConnectionNoticeComponent } from '../../core/connection-notice.component';
+import { AppNavigationComponent } from '../../core/app-navigation.component';
 import { connectionState } from '../../core/api/connection-state';
 import { getErrorMessage, isRecoverableReadError } from '../../core/api/api-errors';
 import { CachedResult, DataValidationError } from '../../core/api/data-cache';
@@ -20,10 +21,11 @@ import { UsersService } from '../../services/users.service';
   selector: 'app-home',
   templateUrl: './home.page.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IonicModule, RouterModule, ConnectionNoticeComponent],
+  imports: [CommonModule, ReactiveFormsModule, IonicModule, ConnectionNoticeComponent, AppNavigationComponent],
 })
 export class HomePage implements OnInit, OnDestroy {
   users: User[] = [];
+  searchTerm = '';
   currentUser: User | null = readUser();
   readonly userForm = createUserForm();
   readonly userFields = USER_FIELD_DEFINITIONS;
@@ -40,6 +42,21 @@ export class HomePage implements OnInit, OnDestroy {
 
   get readOnly(): boolean { return this.connection.offline() || this.snapshot?.source === 'cache' || this.needsRefresh; }
   get dataNotice(): string { return cacheNotice(this.snapshot, this.connection.offline()); }
+  get hasSearch(): boolean { return this.normalizeSearch(this.searchTerm).length > 0; }
+  get filteredUsers(): User[] {
+    const query = this.normalizeSearch(this.searchTerm);
+    if (!query) return this.users;
+    return this.users.filter(user => this.normalizeSearch(
+      `${user.username} ${user.firstName ?? ''} ${user.lastName ?? ''} ${user.email ?? ''}`,
+    ).includes(query));
+  }
+  get dataStateLabel(): string {
+    if (this.isLoading) return 'Actualizando';
+    if (this.connection.offline()) return 'Sin conexión';
+    if (this.snapshot?.source === 'cache') return 'Copia temporal';
+    if (this.needsRefresh) return 'Actualización pendiente';
+    return this.snapshot ? 'Datos actualizados' : 'Sin datos cargados';
+  }
 
   constructor(private usersService: UsersService, private router: Router, private cdr: ChangeDetectorRef) {}
 
@@ -53,6 +70,23 @@ export class HomePage implements OnInit, OnDestroy {
   fieldError(field: string): string { return getFieldError(this.userForm, field, this.submitted); }
 
   fieldId(field: string): string { return field === 'confirmPassword' ? 'user-confirm-password' : `user-${field}`; }
+
+  updateSearch(event: Event): void {
+    this.searchTerm = (event.target as HTMLInputElement).value;
+  }
+
+  clearSearch(): void { this.searchTerm = ''; }
+
+  initials(user: User): string {
+    const names = [user.firstName ?? '', user.lastName ?? ''].map(name => name.trim()).filter(name => name.length > 0);
+    return (names.length
+      ? names.map(name => Array.from(name)[0]).join('')
+      : Array.from(user.username.trim()).slice(0, 2).join('')).toLocaleUpperCase('es');
+  }
+
+  private normalizeSearch(value: string): string {
+    return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es').trim().replace(/\s+/g, ' ');
+  }
 
   ionViewWillEnter(): void {
     this.currentUser = readUser();
@@ -173,6 +207,7 @@ export class HomePage implements OnInit, OnDestroy {
     finally {
       clearSession();
       this.users = [];
+      this.searchTerm = '';
       this.snapshot = null;
       this.currentUser = null;
       this.cancelEdit();
@@ -188,6 +223,7 @@ export class HomePage implements OnInit, OnDestroy {
       clearSession();
       this.snapshot = null;
       this.users = [];
+      this.searchTerm = '';
       this.currentUser = null;
       this.cancelEdit();
       await this.router.navigateByUrl('/login?expired=1', { replaceUrl: true });

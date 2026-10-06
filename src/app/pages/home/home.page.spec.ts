@@ -104,4 +104,43 @@ describe('Usuarios con formulario Data Driven', () => {
     expect(service.createUser).not.toHaveBeenCalled();
     expect(page.userForm.getRawValue()).toEqual(valid);
   });
+
+  it.each([
+    ['EmIlYs', [1]],
+    ['  ANA   LOPEZ  ', [2]],
+    ['ANA@EXAMPLE.TEST', [2]],
+    ['sin coincidencias', []],
+    ['   ', [1, 2]],
+  ] as const)('busca "%s" en usuario, nombre y correo sin depender de tildes o mayúsculas', (query, expected) => {
+    page.searchTerm = query;
+    expect(page.filteredUsers.map(user => user.id)).toEqual(expected);
+    expect(page.users).toEqual([current, other]);
+  });
+
+  it('permite buscar y limpiar sin conexión sin solicitar datos ni alterar una edición', () => {
+    page.editUser(other);
+    const draft = page.userForm.getRawValue();
+    service.getUsers.mockClear();
+    window.dispatchEvent(new Event('offline'));
+    page.searchTerm = 'lopez';
+    expect(page.filteredUsers).toEqual([other]);
+    expect(page.hasSearch).toBe(true);
+    expect(page.dataStateLabel).toBe('Sin conexión');
+    page.clearSearch();
+    expect(page.filteredUsers).toEqual([current, other]);
+    expect(page.hasSearch).toBe(false);
+    expect(page.userForm.getRawValue()).toEqual(draft);
+    expect(service.getUsers).not.toHaveBeenCalled();
+  });
+
+  it('distingue un directorio vacío de una búsqueda sin resultados', () => {
+    page.searchTerm = 'cuenta-inexistente';
+    expect(page.filteredUsers).toEqual([]);
+    expect(page.users.length).toBe(2);
+    page.clearSearch();
+    page.users = [];
+    expect(page.filteredUsers).toEqual([]);
+    expect(page.hasSearch).toBe(false);
+    expect(page.users.length).toBe(0);
+  });
 });

@@ -23,6 +23,8 @@ export class RegisterPage implements OnDestroy {
   isSubmitting = false;
   errorMessage = '';
   successMessage = '';
+  passwordVisible = false;
+  confirmationVisible = false;
   readonly connection = connectionState;
   private readonly formChanges: Subscription;
 
@@ -35,6 +37,12 @@ export class RegisterPage implements OnDestroy {
 
   fieldError(field: keyof RegisterPage['registerForm']['controls']): string {
     return getFieldError(this.registerForm, field, this.submitted);
+  }
+
+  togglePasswordVisibility(field: 'password' | 'confirmPassword'): void {
+    if (this.isSubmitting) return;
+    if (field === 'password') this.passwordVisible = !this.passwordVisible;
+    else this.confirmationVisible = !this.confirmationVisible;
   }
 
   // La promesa termina después de registrar en MySQL y navegar al login, o tratar el error.
@@ -57,6 +65,8 @@ export class RegisterPage implements OnDestroy {
       this.successMessage = 'Cuenta creada. Ya puedes iniciar sesión.';
       this.registerForm.controls.password.reset('', { emitEvent: false });
       this.registerForm.controls.confirmPassword.reset('', { emitEvent: false });
+      this.passwordVisible = false;
+      this.confirmationVisible = false;
       this.submitted = false;
       const navigated = await this.router.navigateByUrl('/login?registered=1', { replaceUrl: true });
       if (!navigated) this.errorMessage = 'Usa el enlace Iniciar sesión para continuar.';

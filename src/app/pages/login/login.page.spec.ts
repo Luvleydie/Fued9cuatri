@@ -107,6 +107,40 @@ describe('LoginPage', () => {
     expect(readToken()).toBe(response.accessToken);
   });
 
+  it('limpia el rechazo anterior y los errores de campo al cargar la cuenta demo', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce({ isAxiosError: true, response: {
+      status: 422, data: { message: 'Revisa el usuario.', errors: { username: 'Este usuario no está disponible.' } },
+    } });
+    page.fillDemo();
+    await page.login();
+    expect(page.loginForm.invalid).toBe(true);
+    expect(page.errorMessage).toBe('Revisa el usuario.');
+    expect(page.failLogin).toBe(true);
+    page.fillDemo();
+    expect(page.loginForm.getRawValue()).toEqual({ username: 'emilys', password: 'emilyspass' });
+    expect(page.loginForm.valid).toBe(true);
+    expect(page.errorMessage).toBe('');
+    expect(page.fieldError('username')).toBe('');
+    expect(page.failLogin).toBe(false);
+    expect(page.submitted).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(api.post).toHaveBeenCalledTimes(1);
+  });
+
+  it('permite revisar la contraseña sin cambiarla y bloquea el control durante el envío', async () => {
+    page.fillDemo();
+    page.togglePasswordVisibility();
+    expect(page.passwordVisible).toBe(true);
+    expect(page.loginForm.controls.password.value).toBe('emilyspass');
+    page.isSubmitting = true;
+    page.togglePasswordVisibility();
+    expect(page.passwordVisible).toBe(true);
+    page.isSubmitting = false;
+    await page.login();
+    expect(page.passwordVisible).toBe(false);
+    expect(page.loginForm.controls.password.value).toBe('');
+  });
+
   it('borra la sesión si el router rechaza la navegación', async () => {
     router.navigateByUrl.mockResolvedValueOnce(false);
     page.fillDemo();

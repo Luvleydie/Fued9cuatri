@@ -169,3 +169,13 @@ Los prompts siguientes son **extractos documentados** de instrucciones usadas du
 Fuentes: [bitácora de conexión](docs/BITACORA_IA_CONEXION.md) y [bitácora Data Driven](docs/ACTIVIDAD_DATA_DRIVEN.md#bitácora-de-apoyo-de-ia). Incluyen problemas adicionales y extractos más amplios.
 
 **Resumen para la actividad:** quería una aplicación Ionic capaz de administrar datos, conservarlos y responder claramente ante fallos. Con ayuda de IA se implementaron navegación protegida, CRUD con MySQL, formularios Data Driven, manejo de errores y consulta offline. Los prompts y las pruebas quedaron documentados. El resultado es una aplicación web reproducible; la entrega de un APK funcional sigue pendiente de configurar y verificar Android.
+
+## 11. Ampliación de diseño y gráficas D3.js
+
+Actualización del 5 de octubre de 2026: se renovaron las cuatro pantallas con navegación compartida para escritorio y móvil, tarjetas de catálogo, avatares, búsquedas locales, resúmenes del carrito, estados sin resultados y controles accesibles para mostrar u ocultar contraseñas.
+
+Carrito incorpora tres gráficas mediante D3.js: precios del catálogo, existencias disponibles y distribución del importe por artículo. Se dibujan con datos de la API o una copia válida; la distribución cambia cuando el servidor confirma una nueva cantidad. Se incluyen estados vacíos y tablas de valores exactos.
+
+La [guía de gráficas](docs/GRAFICAS_D3.md) explica los archivos y el funcionamiento e incluye el objetivo, el prompt y el resultado. El [reporte D3 y diseño](docs/evidencia/d3-verificacion.json) y las [capturas actualizadas](docs/screenshots-diseno/) documentan esta ampliación. Las cifras de la sección 6 corresponden a la entrega inicial del 2 de octubre.
+
+Verificación de esta ampliación: **225 pruebas unitarias, 4 escenarios D3/diseño, 4 escenarios de formularios, 5 escenarios de integración, 7 escenarios de conexión y 6 pruebas del service worker aprobados**. También pasaron lint y la compilación de producción. El [reporte consolidado](docs/evidencia/diseno-d3-verificacion.json) enlaza la evidencia vigente.

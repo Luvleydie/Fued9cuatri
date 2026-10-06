@@ -25,6 +25,7 @@ export class LoginPage implements OnDestroy {
   isSubmitting = false;
   failLogin = false;
   errorMessage = '';
+  passwordVisible = false;
   readonly connection = connectionState;
   timer: ReturnType<typeof setTimeout>[] = [];
   private readonly formChanges: Subscription;
@@ -51,7 +52,15 @@ export class LoginPage implements OnDestroy {
 
   fillDemo(): void {
     if (this.isSubmitting) return;
-    this.loginForm.patchValue({ username: 'emilys', password: 'emilyspass' });
+    this.clearTimers();
+    this.failLogin = false;
+    this.errorMessage = '';
+    this.submitted = false;
+    this.loginForm.reset({ username: 'emilys', password: 'emilyspass' });
+  }
+
+  togglePasswordVisibility(): void {
+    if (!this.isSubmitting) this.passwordVisible = !this.passwordVisible;
   }
 
   fieldError(field: 'username' | 'password'): string {
@@ -83,6 +92,7 @@ export class LoginPage implements OnDestroy {
       const navigated = await this.router.navigateByUrl('/home', { replaceUrl: true });
       if (!navigated) throw new Error('No pudimos abrir la página principal. Inténtalo de nuevo.');
       this.loginForm.controls.password.reset('', { emitEvent: false });
+      this.passwordVisible = false;
       this.submitted = false;
     } catch (error: unknown) {
       submissionError = error;

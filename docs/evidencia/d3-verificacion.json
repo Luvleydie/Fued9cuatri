@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-06T01:37:01.867Z",
+  "baseURL": "http://localhost/novacart/",
+  "scope": "UI y D3 con API simulada; no modifica MySQL. Anchos 1440, 768 y 390; capturas con altura ampliada al contenido Ionic.",
+  "results": [
+    {
+      "name": "Tres gráficas D3 con escalas, valores reales y actualización confirmada",
+      "passed": true,
+      "charts": 3,
+      "amounts": [
+        250,
+        100
+      ],
+      "failedWritePreservesChart": true,
+      "screenshot": "docs/screenshots-diseno/04-carrito-graficas-1440.png",
+      "mobileScreenshot": "docs/screenshots-diseno/04-carrito-graficas-390.png",
+      "failedWriteScreenshot": "docs/screenshots-diseno/05-carrito-error-conservado.png"
+    },
+    {
+      "name": "Catálogo vacío y total cero producen estados claros sin geometría inválida",
+      "passed": true,
+      "invalidGeometry": false,
+      "emptyState": true
+    },
+    {
+      "name": "Un carrito con precio cero conserva la tabla y no inventa porcentajes",
+      "passed": true,
+      "invalidGeometry": false,
+      "zeroTotalHandled": true
+    },
+    {
+      "name": "Diseño y búsquedas funcionan en las cuatro pantallas a 1440 y 390 px",
+      "passed": true,
+      "screenshots": [
+        "docs/screenshots-diseno/01-login-1440.png",
+        "docs/screenshots-diseno/02-registro-1440.png",
+        "docs/screenshots-diseno/01-login-390.png",
+        "docs/screenshots-diseno/02-registro-390.png",
+        "docs/screenshots-diseno/03-usuarios-1440.png",
+        "docs/screenshots-diseno/03-usuarios-390.png"
+      ],
+      "searchDoesNotChangeAnalytics": true
+    }
+  ]
+}

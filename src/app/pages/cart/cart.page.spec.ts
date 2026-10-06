@@ -2,8 +2,9 @@ import { ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AxiosError } from 'axios';
+import api from '../../core/api/axios-client';
 import { CartService } from '../../services/cart.service';
-import { clearSession } from '../../core/api/session-storage';
+import { clearSession, readUser, saveSession } from '../../core/api/session-storage';
 import { CartPage } from './cart.page';
 
 describe('Carrito ante fallos de acceso', () => {
@@ -16,12 +17,14 @@ describe('Carrito ante fallos de acceso', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.spyOn(api, 'post').mockResolvedValue({ data: {} });
+    router.navigateByUrl.mockResolvedValue(true);
     window.dispatchEvent(new Event('online'));
     service.getProducts.mockResolvedValue(snapshot(products));
     service.getCart.mockResolvedValue(snapshot(cart));
     page = new CartPage(service as unknown as CartService, router as unknown as Router, { markForCheck: vi.fn() } as unknown as ChangeDetectorRef);
   });
-  afterEach(() => { window.dispatchEvent(new Event('online')); clearSession(); });
+  afterEach(() => { vi.restoreAllMocks(); window.dispatchEvent(new Event('online')); clearSession(); });
 
   it('muestra los productos aunque falle el carrito y no muestra un total vacío como confirmado', async () => {
     service.getCart.mockRejectedValue(new AxiosError('Network Error', 'ERR_NETWORK'));
@@ -110,5 +113,57 @@ describe('Carrito ante fallos de acceso', () => {
     expect(page.quantityRows.at(1).controls.quantity.value).toBe(4);
     expect(page.quantityRows.at(1).dirty).toBe(true);
     expect(page.items[1].quantity).toBe(1);
+  });
+
+  it('filtra títulos sin cambiar el catálogo ni perder las cantidades guardadas', async () => {
+    await page.loadCart();
+    page.products = [...products, { id: 2, title: 'Teclado compacto', price: 100, stock: 8 }];
+    page.searchQuery = '  tECLado  ';
+    expect(page.filteredProducts.map(product => product.id)).toEqual([2]);
+    expect(page.products).toHaveLength(2);
+    expect(page.unitCount).toBe(2);
+    page.searchQuery = 'inexistente';
+    expect(page.filteredProducts).toEqual([]);
+    page.searchQuery = '  ';
+    expect(page.filteredProducts).toHaveLength(2);
+  });
+
+  it('el resumen cuenta cantidades confirmadas aunque el control tenga un borrador', async () => {
+    await page.loadCart();
+    page.quantityRows.at(0).controls.quantity.setValue(9);
+    expect(page.unitCount).toBe(2);
+    expect(page.selectedProductCount).toBe(1);
+    expect(page.total).toBe(400);
+    page.setCart({ items: [], total: 0 });
+    expect(page.unitCount).toBe(0);
+    expect(page.selectedProductCount).toBe(0);
+  });
+
+  it('permite cerrar sesión y limpia el carrito aunque el servidor falle', async () => {
+    saveSession({ id: 9, username: 'demo', accessToken: 'a'.repeat(64), expiresAt: Math.floor(Date.now() / 1000) + 3600 });
+    await page.loadCart();
+    vi.mocked(api.post).mockRejectedValue(new AxiosError('Network Error', 'ERR_NETWORK'));
+    await page.logout();
+    expect(api.post).toHaveBeenCalledWith('/auth/logout');
+    expect(readUser()).toBeNull();
+    expect(page.items).toEqual([]);
+    expect(page.products).toEqual([]);
+    expect(page.quantityRows.length).toBe(0);
+    expect(page.currentUsername).toBe('');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/login', { replaceUrl: true });
+    expect(page.isSubmitting).toBe(false);
+  });
+
+  it('ignora una consulta pendiente que responde después de cerrar sesión', async () => {
+    let completeProducts!: (value: ReturnType<typeof snapshot<typeof products>>) => void;
+    service.getProducts.mockImplementation(() => new Promise(resolve => { completeProducts = resolve; }));
+    const pending = page.loadCart();
+    await page.logout();
+    completeProducts(snapshot(products));
+    await pending;
+    expect(page.items).toEqual([]);
+    expect(page.products).toEqual([]);
+    expect(page.cartSnapshot).toBeNull();
+    expect(page.isLoading).toBe(false);
   });
 });

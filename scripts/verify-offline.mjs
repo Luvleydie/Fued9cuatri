@@ -82,6 +82,8 @@ try {
     const total = await active(page).getByTestId('cart-total').innerText();
     const productCount = await active(page).getByRole('button', { name: /^Agregar / }).count();
     assert.ok(productCount > 0, 'La prueba requiere productos reales cargados en línea.');
+    await expect(active(page).locator('.price-bar')).toHaveCount(productCount);
+    await expect(active(page).locator('.stock-bar')).toHaveCount(productCount);
 
     await context.setOffline(true);
     await expect(notice(page)).toContainText('Sin conexión');
@@ -100,6 +102,11 @@ try {
     await expect(active(page).getByTestId('cart-total')).toHaveText(total);
     await expect(notice(page)).toContainText('Sin conexión');
     await expect(active(page).getByRole('button', { name: /^Agregar / })).toHaveCount(productCount);
+    await expect(active(page).getByTestId('price-chart')).toBeVisible();
+    await expect(active(page).getByTestId('stock-chart')).toBeVisible();
+    await expect(active(page).locator('.price-bar')).toHaveCount(productCount);
+    await expect(active(page).locator('.stock-bar')).toHaveCount(productCount);
+    assert.equal(await active(page).locator('app-cart-charts').evaluate(node => /NaN|Infinity/.test(node.innerHTML)), false);
     await page.getByRole('link', { name: 'Usuarios', exact: true }).click();
     await expect(users(page)).toHaveCount(userCount);
     await expect(active(page).getByTestId('users-cache-status')).toContainText('Mostrando copia temporal');
@@ -120,7 +127,7 @@ try {
     });
     assert.ok(publicCache.assetCount > 0);
     assert.equal(publicCache.containsApi, false, 'El service worker no debe almacenar respuestas privadas de la API.');
-    return { screenshot, mobileScreenshot, serviceWorker, userCount, productCount, publicCache, offlineReloadPassed: true, recovered: true };
+    return { screenshot, mobileScreenshot, serviceWorker, userCount, productCount, publicCache, offlineReloadPassed: true, d3ChartsOfflinePassed: true, recovered: true };
   });
 
   await scenario('Servidor 503 con copia válida y actualización posterior', async page => {

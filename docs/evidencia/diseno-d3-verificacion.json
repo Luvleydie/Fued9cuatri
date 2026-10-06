@@ -1,0 +1,19 @@
+{
+  "verifiedOn": "2026-10-05",
+  "timezone": "America/Mexico_City",
+  "recordType": "Consolidación de resultados observados al ejecutar los comandos; los reportes enlazados los generan sus scripts.",
+  "application": "NovaCart",
+  "repository": "https://github.com/Luvleydie/Fued9cuatri",
+  "branch": "main",
+  "baseURL": "http://localhost/novacart/",
+  "checks": [
+    { "command": "npm test -- --watch=false", "passed": true, "tests": 225, "files": 14 },
+    { "command": "npm run lint", "passed": true },
+    { "command": "npm run deploy:xampp", "passed": true, "scope": "Compilación de producción, worker y despliegue web local" },
+    { "command": "npm run test:d3", "passed": true, "scenarios": 4, "report": "d3-verificacion.json", "scope": "D3, diseño y búsquedas con API simulada; no modifica MySQL" },
+    { "command": "npm run test:data-driven", "passed": true, "scenarios": 4, "report": "data-driven-verificacion.json", "scope": "Formularios con API simulada" },
+    { "command": "npm run test:e2e", "passed": true, "scenarios": 5, "report": "regresion-diseno.json", "scope": "Integración de navegador con API PHP y MySQL" },
+    { "command": "npm run test:offline", "passed": true, "scenarios": 7, "report": "conexion-verificacion.json", "d3ChartsAfterOfflineReload": true },
+    { "command": "npm run test:offline-shell", "passed": true, "tests": 6 }
+  ]
+}
