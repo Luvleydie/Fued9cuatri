@@ -1,0 +1,89 @@
+<section class="panel metadata-panel" aria-labelledby="metadata-title">
+  <span class="section-eyebrow">Compartir cerca de ti</span>
+  <h2 id="metadata-title">Metadata de un archivo por Bluetooth</h2>
+  <p class="section-description">Elige un archivo y el dispositivo de destino. Se comparten su nombre, tamaño, tipo y fecha de modificación.</p>
+  <div class="transfer-grid">
+    <div class="send-section">
+      <h3>Enviar metadata</h3>
+      <div class="field">
+        <label for="metadata-file">1. Selecciona el archivo</label>
+        <input id="metadata-file" type="file" (change)="chooseFile($event)" [disabled]="busy || !active" aria-describedby="metadata-file-hint" />
+        <small id="metadata-file-hint" class="muted">El contenido del archivo permanece en tu dispositivo.</small>
+      </div>
+      @if (metadata; as file) {
+        <dl class="metadata-preview" data-testid="metadata-preview">
+          <div><dt>Nombre</dt><dd>{{ file.name }}</dd></div>
+          <div><dt>Tamaño</dt><dd>{{ file.size | number }} bytes</dd></div>
+          <div><dt>Tipo</dt><dd>{{ file.type || 'No especificado' }}</dd></div>
+          <div><dt>Modificado</dt><dd>{{ (displayDate(file.lastModified) | date:'medium') || 'Fecha no disponible' }}</dd></div>
+        </dl>
+      }
+      <div class="field">
+        <label for="metadata-target-kind">2. Tipo de destino</label>
+        <select id="metadata-target-kind" [value]="targetKind" (change)="changeTarget($event)" [disabled]="busy || receiving || receiverBusy">
+          <option value="novacart">Otro teléfono con NovaCart</option>
+          <option value="external">Otro receptor BLE</option>
+        </select>
+      </div>
+      @if (targetKind === 'novacart') {
+        <p class="muted">En el teléfono Android de destino, abre NovaCart y activa «Recibir metadata». Elígelo por su nombre Bluetooth.</p>
+      } @else {
+        <p class="muted">El receptor debe aceptar metadata en JSON por Bluetooth LE. Usa los identificadores que proporciona su fabricante o configuración.</p>
+        <div class="field">
+          <label for="metadata-service">UUID del servicio</label>
+          <input id="metadata-service" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" [value]="externalService" (input)="configureTarget('service', $event)" [disabled]="busy" spellcheck="false" autocomplete="off" aria-describedby="metadata-uuid-hint" />
+        </div>
+        <div class="field">
+          <label for="metadata-characteristic">UUID de la característica de escritura</label>
+          <input id="metadata-characteristic" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" [value]="externalCharacteristic" (input)="configureTarget('characteristic', $event)" [disabled]="busy" spellcheck="false" autocomplete="off" aria-describedby="metadata-uuid-hint" />
+        </div>
+        <small id="metadata-uuid-hint" class="muted">Introduce ambos UUID completos (36 caracteres). El receptor debe aceptar JSON UTF-8 terminado en salto de línea y escritura con respuesta.</small>
+      }
+      <div class="form-actions">
+        @if (!ready) {
+          <button type="button" class="secondary-button" (click)="prepare()" [disabled]="busy || !metadata || receiving || receiverBusy">{{ preparing ? 'Preparando…' : 'Preparar Bluetooth' }}</button>
+        } @else {
+          <button type="button" class="secondary-button" (click)="chooseDevice()" [disabled]="busy || !metadata || !targetValid || receiving || receiverBusy">{{ choosing ? 'Buscando dispositivos…' : device ? 'Cambiar destino' : 'Elegir dispositivo cercano' }}</button>
+        }
+      </div>
+      @if (device) {
+        <p class="destination"><strong>Destino:</strong> {{ device.name || 'Dispositivo sin nombre' }} <small>{{ device.deviceId }}</small></p>
+      }
+      <div class="form-actions">
+        <button type="button" class="primary-button" (click)="send()" [disabled]="!ready || !metadata || !device || !targetValid || busy || receiving || receiverBusy">{{ sending ? 'Enviando…' : 'Enviar metadata' }}</button>
+        @if (sending) { <button type="button" class="secondary-button" (click)="cancelSend()">Cancelar envío</button> }
+      </div>
+      @if (sending) { <progress [value]="progress" max="100" aria-label="Progreso del envío">{{ progress }}%</progress> }
+      @if (status) { <p class="form-success" role="status">{{ status }}</p> }
+      @if (error) { <p class="form-error" role="alert">{{ error }}</p> }
+    </div>
+    <div class="receive-section">
+      <h3>Recibir metadata</h3>
+      @if (canReceive) {
+        <p class="muted">Haz visible este teléfono para que un dispositivo cercano pueda enviarte metadata. La recepción se detiene al salir de esta pantalla.</p>
+        @if (!receiving) {
+          <button type="button" class="secondary-button" (click)="startReceiving()" [disabled]="busy || receiverBusy">{{ receiverBusy ? 'Preparando receptor…' : 'Recibir metadata' }}</button>
+        } @else {
+          <p class="destination"><strong>Visible como:</strong> {{ receiverName }}</p>
+          <button type="button" class="secondary-button" (click)="stopReceiving()" [disabled]="receiverBusy">{{ receiverBusy ? 'Deteniendo…' : 'Detener recepción' }}</button>
+        }
+        @if (receiverStatus) { <p class="form-success" role="status">{{ receiverStatus }}</p> }
+        @if (receiverError) { <p class="form-error" role="alert">{{ receiverError }}</p> }
+        @if (received; as result) {
+          <div role="status">
+            <h4>Última metadata recibida</h4>
+            <dl class="metadata-preview">
+              <div><dt>Nombre</dt><dd>{{ result.file.name }}</dd></div>
+              <div><dt>Tamaño</dt><dd>{{ result.file.size | number }} bytes</dd></div>
+              <div><dt>Tipo</dt><dd>{{ result.file.type || 'No especificado' }}</dd></div>
+              <div><dt>Modificado</dt><dd>{{ (displayDate(result.file.lastModified) | date:'medium') || 'Fecha no disponible' }}</dd></div>
+              <div><dt>Dispositivo de origen</dt><dd>{{ result.deviceId }}</dd></div>
+            </dl>
+          </div>
+        }
+      } @else {
+        <p class="muted">La recepción entre teléfonos está disponible en la app Android de NovaCart. Desde un navegador compatible puedes enviar metadata por Bluetooth.</p>
+      }
+    </div>
+  </div>
+</section>

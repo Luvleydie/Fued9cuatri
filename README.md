@@ -6,6 +6,14 @@ App académica con **Angular/Ionic, interfaces TypeScript, Axios, PHP y MySQL de
 
 Repositorio: [Luvleydie/Fued9cuatri](https://github.com/Luvleydie/Fued9cuatri), rama principal `main`.
 
+## Entrega de conexión con API REST
+
+[Informe de la entrega REST](docs/ENTREGA_API_REST.md) · [Documento Word con capturas](output/NovaCart_Entrega_API_REST.docx)
+
+La integración usa servicios Angular con Axios y una API PHP que persiste en MySQL. Incluye `GET`, `POST`, `PUT` y `DELETE`, manejo de respuestas y errores e indicadores de carga. `PUT` cubre el requisito de actualización `PUT/PATCH`.
+
+Con Apache y MySQL activos, ejecuta `npm run deploy:xampp` y `npm run test:rest-delivery` para repetir el recorrido del navegador. La prueba crea y elimina únicamente su usuario temporal, guarda capturas en `docs/screenshots-rest/` y registra los métodos y estados HTTP en `docs/evidencia/rest-verificacion.json`. La latencia y el error 503 usados para demostrar los estados de interfaz se simulan de forma controlada en la prueba.
+
 | Pantalla | Ruta | Función |
 |---|---|---|
 | Login | /login | Autenticar y guardar la sesión en sessionStorage |
@@ -89,9 +97,17 @@ El catálogo permite ordenar por nombre o precio, filtrar por existencias y busc
 
 [Código, funcionamiento y bitácora de esta ampliación](docs/MEJORAS_CATALOGO_Y_CARRITO.md). Prueba de interfaz y recarga offline: `npm run test:catalog`.
 
+**Lista de compra:** el carrito permite revisar y copiar un resumen con productos, cantidades guardadas, precios y total; en la web también se descarga como TXT. La lista identifica la fecha y el origen de los datos, incluidos los de la copia temporal sin conexión. Prueba: `npm run test:shopping-list`.
+
+El diseño de tianguis incluye microbuses e ilustraciones grandes. En pantallas pequeñas, las imágenes se colocan en filas propias para conservar espacio para los botones y formularios.
+
 ## Android y APK
 
-El proyecto incluye la estructura de Android en `android/` y la dependencia de Capacitor. **El APK está pendiente de generación y verificación**: antes de compilar se debe configurar una API accesible desde Android; la dirección relativa utilizada en la web no conecta con XAMPP dentro del teléfono. Consulta el [estado y pasos de entrega Android](ENTREGA_PROYECTO_IONIC.md#9-apk).
+También está instalado `@capawesome/capacitor-photo-editor` para Android, con las rutas de FileProvider configuradas. Su API `PhotoEditor.editPhoto({ path })` abre una app de edición instalada en el teléfono; requiere la ruta nativa de una imagen. Consulta la [documentación de Photo Editor](https://capawesome.io/plugins/photo-editor/).
+
+La compilación móvil tiene una API configurable, soporte CORS en PHP y salida independiente de la web. Ejecuta `npm run mobile:apk -- --emulator` para generar el APK debug contra XAMPP, o proporciona `--api-url https://servidor/novacart/api`. El instalador se guarda en `output/android/NovaCart-debug.apk`. Consulta los [pasos y requisitos del cliente móvil](docs/CLIENTE_MOVIL.md).
+
+En **Inicio / Datos de usuario** puedes seleccionar un archivo y enviar su metadata por Bluetooth Low Energy a otro Android con NovaCart o a un periférico BLE compatible. Consulta los [pasos de envío, recepción y protocolo para otros dispositivos](docs/BLUETOOTH_METADATA.md).
 
 El MCP ya se comprobó desde Codex. Para cargarlo en otra sesión, vuelve a abrir el proyecto. `codex mcp get novacart_mysql` muestra su configuración; `npm run test:mcp` comprueba la conexión real.
 

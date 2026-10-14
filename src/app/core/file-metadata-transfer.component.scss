@@ -1,0 +1,23 @@
+:host { display: block; margin-top: 24px; }
+.metadata-panel { padding: 28px; }
+.transfer-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; margin-top: 22px; }
+.send-section, .receive-section { min-width: 0; }
+.receive-section { border-left: 1px solid var(--nc-border); padding-left: 28px; }
+.field { margin-top: 16px; }
+select { width: 100%; min-height: 46px; padding: 10px; color: var(--nc-ink); background: var(--nc-surface); border: 2px solid var(--nc-border); font: inherit; }
+input[type='file'] { max-width: 100%; min-width: 0; padding: 10px; }
+.metadata-preview { margin: 20px 0; padding: 16px; background: var(--nc-surface); border: 1px solid var(--nc-border); }
+.metadata-preview div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 5px 0; }
+dt { font-weight: 700; }
+dd { margin: 0; overflow-wrap: anywhere; }
+.destination { overflow-wrap: anywhere; }
+.destination small { display: block; color: var(--nc-muted); }
+progress { width: 100%; margin-top: 16px; accent-color: var(--nc-primary); }
+.form-actions { flex-wrap: wrap; }
+.form-success, .form-error { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .metadata-panel { padding: 20px; }
+  .transfer-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .receive-section { border-left: 0; border-top: 1px solid var(--nc-border); padding: 20px 0 0; }
+  .metadata-preview div { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+}

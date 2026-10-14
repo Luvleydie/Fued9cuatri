@@ -1,10 +1,13 @@
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { Capacitor } from '@capacitor/core';
 
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 
 function registerOfflineShell(): void {
-  if (!environment.production || !window.isSecureContext || !('serviceWorker' in navigator)) return;
+  // El APK ya contiene los recursos; su actualización depende de instalar otra
+  // versión y no de un service worker con archivos de una compilación anterior.
+  if (Capacitor.isNativePlatform() || !environment.production || !window.isSecureContext || !('serviceWorker' in navigator)) return;
 
   const register = (): void => {
     const scope = new URL('./', document.baseURI);

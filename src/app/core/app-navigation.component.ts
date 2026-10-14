@@ -25,7 +25,7 @@ import { IonicModule } from '@ionic/angular/lazy';
             @if (cartCount > 0) { <span class="navigation-count" aria-hidden="true">{{ cartCount }}</span> }
           </a>
         </nav>
-        <div class="navigation-note"><span class="navigation-note-icon" aria-hidden="true">✦</span><p>Todo en su lugar.<small>Administra tus usuarios y guarda tus artículos favoritos.</small></p></div>
+        <div class="navigation-note"><img class="navigation-microbus" src="assets/barrio/microbus.svg" alt="" width="480" height="230" /><p>Todo en su lugar.<small>Administra tus usuarios y guarda tus artículos favoritos.</small></p></div>
         <div class="navigation-footer"><span class="status-dot" aria-hidden="true"></span> NovaCart · 1.0</div>
       </aside>
       <ion-toolbar>

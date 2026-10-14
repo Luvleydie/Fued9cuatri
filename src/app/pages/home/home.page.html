@@ -2,6 +2,10 @@
 
 <ion-content>
   <main class="home-shell fade-in">
+    <div class="barrio-welcome" aria-label="Bienvenida al barrio">
+      <div><span class="route-label">NOVACART · RUTA DEL BARRIO</span><strong>¡PÁSALE, HAY LUGAR!</strong><p>Usuarios, carrito y buena cumbia. Hecho con sabor de barrio.</p></div>
+      <img src="assets/barrio/microbus.svg" alt="Microbús verde de la ruta Centro" width="480" height="230" />
+    </div>
     <header class="page-heading">
       <div>
         <span class="section-eyebrow">Tu espacio de trabajo</span>
@@ -16,6 +20,12 @@
     @if (needsRefresh && snapshot?.source !== 'cache') { <p class="cache-notice">Actualiza los datos antes de guardar más cambios.</p> }
     @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
     @if (successMessage) { <p class="form-success" role="status">{{ successMessage }}</p> }
+    @if (isSubmitting) {
+      <div class="form-actions" role="status" aria-live="polite" data-testid="users-mutation-loading">
+        <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+        <span>Procesando solicitud…</span>
+      </div>
+    }
 
     <section class="summary-grid" aria-label="Resumen de usuarios">
       <div class="summary-card">
@@ -82,7 +92,7 @@
         <p id="users-search-hint" class="muted">La búsqueda funciona también con los datos guardados sin conexión.</p>
         <p id="users-result-count" class="muted" role="status" aria-live="polite">Mostrando {{ filteredUsers.length }} de {{ users.length }} usuarios.</p>
         @if (isLoading) {
-          <div class="empty-state" role="status"><h3>Cargando usuarios…</h3><p>Estamos actualizando el directorio.</p></div>
+          <div class="empty-state" role="status" data-testid="users-request-loading"><ion-spinner name="crescent" aria-hidden="true"></ion-spinner><h3>Cargando usuarios…</h3><p>Estamos actualizando el directorio.</p></div>
         }
         @else if (!users.length && !errorMessage) {
           <div class="empty-state"><h3>No hay usuarios registrados</h3><p>{{ readOnly ? 'Conéctate y actualiza los datos para gestionar las cuentas.' : 'Crea una cuenta con el formulario para comenzar.' }}</p></div>
@@ -111,5 +121,6 @@
         }
       </section>
     </div>
+    <app-file-metadata-transfer [active]="bluetoothActive && !!currentUser" />
   </main>
 </ion-content>

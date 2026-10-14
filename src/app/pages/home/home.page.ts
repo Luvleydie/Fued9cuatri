@@ -16,12 +16,13 @@ import { cacheNotice } from '../../core/cache-notice';
 import { applyServerErrors, bindFormChanges, createUserForm, getFieldError, setUserFormMode, USER_FIELD_DEFINITIONS, userInputFromForm } from '../../core/forms/form-models';
 import { User } from '../../models/user.model';
 import { UsersService } from '../../services/users.service';
+import { FileMetadataTransferComponent } from '../../core/file-metadata-transfer.component';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IonicModule, ConnectionNoticeComponent, AppNavigationComponent],
+  imports: [CommonModule, ReactiveFormsModule, IonicModule, ConnectionNoticeComponent, AppNavigationComponent, FileMetadataTransferComponent],
 })
 export class HomePage implements OnInit, OnDestroy {
   users: User[] = [];
@@ -39,6 +40,7 @@ export class HomePage implements OnInit, OnDestroy {
   readonly connection = connectionState;
   snapshot: CachedResult<User[]> | null = null;
   needsRefresh = false;
+  bluetoothActive = true;
 
   get readOnly(): boolean { return this.connection.offline() || this.snapshot?.source === 'cache' || this.needsRefresh; }
   get dataNotice(): string { return cacheNotice(this.snapshot, this.connection.offline()); }
@@ -89,9 +91,12 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   ionViewWillEnter(): void {
+    this.bluetoothActive = true;
     this.currentUser = readUser();
     void this.loadUsers();
   }
+
+  ionViewWillLeave(): void { this.bluetoothActive = false; this.cdr.markForCheck(); }
 
   async loadUsers(): Promise<void> {
     if (this.isLoading || this.isSubmitting) return;

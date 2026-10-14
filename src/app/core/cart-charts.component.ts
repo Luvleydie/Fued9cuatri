@@ -26,7 +26,7 @@ export class CartChartsComponent implements AfterViewInit, OnChanges {
   @ViewChild('stockSvg', { static: true }) private stockSvg!: ElementRef<SVGSVGElement>;
   @ViewChild('cartSvg', { static: true }) private cartSvg!: ElementRef<SVGSVGElement>;
   private ready = false;
-  private readonly colors = ['#7257cf', '#5e947c', '#bf8b60', '#7489c5', '#b06f97', '#889559'];
+  private readonly colors = ['#176b3a', '#c9352b', '#a87913', '#358b83', '#a4502e', '#70853b'];
   private readonly currency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 });
 
   get cartAmounts(): CartAmount[] {
@@ -66,13 +66,13 @@ export class CartChartsComponent implements AfterViewInit, OnChanges {
     const bars = plot.selectAll<SVGRectElement, Product>('rect.price-bar').data(this.products, product => product.id).join('rect')
       .attr('class', 'price-bar').attr('data-product-id', product => product.id).attr('data-value', product => product.price)
       .attr('x', 0).attr('y', product => y(product.id) || 0).attr('width', product => x(product.price)).attr('height', y.bandwidth())
-      .attr('rx', 4).attr('fill', '#7257cf').attr('tabindex', 0).attr('role', 'img')
+      .attr('rx', 4).attr('fill', '#c9352b').attr('tabindex', 0).attr('role', 'img')
       .attr('aria-label', product => `${product.title}: ${this.currency.format(product.price)} MXN por unidad`);
     bars.selectAll<SVGTitleElement, Product>('title').data(product => [product]).join('title')
       .text(product => `${product.title}: ${this.currency.format(product.price)} MXN por unidad`);
     plot.selectAll<SVGTextElement, Product>('text.price-label').data(this.products, product => product.id).join('text')
       .attr('class', 'price-label').attr('x', product => x(product.price) + 7).attr('y', product => (y(product.id) || 0) + y.bandwidth() / 2)
-      .attr('dy', '.35em').attr('font-size', 14).attr('fill', '#514b63').text(product => this.currency.format(product.price));
+      .attr('dy', '.35em').attr('font-size', 14).attr('fill', '#51472d').text(product => this.currency.format(product.price));
     this.styleAxes(svg);
   }
 
@@ -96,13 +96,13 @@ export class CartChartsComponent implements AfterViewInit, OnChanges {
     const bars = plot.selectAll<SVGRectElement, Product>('rect.stock-bar').data(this.products, product => product.id).join('rect')
       .attr('class', 'stock-bar').attr('data-product-id', product => product.id).attr('data-value', product => product.stock)
       .attr('x', product => x(product.id) || 0).attr('y', product => y(product.stock)).attr('width', x.bandwidth())
-      .attr('height', product => innerHeight - y(product.stock)).attr('rx', 4).attr('fill', '#5e947c')
+      .attr('height', product => innerHeight - y(product.stock)).attr('rx', 4).attr('fill', '#176b3a')
       .attr('tabindex', 0).attr('role', 'img').attr('aria-label', product => `${product.title}: ${product.stock} unidades disponibles`);
     bars.selectAll<SVGTitleElement, Product>('title').data(product => [product]).join('title')
       .text(product => `${product.title}: ${product.stock} unidades disponibles`);
     plot.selectAll<SVGTextElement, Product>('text.stock-label-value').data(this.products, product => product.id).join('text')
       .attr('class', 'stock-label-value').attr('x', product => (x(product.id) || 0) + x.bandwidth() / 2).attr('y', product => y(product.stock) - 8)
-      .attr('text-anchor', 'middle').attr('font-size', 15).attr('fill', '#514b63').text(product => product.stock);
+      .attr('text-anchor', 'middle').attr('font-size', 15).attr('fill', '#51472d').text(product => product.stock);
     this.styleAxes(svg);
   }
 
@@ -119,15 +119,15 @@ export class CartChartsComponent implements AfterViewInit, OnChanges {
     slices.selectAll<SVGTitleElement, (typeof sectors)[number]>('title').data(sector => [sector]).join('title')
       .text(sector => `${sector.data.title}: ${this.currency.format(sector.data.amount)} MXN (${this.percentage(sector.data.amount)})`);
     plot.selectAll<SVGTextElement, number>('text.cart-center-caption').data(amounts.length ? [0] : []).join('text')
-      .attr('class', 'cart-center-caption').attr('text-anchor', 'middle').attr('y', -7).attr('font-size', 12).attr('fill', '#716d85').text('Importe guardado');
+      .attr('class', 'cart-center-caption').attr('text-anchor', 'middle').attr('y', -7).attr('font-size', 12).attr('fill', '#68604d').text('Importe guardado');
     plot.selectAll<SVGTextElement, number>('text.cart-center-total').data(amounts.length ? [0] : []).join('text')
-      .attr('class', 'cart-center-total').attr('text-anchor', 'middle').attr('y', 18).attr('font-size', 20).attr('font-weight', 650).attr('fill', '#27243d').text(this.currency.format(this.cartTotal));
+      .attr('class', 'cart-center-total').attr('text-anchor', 'middle').attr('y', 18).attr('font-size', 20).attr('font-weight', 650).attr('fill', '#b32922').text(this.currency.format(this.cartTotal));
   }
 
   private shortTitle(title: string, length = 20): string { return title.length > length ? `${title.slice(0, length - 1)}…` : title; }
 
   private styleAxes(svg: ReturnType<typeof select<SVGSVGElement, unknown>>): void {
-    svg.selectAll('.domain, .tick line').attr('stroke', '#e6e3ef');
-    svg.selectAll('.tick text').attr('fill', '#716d85').attr('font-size', 14);
+    svg.selectAll('.domain, .tick line').attr('stroke', '#b4aa88');
+    svg.selectAll('.tick text').attr('fill', '#68604d').attr('font-size', 14);
   }
 }

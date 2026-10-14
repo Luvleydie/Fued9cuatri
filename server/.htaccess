@@ -5,7 +5,7 @@ RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^index\.php$ - [L]
 RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
-<FilesMatch "^(config|config\.local|database|validation|http|auth|install|inspect)\.php$">
+<FilesMatch "^(config|config\.local|database|validation|http|auth|cors|install|inspect)\.php$">
     Require all denied
 </FilesMatch>
 <FilesMatch "\.(sql|ts)$">

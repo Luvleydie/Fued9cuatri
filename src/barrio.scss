@@ -1,0 +1,368 @@
+/* Letreros sencillos, colores de tianguis y la ruta del barrio. */
+:root {
+  --nc-ink: #292419;
+  --nc-muted: #68604d;
+  --nc-primary: #176b3a;
+  --nc-border: #b4aa88;
+  --nc-surface: #fff6de;
+  --barrio-red: #c9352b;
+  --barrio-yellow: #f3c546;
+}
+
+body { -webkit-font-smoothing: auto; }
+ion-content {
+  --background: #fff6de;
+  --padding-bottom: 72px;
+}
+ion-app:has(app-barrio-radio details[open]) ion-content { --padding-bottom: 210px; }
+ion-content::part(background) {
+  background-image: radial-gradient(#b6a57b35 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+h1, h2, h3 { font-family: Arial, Helvetica, sans-serif; font-weight: 800; letter-spacing: 0; }
+h1 { color: #b32922; }
+.section-eyebrow { color: #176b3a; letter-spacing: 1px; }
+.section-description, .muted { color: #68604d; }
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline-color: #176b3a;
+}
+button { border-radius: 3px; font-weight: 700; }
+.primary-button {
+  background: #176b3a;
+  border: 2px solid #292419;
+  box-shadow: 3px 3px 0 #292419;
+}
+.primary-button:hover:not(:disabled) { background: #10522b; border-color: #292419; }
+.secondary-button {
+  color: #292419;
+  background: #f3c546;
+  border: 2px solid #292419;
+  box-shadow: 2px 2px 0 #292419;
+}
+.secondary-button:hover:not(:disabled) { color: #292419; background: #ffdd78; border-color: #292419; }
+.danger-button { color: #a8241e; border: 2px solid #b32922; background: #fff2e9; }
+.danger-button:hover:not(:disabled) { background: #ffd9cf; }
+.text-button { color: #176b3a; }
+.text-button:hover:not(:disabled), .password-toggle:hover { color: #145e33; background: #e4edd9; }
+.panel, .chart-panel {
+  background: #fffdf4;
+  border: 2px solid #292419;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 #d4c49d;
+}
+.brand-mark {
+  background: #176b3a;
+  border: 2px solid #292419;
+  border-radius: 3px;
+  box-shadow: 2px 2px 0 #c9352b;
+}
+.field, .search-field { color: #292419; }
+.field input, .search-field input, .catalog-filters select {
+  background: #fffef9;
+  color: #292419;
+  border: 2px solid #b4aa88;
+  border-radius: 2px;
+}
+.field input::placeholder, .search-field input::placeholder { color: #80765f; }
+.field input:focus, .search-field input:focus, .catalog-filters select:focus {
+  border-color: #176b3a;
+  box-shadow: 0 0 0 3px #176b3a22;
+}
+.field input:disabled { background: #f1ebdc; }
+.field input[aria-invalid="true"] { border-color: #b32922; background: #fff1e9; }
+.field-error { color: #a8241e; }
+.password-toggle { color: #176b3a; }
+.form-error, .form-success, .connection-notice, .cache-notice { border-radius: 2px; }
+.form-error { color: #9b221b; background: #fff0e8; border-color: #d88c75; }
+.form-success, .connection-notice { color: #17542f; background: #e9efdb; border-color: #a9be8b; }
+.connection-warning, .cache-notice { color: #705218; background: #fff0b9; border-color: #b49437; }
+
+/* El toldo y el cartel de bienvenida no cambian los formularios. */
+.auth-shell {
+  padding: 38px 26px 90px;
+  background: transparent;
+}
+.auth-layout {
+  max-width: 1080px;
+  border: 3px solid #292419;
+  border-radius: 4px;
+  box-shadow: 8px 8px 0 #c9352b;
+}
+.auth-story {
+  padding: 50px 36px 30px;
+  background: #f8d97a;
+  border-right: 2px solid #292419;
+}
+.auth-story::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 18px;
+  background: repeating-linear-gradient(90deg, #c9352b 0 32px, #fff6de 32px 64px);
+  border-bottom: 2px solid #292419;
+}
+.auth-story-brand {
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-size: 28px;
+  font-style: italic;
+  color: #176b3a;
+  letter-spacing: -1px;
+  text-shadow: 1px 1px 0 #fff6de;
+}
+.barrio-sticker {
+  width: fit-content;
+  margin-top: 23px;
+  padding: 5px 11px;
+  border: 2px solid #292419;
+  background: #fffdf4;
+  color: #b32922;
+  font-size: 12px;
+  font-weight: 800;
+  transform: rotate(-3deg);
+  box-shadow: 2px 2px 0 #292419;
+}
+.auth-story-copy { margin: 26px 0 14px; }
+.auth-story-copy h2 { color: #b32922; font-size: 38px; letter-spacing: -.7px; }
+.auth-story-copy p { color: #51472d; font-size: 13px; line-height: 1.65; }
+.auth-preview {
+  padding: 0;
+  margin: 6px -8px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+.auth-preview img { width: 100%; height: auto; display: block; }
+.auth-feature-list { margin: 16px 0; gap: 14px; }
+.auth-feature { color: #51472d; }
+.auth-feature > span:first-child {
+  background: #176b3a;
+  color: #fff;
+  border: 1px solid #292419;
+  border-radius: 0;
+  padding: 2px 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.auth-proof { color: #51472d; padding-top: 12px; }
+.auth-panel { padding: 44px 40px; background: #fffdf4; border: 0; box-shadow: none; }
+.auth-panel-heading { padding-bottom: 10px; border-bottom: 3px double #c9352b; }
+.auth-panel h1 { letter-spacing: -.4px; }
+.auth-footer { border-top-color: #b4aa88; }
+.auth-link { text-decoration: underline; }
+.demo-card { background: #fff3c3; border: 2px dashed #a78529; border-radius: 2px; }
+
+/* Ruta, directorio y carrito conservan su distribución y sus acciones. */
+.app-sidebar { background: #fff9e9; border-right: 2px solid #292419; }
+.navigation-brand { color: #176b3a; font-style: italic; font-weight: 800; }
+.navigation-brand small { color: #68604d; font-style: normal; }
+.navigation-caption { color: #176b3a; border-bottom: 2px dashed #b4aa88; padding-bottom: 12px; }
+.navigation-links a { color: #51472d; border: 2px solid transparent; border-radius: 2px; }
+.navigation-links a:hover { background: #f5ebcb; }
+.navigation-links a.active {
+  background: #f3c546;
+  color: #292419;
+  border-color: #292419;
+  box-shadow: 3px 3px 0 #c9352b;
+}
+.navigation-count { background: #176b3a; border-radius: 2px; }
+.navigation-note { padding: 12px; background: #f8e8b0; border: 2px dashed #a78529; border-radius: 2px; }
+.navigation-microbus { display: block; width: 100%; height: auto; margin: 0 auto; }
+.navigation-note-icon { color: #b32922; }
+.navigation-note small { color: #51472d; }
+.navigation-footer { color: #68604d; }
+.status-dot { background: #176b3a; }
+.app-header ion-toolbar {
+  --background: #176b3a;
+  --color: #fff6de;
+  border-bottom: 3px solid #f3c546;
+}
+.topbar-location, .topbar-location strong, .topbar-username { color: #fff6de; }
+.logout-button { color: #fff6de; }
+.logout-button:hover:not(:disabled) { color: #292419; background: #f3c546; }
+.topbar-avatar, .avatar { background: #f3c546; color: #292419; border: 1px solid #292419; border-radius: 3px; }
+.home-shell { padding-bottom: 90px; }
+.barrio-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  gap: 12px;
+  min-height: 130px;
+  padding: 26px 22px 17px;
+  margin-bottom: 28px;
+  background: #f3c546;
+  border: 2px solid #292419;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0 #c9352b;
+}
+.barrio-welcome::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 9px;
+  background: repeating-linear-gradient(90deg, #176b3a 0 22px, #fff6de 22px 44px, #c9352b 44px 66px);
+  border-bottom: 1px solid #292419;
+}
+.barrio-welcome > div { min-width: 0; }
+.barrio-welcome strong { display: block; color: #b32922; font-size: clamp(19px, 2.3vw, 30px); font-weight: 900; }
+.barrio-welcome p { margin: 8px 0 0; font-size: 12px; color: #51472d; line-height: 1.5; }
+.barrio-welcome .route-label { display: block; margin-bottom: 6px; color: #176b3a; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+.barrio-welcome img { flex-shrink: 0; width: 190px; height: auto; }
+.user-badge, .count { background: #e2ecd3; color: #17542f; border: 1px solid #a9be8b; border-radius: 2px; }
+.summary-card { border: 2px solid #292419; border-radius: 2px; background: #e9efdb; box-shadow: 3px 3px 0 #b4aa88; }
+.summary-card:nth-child(2) { background: #fff0b9; }
+.summary-card:nth-child(3) { background: #f9dfd0; }
+.summary-label { color: #51472d; font-weight: 700; }
+.summary-value { color: #176b3a; font-weight: 800; letter-spacing: 0; }
+.summary-card:nth-child(3) .summary-value { color: #a8241e; }
+.editor-panel, .catalog-panel { border-top: 7px solid #176b3a; }
+.users-panel, .cart-panel { border-top: 7px solid #c9352b; }
+.user-row { border-bottom: 1px dashed #b4aa88; }
+.empty-art, .cart-item-avatar { background: #fff0b9; color: #176b3a; border-radius: 3px; }
+.product-card { border: 2px solid #292419; border-radius: 2px; background: #fffdf4; }
+.product-card.is-selected { border-color: #176b3a; box-shadow: 3px 3px 0 #176b3a; }
+.product-art { background: #f9dfd0; color: #a8241e; border-bottom: 2px solid #292419; }
+.product-card:nth-child(3n + 2) .product-art { background: #e2ecd3; color: #176b3a; }
+.product-card:nth-child(3n) .product-art { background: #fff0b9; color: #8b6412; }
+.stock-label { color: #17542f; }
+.stock-label.out-of-stock { color: #925217; }
+.product-price { color: #b32922; font-weight: 800; }
+.quantity-actions button { border-radius: 2px; }
+.cart-summary { border-top-color: #b4aa88; }
+.cart-total { color: #b32922; }
+.chart-empty { background: #f5eedc; border-radius: 2px; }
+.chart-surface svg text { font-family: Arial, Helvetica, sans-serif; }
+.chart-surface rect:focus-visible, .chart-surface path:focus-visible { stroke: #292419; }
+
+@media (max-width: 900px) {
+  .auth-story { padding: 45px 26px 26px; }
+  .auth-panel { padding: 34px 28px; }
+  .auth-story-copy h2 { font-size: 32px; }
+}
+@media (max-width: 760px) {
+  .auth-shell { padding: 24px 16px 80px; }
+  .auth-layout { border-radius: 2px; box-shadow: 5px 5px 0 #c9352b; }
+  .auth-story { border-right: 0; border-bottom: 2px solid #292419; padding: 33px 24px 18px; }
+  .auth-story-brand { font-size: 25px; }
+  .auth-story-mobile-copy { color: #51472d; }
+  .barrio-sticker { position: absolute; right: 18px; top: 20px; margin-top: 0; font-size: 9px; padding: 4px 7px; }
+  .auth-preview { display: block; margin: 10px 0 0; }
+  .auth-preview img { width: 245px; max-width: 100%; max-height: 112px; object-fit: contain; margin: 0 auto; }
+  .auth-panel { padding: 26px 24px; }
+  .app-sidebar { border-right: 0; border-bottom: 2px solid #292419; background: #fff6de; }
+  .navigation-links a { border-radius: 2px; }
+  .home-shell { padding-bottom: 80px; }
+  .barrio-welcome { min-height: 112px; padding: 22px 15px 13px; margin-bottom: 25px; }
+  .barrio-welcome img { width: 126px; }
+  .barrio-welcome strong { font-size: 19px; }
+  .barrio-welcome p { font-size: 11px; }
+}
+@media (max-width: 380px) {
+  .barrio-sticker { font-size: 8px; right: 12px; }
+  .auth-story-brand { font-size: 23px; gap: 8px; }
+  .barrio-welcome img { width: 102px; }
+  .barrio-welcome strong { font-size: 17px; }
+}
+
+/* La libreta del mandado: controles amplios y una lista que se lleva en el celular. */
+.barrio-cart-page .barrio-cart-sign {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  color: #b32922;
+  border-bottom: 2px dashed #b4aa88;
+}
+.barrio-cart-page .barrio-cart-sign .section-eyebrow { margin: 0; }
+.barrio-cart-page .quantity-actions button { min-width: 44px; min-height: 44px; font-size: 22px; }
+.barrio-cart-page .quantity-actions span { min-width: 30px; text-align: center; font-weight: 800; }
+.barrio-cart-page .quantity-editor input { min-height: 44px; font-size: 16px; }
+.barrio-cart-page .barrio-list-to-go {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0;
+  padding: 18px;
+  background: #fff0b9;
+  border: 2px dashed #a78529;
+  border-radius: 2px;
+}
+.barrio-cart-page .barrio-list-to-go strong { color: #b32922; font-size: 21px; }
+.barrio-cart-page .barrio-list-to-go p { margin: 8px 0 0; color: #51472d; font-size: 13px; line-height: 1.6; }
+.barrio-cart-page .barrio-list-to-go button { justify-self: start; min-height: 44px; }
+.barrio-shopping-list-modal { --width: 660px; --height: min(760px, 90vh); --border-radius: 4px; }
+.barrio-shopping-list-modal ion-toolbar { --background: #176b3a; --color: #fff6de; border-bottom: 3px solid #f3c546; }
+.barrio-shopping-list-modal ion-content { --padding-bottom: 0; }
+.barrio-shopping-list-sheet { padding: 22px; }
+.barrio-shopping-list-sheet > p { font-size: 14px; line-height: 1.6; }
+.barrio-shopping-list-sheet label { display: block; margin: 18px 0 8px; font-size: 13px; font-weight: 700; }
+.barrio-shopping-list-sheet textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 340px;
+  padding: 14px;
+  resize: vertical;
+  font: 14px/1.65 Consolas, monospace;
+  color: #292419;
+  background: #fffdf4;
+  border: 2px solid #b4aa88;
+  border-radius: 2px;
+}
+.barrio-shopping-list-sheet textarea:focus { outline: 3px solid #176b3a; outline-offset: 2px; }
+.barrio-shopping-list-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.barrio-shopping-list-actions button { min-height: 44px; }
+@media (max-width: 600px) {
+  .barrio-cart-page .barrio-list-to-go { padding: 15px; }
+  .barrio-cart-page .barrio-list-to-go button { width: 100%; }
+  .barrio-shopping-list-modal { --width: 100%; --height: 100%; --border-radius: 0; }
+  .barrio-shopping-list-sheet { padding: 18px; }
+  .barrio-shopping-list-sheet textarea { height: 42vh; font-size: 16px; }
+  .barrio-shopping-list-actions button { flex: 1 1 150px; }
+}
+
+/* Ilustraciones grandes, con espacio propio para conservar todos los controles a la vista. */
+.barrio-welcome { gap: 24px; }
+.barrio-welcome > div { flex: 1 1 0; }
+.barrio-welcome img { display: block; width: min(44%, 390px); max-width: 100%; height: auto; object-fit: contain; }
+.auth-preview { margin: 16px -24px 0; }
+.auth-preview img { width: 100%; max-width: 100%; max-height: none; height: auto; object-fit: contain; }
+.navigation-note { margin-inline: -5px; padding: 7px; flex-shrink: 0; }
+.navigation-microbus { max-width: 100%; }
+.barrio-cart-page .product-art { min-height: 190px; padding: 12px; }
+.barrio-cart-page .product-art svg { display: block; width: min(100%, 170px); height: auto; aspect-ratio: 6 / 5; }
+.barrio-cart-page .cart-item { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 14px; }
+.barrio-cart-page .cart-item-avatar { width: 104px; height: 104px; }
+.barrio-cart-page .cart-item-avatar svg { display: block; width: 90px; height: auto; aspect-ratio: 6 / 5; }
+.barrio-cart-page .cart-item .row-actions { grid-column: 2; justify-self: start; }
+@media (min-width: 901px) {
+  .auth-layout { max-width: 1200px; }
+}
+@media (min-width: 761px) {
+  .app-sidebar { overflow-y: auto; }
+}
+@media (max-width: 900px) {
+  .barrio-welcome { flex-direction: column; align-items: stretch; gap: 8px; }
+  .barrio-welcome img { align-self: center; width: min(100%, 370px); }
+}
+@media (max-width: 760px) {
+  .auth-preview { margin: 14px -18px 0; }
+  .auth-preview img { width: 100%; max-height: none; }
+  .barrio-welcome { padding-bottom: 12px; }
+  .barrio-welcome img { width: min(100%, 360px); }
+}
+@media (max-width: 600px) {
+  .barrio-cart-page .cart-item { grid-template-columns: minmax(0, 1fr); }
+  .barrio-cart-page .cart-item-avatar { width: 100%; height: 154px; }
+  .barrio-cart-page .cart-item-avatar svg { width: 150px; max-width: 100%; }
+  .barrio-cart-page .cart-item .row-actions { grid-column: 1; }
+}
+@media (max-width: 480px) {
+  .barrio-cart-page .product-grid { grid-template-columns: minmax(0, 1fr); }
+  .barrio-cart-page .product-art { min-height: 200px; }
+  .barrio-cart-page .product-art svg { width: min(100%, 210px); }
+}

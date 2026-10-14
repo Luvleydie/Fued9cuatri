@@ -1,6 +1,10 @@
 <app-navigation activePage="cart" [username]="currentUsername" [cartCount]="unitCount" [busy]="isSubmitting" (logout)="logout()" />
 <ion-content>
-  <main class="home-shell fade-in">
+  <main class="home-shell fade-in barrio-cart-page">
+    <div class="barrio-welcome" aria-label="Bienvenida al tianguis">
+      <div><span class="route-label">NOVACART · EL TIANGUIS DIGITAL</span><strong>¡PÁSALE A VER!</strong><p>Tu carrito se va contigo. Y la cumbia también.</p></div>
+      <img src="assets/barrio/microbus.svg" alt="Microbús verde de la ruta Centro" width="480" height="230" />
+    </div>
     <header class="page-heading">
       <div>
         <span class="section-eyebrow">TU SELECCIÓN, A TU RITMO</span>
@@ -13,7 +17,12 @@
     @if (needsRefresh) { <p class="cache-notice">Actualiza el carrito antes de guardar más cambios.</p> }
     @if (errorMessage) { <p class="form-error" role="alert">{{ errorMessage }}</p> }
     @if (successMessage) { <p class="form-success" role="status" data-testid="cart-success">{{ successMessage }}</p> }
-    @if (isLoading) { <p role="status">Cargando carrito…</p> }
+    @if (isLoading || isSubmitting) {
+      <div class="form-actions" role="status" aria-live="polite" data-testid="cart-request-loading">
+        <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+        <span>{{ isLoading ? 'Cargando carrito…' : 'Procesando solicitud…' }}</span>
+      </div>
+    }
 
     @if (cartSnapshot) {
       <div class="summary-grid" aria-label="Resumen de tu selección">
@@ -85,7 +94,7 @@
         }
       </section>
       <section class="panel cart-panel" aria-labelledby="cart-title" [formGroup]="quantityForm">
-        <span class="section-eyebrow">GUARDADO EN TU CUENTA</span>
+        <div class="barrio-cart-sign"><span class="section-eyebrow">TU MANDADO, BIEN APUNTADO</span><span aria-hidden="true">★ ★ ★</span></div>
         <div class="list-heading">
           <h2 id="cart-title">Artículos guardados</h2>
           <button type="button" class="danger-button" data-testid="clear-cart" (click)="requestClearCart()"
@@ -143,6 +152,16 @@
             <p class="muted">Los cambios de cantidad aparecen en el total después de guardarlos.</p>
           </div>
         }
+        <div class="barrio-list-to-go">
+          <div>
+            <strong>¡Llévate la lista!</strong>
+            <p id="shopping-list-help">Consulta y copia tus cantidades guardadas, precios y total. También puedes descargarla en la versión web.</p>
+          </div>
+          <button type="button" class="primary-button" data-testid="shopping-list" (click)="openShoppingList()"
+            [disabled]="isLoading || isSubmitting || !cartSnapshot || !items.length" aria-describedby="shopping-list-help">
+            Ver lista de compra
+          </button>
+        </div>
         <p class="muted">El carrito se guarda en tu cuenta. Esta práctica no realiza compras.</p>
       </section>
     </div>
@@ -152,6 +171,31 @@
 <ion-alert cssClass="clear-cart-alert" [isOpen]="clearConfirmationOpen" header="¿Vaciar el carrito?"
   message="Se quitarán todos los artículos guardados en tu cuenta." [buttons]="clearCartButtons"
   (didDismiss)="clearConfirmationOpen = false" />
+
+<ion-modal class="barrio-shopping-list-modal" [isOpen]="shoppingListOpen" (didDismiss)="closeShoppingList()" aria-labelledby="shopping-list-title">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title id="shopping-list-title">Lista de compra</ion-title>
+        <ion-buttons slot="end"><ion-button (click)="closeShoppingList()" aria-label="Cerrar lista de compra">Cerrar</ion-button></ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <section class="barrio-shopping-list-sheet">
+        <p>Tu selección para llevar. La fecha y el origen de los datos aparecen en la lista.</p>
+        <label for="shopping-list-text">Texto de tu lista</label>
+        <textarea id="shopping-list-text" readonly spellcheck="false" [value]="shoppingListFile?.contents" aria-describedby="shopping-list-copy-status"></textarea>
+        <div class="barrio-shopping-list-actions">
+          <button type="button" class="primary-button" (click)="copyShoppingList()" [disabled]="isCopyingList || !shoppingListFile">{{ isCopyingList ? 'Copiando…' : 'Copiar lista' }}</button>
+          @if (!nativePlatform) {
+            <button type="button" class="secondary-button" (click)="downloadShoppingList()" [disabled]="!shoppingListFile">Descargar TXT</button>
+          }
+        </div>
+        <p id="shopping-list-copy-status" class="muted" role="status" aria-live="polite">{{ shoppingListMessage }}</p>
+      </section>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 
 <ng-template #productIllustration let-title>
   <svg viewBox="0 0 120 100" fill="none" aria-hidden="true">

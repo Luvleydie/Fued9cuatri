@@ -1,0 +1,224 @@
+{
+  "generatedAt": "2026-10-14T23:51:06.356Z",
+  "timezone": "America/Mexico_City",
+  "baseURL": "http://localhost/novacart/",
+  "apiBase": "http://localhost/novacart/api/",
+  "passed": true,
+  "checks": [
+    {
+      "name": "La API real responde al diagnóstico",
+      "passed": true,
+      "httpStatus": 200,
+      "database": "mysql"
+    },
+    {
+      "name": "Inicio de sesión con la cuenta demo existente",
+      "passed": true
+    },
+    {
+      "name": "Loading durante GET y bloqueo de acciones",
+      "passed": true,
+      "simulation": "demora del transporte"
+    },
+    {
+      "name": "GET /users actualiza el listado",
+      "passed": true,
+      "httpStatus": 200
+    },
+    {
+      "name": "Loading durante POST y prevención de doble envío",
+      "passed": true,
+      "simulation": "demora del transporte"
+    },
+    {
+      "name": "POST /users crea un usuario temporal",
+      "passed": true,
+      "httpStatus": 201
+    },
+    {
+      "name": "Error HTTP 409 real: informa duplicado y conserva el formulario",
+      "passed": true,
+      "httpStatus": 409
+    },
+    {
+      "name": "PUT /users/:id actualiza y persiste después de recargar",
+      "passed": true,
+      "httpStatus": 200
+    },
+    {
+      "name": "DELETE /users/:id elimina y no reaparece después de recargar",
+      "passed": true,
+      "httpStatus": 204,
+      "subsequentGetStatus": 404
+    },
+    {
+      "name": "Error HTTP 503 simulado: conserva datos y exige actualizar antes de reintentar",
+      "passed": true,
+      "httpStatus": 503,
+      "simulated": true
+    },
+    {
+      "name": "Recuperación: GET real habilita nuevamente el formulario",
+      "passed": true,
+      "httpStatus": 200
+    },
+    {
+      "name": "Sin errores JavaScript no controlados",
+      "passed": true
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "POST",
+      "path": "/novacart/api/users",
+      "status": 201,
+      "simulated": false
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "POST",
+      "path": "/novacart/api/users",
+      "status": 409,
+      "simulated": false
+    },
+    {
+      "method": "PUT",
+      "path": "/novacart/api/users/61",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/novacart/api/users/61",
+      "status": 204,
+      "simulated": false
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    },
+    {
+      "method": "POST",
+      "path": "/novacart/api/users",
+      "status": 503,
+      "simulated": true
+    },
+    {
+      "method": "GET",
+      "path": "/novacart/api/users",
+      "status": 200,
+      "simulated": false
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "docs/screenshots-rest/00-vista-general.png",
+      "description": "Vista general de la aplicación Ionic con búsqueda de la cuenta demo; no muestra datos personales de otras cuentas.",
+      "capture": "viewport completo"
+    },
+    {
+      "path": "docs/screenshots-rest/01-loading-get.png",
+      "description": "GET pendiente: indicador de carga visible y acciones deshabilitadas. Demora controlada; respuesta real.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    },
+    {
+      "path": "docs/screenshots-rest/02-get-usuarios.png",
+      "description": "GET /users devuelve HTTP 200; el directorio muestra usuarios recuperados de la API real.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    },
+    {
+      "path": "docs/screenshots-rest/03-loading-post.png",
+      "description": "POST pendiente: Procesando solicitud… con spinner y Actualizar deshabilitado. El script también comprueba Guardando… y el bloqueo del formulario. Demora controlada; respuesta real.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    },
+    {
+      "path": "docs/screenshots-rest/04-post-creado.png",
+      "description": "POST /users devuelve HTTP 201; el usuario temporal aparece en el directorio y se confirma la creación.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    },
+    {
+      "path": "docs/screenshots-rest/09-error-409-real.png",
+      "description": "HTTP 409 real de la API al intentar duplicar el usuario temporal: el aviso explica el conflicto.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    },
+    {
+      "path": "docs/screenshots-rest/05-put-actualizado.png",
+      "description": "PUT /users/:id devuelve HTTP 200 y confirma el nombre Actualizado REST.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    },
+    {
+      "path": "docs/screenshots-rest/06-delete-eliminado.png",
+      "description": "DELETE /users/:id devuelve HTTP 204; mensaje de eliminación y búsqueda sin coincidencias.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    },
+    {
+      "path": "docs/screenshots-rest/07-error-controlado.png",
+      "description": "HTTP 503 simulado en navegador: aviso comprensible y estado Actualización pendiente; la comprobación confirma datos conservados y bloqueo del reenvío.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    },
+    {
+      "path": "docs/screenshots-rest/08-recuperacion.png",
+      "description": "GET real restaura el servicio tras retirar la simulación; desaparece el error y el formulario conserva los datos.",
+      "capture": "recorte de interfaz sin modificar contenido"
+    }
+  ],
+  "simulations": [
+    "GET y POST se retienen temporalmente en Playwright para capturar el loading; luego continúa la petición a la API real.",
+    "Un POST recibe HTTP 503 simulado por Playwright; no llega al servidor y no crea registros."
+  ],
+  "cleanup": {
+    "completed": true,
+    "temporaryRecordsRemaining": 0,
+    "recordsRemovedDuringCleanup": 0
+  },
+  "database": "mysql"
+}

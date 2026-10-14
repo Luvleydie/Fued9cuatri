@@ -5,12 +5,15 @@ require __DIR__ . '/validation.php';
 require __DIR__ . '/database.php';
 require __DIR__ . '/http.php';
 require __DIR__ . '/auth.php';
+require __DIR__ . '/cors.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
 try {
+    // OPTIONS y los orígenes rechazados terminan antes de abrir MySQL o autenticar.
+    applyCors(require __DIR__ . '/config.php');
     $db = database();
     $route = '/' . trim($_GET['route'] ?? '', '/');
 
@@ -51,6 +54,7 @@ try {
         $productId = $route === '/cart' ? null : positiveId($match[1]);
         cartEndpoint($db, $userId, $productId);
     }
+
     throw new ApiException(404, 'Ruta no encontrada.');
 } catch (ApiException $error) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();

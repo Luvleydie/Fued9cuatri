@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-14",
+  "timezone": "America/Mexico_City",
+  "checks": [
+    { "command": "npm test -- --watch=false", "passed": true, "testFiles": 22, "tests": 322 },
+    { "command": "npm run test:api", "passed": true, "checks": 35, "database": "mysql" },
+    { "command": "npm run lint", "passed": true },
+    { "command": "npm run deploy:xampp", "passed": true, "applicationURL": "http://localhost/novacart/" }
+  ],
+  "browserEvidence": "docs/evidencia/rest-verificacion.json",
+  "scope": "Integración web Ionic Angular con API REST PHP y MySQL. No incluye prueba de hardware Android ni Bluetooth."
+}

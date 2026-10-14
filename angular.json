@@ -59,6 +59,16 @@
               ],
               "outputHashing": "all"
             },
+            "mobile": {
+              "outputPath": { "base": "www-mobile", "browser": "" },
+              "baseHref": "/",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.mobile.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -123,7 +133,8 @@
   "cli": {
     "schematicCollections": [
       "@ionic/angular-toolkit"
-    ]
+    ],
+    "analytics": "1c031e7d-90ca-4eda-8fe7-d12e56e90565"
   },
   "schematics": {
     "@ionic/angular-toolkit:component": {

@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 350" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Una vuelta por el barrio</title>
+  <desc id="desc">Casitas coloridas, cables, papel picado, un tianguis y un microbús de la ruta 01, en una ilustración alegre de barrio mexicano.</desc>
+  <defs>
+    <pattern id="brick" width="34" height="22" patternUnits="userSpaceOnUse">
+      <path d="M0 21H34M17 0V21" stroke="#292419" stroke-width="2" opacity=".13"/>
+    </pattern>
+  </defs>
+  <path d="M0 0H760V350H0Z" fill="#fff6de"/>
+  <circle cx="661" cy="64" r="33" fill="#f3c546"/>
+  <path d="M0 275H760V350H0Z" fill="#d4c5a0"/>
+  <path d="M0 311H760M25 335H106M440 335H509M585 335H728" stroke="#fff6de" stroke-width="6" stroke-linecap="round"/>
+  <g stroke="#292419" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 132H118V277H3Z" fill="#e2a581"/>
+    <path d="M3 132H118V277H3Z" fill="url(#brick)" stroke="none"/>
+    <path d="M0 128H123V140H0Z" fill="#c9352b"/>
+    <path d="M22 157H61V196H22Z" fill="#a9d9d3"/>
+    <path d="M41 157V196M22 177H61" stroke-width="3"/>
+    <path d="M73 217H103V278H73Z" fill="#176b3a"/>
+    <path d="M108 97H244V277H108Z" fill="#f3c546"/>
+    <path d="M102 91H250V105H102Z" fill="#176b3a"/>
+    <path d="M127 125H164V166H127ZM186 125H222V166H186Z" fill="#a9d9d3"/>
+    <path d="M145 125V166M203 125V166M127 146H164M186 146H222" stroke-width="3"/>
+    <path d="M154 213H203V278H154Z" fill="#c9352b"/>
+    <path d="M239 142H352V277H239Z" fill="#94be87"/>
+    <path d="M235 138H356V150H235Z" fill="#176b3a"/>
+    <path d="M260 170H306V210H260Z" fill="#fff6de"/>
+    <path d="M283 170V210M260 190H306" stroke-width="3"/>
+    <path d="M319 213H340V278H319Z" fill="#c9352b"/>
+    <path d="M470 161H744V279H470Z" fill="#e2a581"/>
+    <path d="M484 172H730V214H484Z" fill="#fff6de"/>
+    <path d="M502 277V198M714 277V198" stroke-width="6"/>
+    <path d="M493 170H724L750 218H465Z" fill="#c9352b"/>
+    <path d="M519 170H555L544 218H500ZM591 170H627L635 218H594ZM663 170H699L726 218H681Z" fill="#f3c546" stroke="none"/>
+    <path d="M465 218H750V229Q733 239 714 229Q696 239 678 229Q660 239 643 229Q625 239 607 229Q589 239 572 229Q554 239 536 229Q518 239 501 229Q482 239 465 229Z" fill="#c9352b"/>
+    <path d="M532 218V229Q550 239 568 229V218M602 218V229Q621 239 639 229V218M674 218V229Q692 239 710 229V218" fill="#f3c546" stroke="none"/>
+    <path d="M513 275H705V297H513Z" fill="#176b3a"/>
+    <path d="M519 256H565V275H519ZM575 256H624V275H575ZM634 256H699V275H634Z" fill="#f3c546" stroke-width="3"/>
+    <path d="M524 265H559M581 265H618M641 265H692" stroke-width="2"/>
+    <circle cx="533" cy="251" r="8" fill="#c9352b" stroke-width="2"/>
+    <circle cx="551" cy="251" r="8" fill="#c9352b" stroke-width="2"/>
+    <circle cx="588" cy="250" r="9" fill="#176b3a" stroke-width="2"/>
+    <circle cx="609" cy="251" r="8" fill="#176b3a" stroke-width="2"/>
+    <path d="M643 251Q650 238 657 251M662 251Q669 238 676 251M680 251Q687 238 694 251" fill="#fff6de" stroke-width="2"/>
+    <path d="M407 282V68M400 76H421M413 73V45" stroke-width="7"/>
+    <path d="M0 40Q210 103 407 68Q561 98 760 39M0 63Q211 113 407 79Q569 120 760 73" stroke-width="2"/>
+    <path d="M15 30Q393 91 744 25" stroke-width="2"/>
+  </g>
+  <g stroke="#292419" stroke-width="2" stroke-linejoin="round">
+    <path d="M47 36L84 42L80 72L68 81L57 70L43 74Z" fill="#176b3a"/>
+    <path d="M131 49L168 53L165 85L153 93L142 81L128 86Z" fill="#c9352b"/>
+    <path d="M216 58L254 61L252 92L239 101L228 88L214 94Z" fill="#f3c546"/>
+    <path d="M308 64L346 65V96L334 105L322 93L308 100Z" fill="#176b3a"/>
+    <path d="M467 63L505 61L508 93L496 103L483 92L470 99Z" fill="#c9352b"/>
+    <path d="M558 56L595 52L599 83L587 94L574 83L561 91Z" fill="#176b3a"/>
+    <path d="M649 43L686 36L692 67L682 78L667 68L655 77Z" fill="#f3c546"/>
+    <path d="M57 49L66 60L74 51M141 61L149 73L158 64M226 69L234 82L244 72M318 75L327 87L336 76M477 74L487 85L495 73M568 68L578 79L586 66M660 55L671 66L677 52" stroke="#fff6de" stroke-width="4"/>
+  </g>
+  <g fill="#292419" font-family="Arial, Helvetica, sans-serif" font-weight="900" text-anchor="middle">
+    <text x="607" y="157" font-size="19" letter-spacing="2">TIANGUIS</text>
+    <text x="174" y="191" font-size="10" letter-spacing="1.5">ABARROTES</text>
+  </g>
+  <g transform="translate(25 134) scale(.91)" stroke="#292419" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="243" cy="203" rx="203" ry="11" fill="#292419" opacity=".14" stroke="none"/>
+    <path d="M50 75Q50 59 67 59H371Q398 59 408 88L429 144V177Q429 188 416 188H58Q46 188 46 174V91Q46 81 50 75Z" fill="#fff6de"/>
+    <path d="M56 62H372Q395 62 404 85H49Q50 66 56 62Z" fill="#176b3a"/>
+    <path d="M47 140H427V177Q429 188 416 188H58Q46 188 46 174Z" fill="#176b3a"/>
+    <path d="M48 153H426" stroke="#f3c546" stroke-width="9"/>
+    <path d="M51 167H425" stroke="#c9352b" stroke-width="6"/>
+    <path d="M63 88H114V129H63ZM126 88H179V129H126ZM191 88H244V129H191ZM256 88H309V129H256Z" fill="#a9d9d3"/>
+    <path d="M323 88H351V181H323Z" fill="#fff6de"/>
+    <path d="M329 94H345V131H329Z" fill="#a9d9d3" stroke-width="3"/>
+    <path d="M337 143V156" stroke-width="3"/>
+    <path d="M365 88H399L412 126H365Z" fill="#a9d9d3"/>
+    <path d="M371 95L391 117M71 96L91 119M135 96L155 119M201 96L221 119M266 96L286 119" stroke="#fff6de" stroke-width="4" opacity=".85"/>
+    <path d="M46 177H69M407 178H435" stroke-width="9"/>
+    <rect x="411" y="141" width="15" height="12" rx="2" fill="#f3c546" stroke-width="3"/>
+    <rect x="49" y="142" width="10" height="13" rx="2" fill="#c9352b" stroke-width="3"/>
+    <path d="M420 107H440V132" stroke-width="4"/>
+    <rect x="434" y="112" width="11" height="18" rx="3" fill="#176b3a" stroke-width="3"/>
+    <circle cx="126" cy="184" r="25" fill="#292419"/>
+    <circle cx="126" cy="184" r="12" fill="#d4d0bc" stroke-width="4"/>
+    <circle cx="367" cy="184" r="25" fill="#292419"/>
+    <circle cx="367" cy="184" r="12" fill="#d4d0bc" stroke-width="4"/>
+    <rect x="154" y="42" width="154" height="35" rx="3" fill="#f3c546" stroke-width="4"/>
+    <path d="M163 43V36H296V42" stroke-width="3"/>
+    <g fill="#292419" stroke="none" font-family="Arial, Helvetica, sans-serif" font-weight="900" text-anchor="middle">
+      <text x="231" y="66" font-size="22" letter-spacing="2">RUTA 01</text>
+      <text x="207" y="150" font-size="17" letter-spacing="3" fill="#fff6de">CENTRO</text>
+      <text x="390" y="143" font-size="10" transform="rotate(-5 390 143)">SÚBALE</text>
+      <text x="227" y="181" font-size="9" letter-spacing="2" fill="#fff6de">SERVICIO DE BARRIO</text>
+    </g>
+  </g>
+</svg>

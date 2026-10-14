@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular/lazy';
+import { Capacitor } from '@capacitor/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import axios from 'axios';
 import api from '../../core/api/axios-client';
@@ -13,6 +14,7 @@ import { connectionState } from '../../core/api/connection-state';
 import { getErrorMessage, isRecoverableReadError } from '../../core/api/api-errors';
 import { CachedResult, DataValidationError } from '../../core/api/data-cache';
 import { cacheNotice } from '../../core/cache-notice';
+import { createShoppingList, ShoppingListFile } from '../../core/shopping-list';
 import { DEFAULT_CATALOG_PREFERENCES, isCatalogAvailability, isCatalogSort, normalizeCatalogSearch, readCatalogPreferences, saveCatalogPreferences } from '../../core/catalog-preferences';
 import { CartItem, CartResponse } from '../../models/cart-item.model';
 import { Product } from '../../models/product.model';
@@ -35,6 +37,11 @@ export class CartPage {
   errorMessage = '';
   successMessage = '';
   clearConfirmationOpen = false;
+  shoppingListOpen = false;
+  shoppingListFile: ShoppingListFile | null = null;
+  shoppingListMessage = '';
+  isCopyingList = false;
+  readonly nativePlatform = Capacitor.isNativePlatform();
   readonly clearCartButtons = [
     { text: 'Cancelar', role: 'cancel' },
     { text: 'Vaciar', role: 'destructive', handler: () => { void this.clearCart(); } },
@@ -112,6 +119,65 @@ export class CartPage {
   }
   get productsNotice(): string { return cacheNotice(this.productsSnapshot, this.connection.offline()); }
   get cartNotice(): string { return cacheNotice(this.cartSnapshot, this.connection.offline()); }
+
+  openShoppingList(): void {
+    if (this.isLoading || this.isSubmitting || !this.items.length || !this.cartSnapshot) return;
+    this.shoppingListFile = createShoppingList(this.cartSnapshot, {
+      offline: this.connection.offline(), needsRefresh: this.needsRefresh,
+    });
+    this.shoppingListMessage = '';
+    this.shoppingListOpen = true;
+  }
+
+  closeShoppingList(): void {
+    this.shoppingListOpen = false;
+    this.shoppingListFile = null;
+    this.shoppingListMessage = '';
+  }
+
+  async copyShoppingList(): Promise<void> {
+    const file = this.shoppingListFile;
+    if (!file || !this.shoppingListOpen || this.isCopyingList) return;
+    this.isCopyingList = true;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(file.contents.replace(/^\uFEFF/, ''));
+      if (this.shoppingListFile === file && this.shoppingListOpen) this.shoppingListMessage = 'Lista copiada. Ya puedes pegarla en tus notas o mensajes.';
+    } catch {
+      if (this.shoppingListFile === file && this.shoppingListOpen) {
+        const text = document.getElementById('shopping-list-text') as HTMLTextAreaElement | null;
+        text?.focus();
+        text?.select();
+        this.shoppingListMessage = 'Selecciona el texto de la lista y usa Copiar en el menú de tu dispositivo.';
+      }
+    } finally {
+      this.isCopyingList = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  downloadShoppingList(): void {
+    if (this.nativePlatform || !this.shoppingListOpen || !this.shoppingListFile) return;
+    let url: string | undefined;
+    const link = document.createElement('a');
+    try {
+      const file = this.shoppingListFile;
+      url = URL.createObjectURL(new Blob([file.contents], { type: 'text/plain;charset=utf-8' }));
+      link.href = url;
+      link.download = file.filename;
+      document.body.appendChild(link);
+      link.click();
+      this.shoppingListMessage = 'Se solicitó la descarga de tu lista TXT.';
+    } catch {
+      this.shoppingListMessage = 'No se pudo iniciar la descarga. Usa Copiar lista para conservarla.';
+    } finally {
+      link.remove();
+      if (url) {
+        const objectUrl = url;
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      }
+    }
+  }
 
   constructor(private cartService: CartService, private router: Router, private cdr: ChangeDetectorRef) {}
 
@@ -270,6 +336,7 @@ export class CartPage {
       this.errorMessage = '';
       this.successMessage = '';
       this.clearConfirmationOpen = false;
+      this.closeShoppingList();
       this.searchQuery = '';
       await this.router.navigateByUrl('/login', { replaceUrl: true });
       this.isSubmitting = false;
@@ -285,6 +352,7 @@ export class CartPage {
         this.currentUsername = '';
         this.successMessage = '';
         this.clearConfirmationOpen = false;
+        this.closeShoppingList();
         this.items = [];
         this.products = [];
         this.total = 0;

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 230" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Microbús mexicano de la ruta 01</title>
+  <desc id="desc">Un microbús verde y crema con rótulos de Centro y Súbale, dibujado con contornos negros.</desc>
+  <ellipse cx="243" cy="204" rx="203" ry="12" fill="#292419" opacity=".13"/>
+  <g stroke="#292419" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 75Q50 59 67 59H371Q398 59 408 88L429 144V177Q429 188 416 188H58Q46 188 46 174V91Q46 81 50 75Z" fill="#fff6de"/>
+    <path d="M56 62H372Q395 62 404 85H49Q50 66 56 62Z" fill="#176b3a"/>
+    <path d="M47 140H427V177Q429 188 416 188H58Q46 188 46 174Z" fill="#176b3a"/>
+    <path d="M48 153H426" stroke="#f3c546" stroke-width="9"/>
+    <path d="M51 167H425" stroke="#c9352b" stroke-width="6"/>
+    <path d="M63 88H114V129H63ZM126 88H179V129H126ZM191 88H244V129H191ZM256 88H309V129H256Z" fill="#a9d9d3"/>
+    <path d="M323 88H351V181H323Z" fill="#fff6de"/>
+    <path d="M329 94H345V131H329Z" fill="#a9d9d3" stroke-width="3"/>
+    <path d="M337 143V156" stroke-width="3"/>
+    <path d="M365 88H399L412 126H365Z" fill="#a9d9d3"/>
+    <path d="M371 95L391 117M71 96L91 119M135 96L155 119M201 96L221 119M266 96L286 119" stroke="#fff6de" stroke-width="4" opacity=".85"/>
+    <path d="M46 177H69M407 178H435" stroke-width="9"/>
+    <rect x="411" y="141" width="15" height="12" rx="2" fill="#f3c546" stroke-width="3"/>
+    <rect x="49" y="142" width="10" height="13" rx="2" fill="#c9352b" stroke-width="3"/>
+    <path d="M420 107H440V132" stroke-width="4"/>
+    <rect x="434" y="112" width="11" height="18" rx="3" fill="#176b3a" stroke-width="3"/>
+    <circle cx="126" cy="184" r="25" fill="#292419"/>
+    <circle cx="126" cy="184" r="12" fill="#d4d0bc" stroke-width="4"/>
+    <circle cx="367" cy="184" r="25" fill="#292419"/>
+    <circle cx="367" cy="184" r="12" fill="#d4d0bc" stroke-width="4"/>
+    <rect x="154" y="42" width="154" height="35" rx="3" fill="#f3c546" stroke-width="4"/>
+    <path d="M163 43V36H296V42" stroke-width="3"/>
+  </g>
+  <g fill="#292419" font-family="Arial, Helvetica, sans-serif" font-weight="900" text-anchor="middle">
+    <text x="231" y="66" font-size="22" letter-spacing="2">RUTA 01</text>
+    <text x="207" y="150" font-size="17" letter-spacing="3" fill="#fff6de">CENTRO</text>
+    <text x="390" y="143" font-size="10" transform="rotate(-5 390 143)">SÚBALE</text>
+    <text x="227" y="181" font-size="9" letter-spacing="2" fill="#fff6de">SERVICIO DE BARRIO</text>
+  </g>
+  <path d="M18 146H30M10 159H32M17 172H31" stroke="#176b3a" stroke-width="4" stroke-linecap="round"/>
+</svg>
